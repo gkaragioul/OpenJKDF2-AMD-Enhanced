@@ -38,4 +38,29 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/Platform/GL/ShaderCompile.c"
     )
     target_compile_definitions(test_shader_stage PRIVATE OPENJKDF2_SHADER_PURE_TEST)
+    openjkdf2_add_unit_test(
+        test_diagnostic_report
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_report.c"
+        "${PROJECT_SOURCE_DIR}/src/General/DiagnosticReport.c"
+    )
+
+    if(TARGET_USE_SDL2 AND TARGET_USE_OPENGL AND NOT TARGET_ANDROID AND NOT TARGET_WASM)
+        add_executable(
+            openjkdf2-renderer-smoke
+            "${PROJECT_SOURCE_DIR}/src/Tools/renderer_smoke_main.c"
+            "${PROJECT_SOURCE_DIR}/src/General/DiagnosticLog.c"
+            "${PROJECT_SOURCE_DIR}/src/General/DiagnosticReport.c"
+            "${PROJECT_SOURCE_DIR}/src/Platform/GL/ShaderCompile.c"
+        )
+        target_compile_features(openjkdf2-renderer-smoke PRIVATE c_std_11)
+        target_include_directories(openjkdf2-renderer-smoke PRIVATE "${PROJECT_SOURCE_DIR}/src")
+        target_link_libraries(openjkdf2-renderer-smoke PRIVATE ${SDL2_COMMON_LIBS} GLEW::glew_s)
+        if(WIN32)
+            target_link_libraries(openjkdf2-renderer-smoke PRIVATE
+                opengl32 version imm32 setupapi cfgmgr32 winmm ole32 oleaut32 shell32 user32
+            )
+        endif()
+        add_test(NAME renderer_smoke COMMAND openjkdf2-renderer-smoke)
+        set_tests_properties(renderer_smoke PROPERTIES LABELS "renderer-smoke" DISABLED TRUE)
+    endif()
 endif()

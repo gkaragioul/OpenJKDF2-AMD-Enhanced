@@ -130,3 +130,4 @@ AGENTS.md
 packaging/dreamcast/disc/*
 /.worktrees/
 /build/
+/renderer-smoke-output/
