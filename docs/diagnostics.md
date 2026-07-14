@@ -17,3 +17,10 @@ device serial numbers must never be submitted as diagnostic event content.
 
 Run-state replacement is written through a temporary file so an interrupted
 write cannot leave a partially written marker.
+
+When `--data-dir <path>` is present, it is a read-only base-asset root and is
+not translated to the legacy mod-oriented `-path` option. User-owned files use
+`--user-dir <path>`, `%LOCALAPPDATA%\OpenJKDF2 AMD Enhanced` by default, or a
+`UserData` directory beside the executable when `--portable` is explicit.
+Relative reads prefer writable overrides before base assets; writes outside
+the configured writable root are rejected by the overlay resolver.
