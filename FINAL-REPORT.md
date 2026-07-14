@@ -46,6 +46,8 @@ Key evidence includes:
 - A real gameplay access-violation crash generated a 3,949-byte DrMinGW report;
   desktop/cursor state remained invariant and the accepted last-known-good
   recovery prompt led to a clean rendered relaunch.
+- Three presentation modes produced complete framebuffer status, sampled
+  zero-error texture uploads, and initial swap-state telemetry in structured logs.
 - A clean-provenance asset-free Windows package and uninstall preservation test.
 
 ## Unresolved limitations

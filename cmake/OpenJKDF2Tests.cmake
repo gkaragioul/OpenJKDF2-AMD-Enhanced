@@ -50,6 +50,13 @@ if(BUILD_TESTING)
     )
     set_tests_properties(enhancement_framework_contract PROPERTIES LABELS "unit")
 
+    add_test(
+        NAME renderer_telemetry_contract
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-renderer-telemetry.ps1"
+    )
+    set_tests_properties(renderer_telemetry_contract PROPERTIES LABELS "unit")
+
     openjkdf2_add_unit_test(
         test_diagnostic_log
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_log.c"

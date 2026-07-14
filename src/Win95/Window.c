@@ -93,6 +93,7 @@ static char Window_rendererDriver[256] = "";
 static char Window_rendererApi[256] = "";
 static char Window_rendererFrameCap[32] = "";
 static char Window_rendererVsync[64] = "";
+static int Window_bSwapLogged = 0;
 
 void Window_SetSafeMode(int enabled)
 {
@@ -1647,6 +1648,17 @@ void Window_SdlUpdate()
 void Window_SdlVblank()
 {
     if (Main_bHeadless) return;
+
+    if (!Window_bSwapLogged)
+    {
+        char swapEvent[192];
+        snprintf(swapEvent, sizeof(swapEvent),
+                 "swap_started mode=%s width=%d height=%d vsync=%s",
+                 display_mode_name(Window_displayMode), Window_screenXSize,
+                 Window_screenYSize, PresentationMode_VsyncName(Window_appliedVsync));
+        diag_log_event(DIAG_SEVERITY_INFO, "presentation", swapEvent);
+        Window_bSwapLogged = 1;
+    }
 
     //static uint32_t roundtrip = 0;
     //uint32_t before = stdPlatform_GetTimeMsec();

@@ -185,11 +185,14 @@ GLuint menu_ibo_triangle;
 extern int jkGuiBuildMulti_bRendering;
 
 int std3D_bInitted = 0;
+static unsigned int std3D_textureUploadCount = 0;
 rdColormap std3D_ui_colormap;
 int std3D_bReinitHudElements = 0;
 
 void std3D_generateIntermediateFbo(int32_t width, int32_t height, std3DIntermediateFbo* pFbo, int isFloat)
 {
+    GLenum framebufferStatus;
+    char framebufferEvent[192];
     // Generate the framebuffer
     memset(pFbo, 0, sizeof(*pFbo));
 
@@ -226,8 +229,14 @@ void std3D_generateIntermediateFbo(int32_t width, int32_t height, std3DIntermedi
     
     // Bind it to our framebuffer fb
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, pFbo->rbo);
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(framebufferStatus != GL_FRAMEBUFFER_COMPLETE)
         stdPlatform_Printf("std3D: ERROR, Framebuffer is incomplete!\n");
+    snprintf(framebufferEvent, sizeof(framebufferEvent),
+             "framebuffer_created kind=intermediate width=%d height=%d float=%s status=0x%x",
+             width, height, isFloat ? "true" : "false", (unsigned int)framebufferStatus);
+    diag_log_event(framebufferStatus == GL_FRAMEBUFFER_COMPLETE ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                   "renderer", framebufferEvent);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -240,6 +249,8 @@ void std3D_deleteIntermediateFbo(std3DIntermediateFbo* pFbo)
 
 void std3D_generateFramebuffer(int32_t width, int32_t height, std3DFramebuffer* pFb)
 {
+    GLenum framebufferStatus;
+    char framebufferEvent[192];
     // Generate the framebuffer
     memset(pFb, 0, sizeof(*pFb));
 
@@ -311,8 +322,14 @@ void std3D_generateFramebuffer(int32_t width, int32_t height, std3DFramebuffer* 
     
     // Bind it to our framebuffer fb
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, pFb->rbo);
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if(framebufferStatus != GL_FRAMEBUFFER_COMPLETE)
         stdPlatform_Printf("std3D: ERROR, Framebuffer is incomplete!\n");
+    snprintf(framebufferEvent, sizeof(framebufferEvent),
+             "framebuffer_created kind=scene width=%d height=%d status=0x%x",
+             width, height, (unsigned int)framebufferStatus);
+    diag_log_event(framebufferStatus == GL_FRAMEBUFFER_COMPLETE ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                   "renderer", framebufferEvent);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     if (jkPlayer_enableSSAO)
@@ -3081,6 +3098,8 @@ int std3D_ClearZBuffer()
 
 int std3D_AddToTextureCache(tVBuffer *vbuf, rdDDrawSurface *texture, int is_alpha_tex, int no_alpha)
 {
+    GLenum uploadError;
+    char uploadEvent[192];
     if (Main_bHeadless) return 1;
     if (!vbuf || !texture) return 1;
     if (texture->texture_loaded) return 1;
@@ -3124,6 +3143,8 @@ int std3D_AddToTextureCache(tVBuffer *vbuf, rdDDrawSurface *texture, int is_alph
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
     std3D_ApplyAnisotropy();
+
+    while (glGetError() != GL_NO_ERROR) {}
 
     if (vbuf->format.format.is16bit)
     {
@@ -3242,6 +3263,24 @@ int std3D_AddToTextureCache(tVBuffer *vbuf, rdDDrawSurface *texture, int is_alph
     }
 
     
+    uploadError = glGetError();
+    ++std3D_textureUploadCount;
+    snprintf(uploadEvent, sizeof(uploadEvent),
+             "%s count=%u width=%u height=%u format=%s alpha=%s gl_error=0x%x",
+             uploadError == GL_NO_ERROR ? "texture_upload" : "texture_upload_failed",
+             std3D_textureUploadCount, width, height,
+             vbuf->format.format.is16bit ? "16bit" : "indexed8",
+             is_alpha_tex ? "true" : "false", (unsigned int)uploadError);
+    if (uploadError != GL_NO_ERROR || std3D_textureUploadCount <= 8 ||
+        (std3D_textureUploadCount & (std3D_textureUploadCount - 1)) == 0)
+        diag_log_event(uploadError == GL_NO_ERROR ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                       "renderer", uploadEvent);
+    if (uploadError != GL_NO_ERROR)
+    {
+        glDeleteTextures(1, &image_texture);
+        return 0;
+    }
+
     std3D_aLoadedSurfaces[std3D_loadedTexturesAmt] = texture;
     std3D_aLoadedTextures[std3D_loadedTexturesAmt++] = image_texture;
     /*ext->surfacebuf = image_data;
