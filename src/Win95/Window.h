@@ -47,6 +47,7 @@ void Window_SetDisplayMode(DisplayMode mode);
 
 
 extern int Window_screenXSize;
+extern int Window_screenYSize;
 extern int Window_screenYsSize;
 extern int Window_lastXRel;
 extern int Window_lastYRel;

@@ -4,6 +4,7 @@
 #include "Win95/Window.h"
 #include "stdPlatform.h"
 #include "Main/jkQuakeConsole.h"
+#include "General/ResolutionLayout.h"
 
 #include <SDL3/SDL.h>
 
@@ -1002,14 +1003,14 @@ void stdControl_ReadMouse()
     if (jkQuakeConsole_bOpen) return; // Hijack input to console
 
     stdControl_aAxes[AXIS_MOUSE_X].dwYoffs = 0;
-    stdControl_aAxes[AXIS_MOUSE_X].uMaxVal = (__int64)(250.0 * (640.0 / Window_screenXSize));
+    stdControl_aAxes[AXIS_MOUSE_X].uMaxVal = (__int64)ResolutionLayout_ScaledMouseRange(250, 640, Window_screenXSize);
     stdControl_aAxes[AXIS_MOUSE_X].uMinVal = -stdControl_aAxes[AXIS_MOUSE_X].uMaxVal;
     stdControl_aAxes[AXIS_MOUSE_X].flags |= 1u;
     stdControl_aAxes[AXIS_MOUSE_X].dwXoffs = (2 * stdControl_aAxes[AXIS_MOUSE_X].uMaxVal + 1) / 2 - stdControl_aAxes[AXIS_MOUSE_X].uMaxVal;
     stdControl_aAxes[AXIS_MOUSE_X].fRangeConversion = 1.0 / (flex_d_t)(stdControl_aAxes[AXIS_MOUSE_X].uMaxVal - stdControl_aAxes[AXIS_MOUSE_X].dwXoffs);
 
     stdControl_aAxes[AXIS_MOUSE_Y].dwYoffs = 0;
-    stdControl_aAxes[AXIS_MOUSE_Y].uMaxVal = (__int64)(200.0 * (480.0 / Window_screenXSize));
+    stdControl_aAxes[AXIS_MOUSE_Y].uMaxVal = (__int64)ResolutionLayout_ScaledMouseRange(200, 480, Window_screenYSize);
     stdControl_aAxes[AXIS_MOUSE_Y].uMinVal = -stdControl_aAxes[AXIS_MOUSE_Y].uMaxVal;
     stdControl_aAxes[AXIS_MOUSE_Y].flags |= 1u;
     stdControl_aAxes[AXIS_MOUSE_Y].dwXoffs = (2 * stdControl_aAxes[AXIS_MOUSE_Y].uMaxVal + 1) / 2 - stdControl_aAxes[AXIS_MOUSE_Y].uMaxVal;

@@ -16,6 +16,7 @@
 #include "Main/jkQuakeConsole.h"
 #include "General/DiagnosticLog.h"
 #include "General/DisplayMode.h"
+#include "General/ResolutionLayout.h"
 
 #include "jk.h"
 
@@ -429,17 +430,15 @@ void Window_HandleMouseMove(SDL_MouseMotionEvent *event)
 
     if (!jkGame_isDDraw)
     {
-        // FLEXTODO
-        flex_t fX = (flex_t)x;
-        flex_t fY = (flex_t)y;
+        ResolutionLayoutRect menuViewport = ResolutionLayout_FitAspect(
+            Window_screenXSize, Window_screenYSize, 640.0 / 480.0);
+        double logicalX;
+        double logicalY;
 
-        // Keep 4:3 aspect
-        flex_t menu_x = ((flex_t)Window_screenXSize - ((flex_t)Window_screenYSize * (640.0 / 480.0))) / 2.0;
-        flex_t menu_w = ((flex_t)Window_screenYSize * (640.0 / 480.0));
-
-        Window_mouseX = (int)(((fX - menu_x) / (flex_t)menu_w) * 640.0);
-        Window_mouseY = (int)((fY / (flex_t)Window_screenYSize) * 480.0);
-        //printf("%d %d\n", Window_mouseX, Window_mouseY);
+        ResolutionLayout_MapPoint(
+            &menuViewport, (double)x, (double)y, 640.0, 480.0, 1, &logicalX, &logicalY);
+        Window_mouseX = (int)logicalX;
+        Window_mouseY = (int)logicalY;
     }
     else
     {
