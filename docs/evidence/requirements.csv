@@ -1,0 +1,43 @@
+id,requirement,evidence_type,status,evidence_path,notes
+M1-REPO,Preserve authoritative upstream history and attribution,git history,proven,.git,Upstream commit and focused fork commits retained
+M1-BUILD,Reproducible Windows x64 Debug and Release builds,build logs and hashes,proven,build-evidence/baseline.json,Both configurations built with MSVC and Ninja
+M1-UPSTREAM-RUN,Run unmodified upstream against legitimate game data,runtime reproduction,missing,,Not run because display restoration safeguard is not yet complete
+M1-DIAGNOSTICS,Machine-readable privacy-safe diagnostics,unit tests and JSON parse,proven,src/Tests/test_diagnostic_log.c,No usernames hostnames serials or raw command lines
+M2-LOGGING,Structured renderer shader and startup logging,source and tests,proven,src/General/DiagnosticLog.c,Texture swap input and frame timing coverage remains incomplete
+M2-SHADER,Graceful named shader compile and link failures,unit and build tests,proven,src/Platform/GL/ShaderCompile.c,No modal compiler-error path remains
+M2-CRASH-DUMP,Crash dump generation and user-facing log location,runtime crash test,incomplete,,Existing DrMinGW loading is not yet integrated into evidence workflow
+M2-SMOKE,Asset-free renderer smoke mode,hardware smoke log,proven,docs/evidence/foundation-verification.md,Hidden 64x64 generated-resource test
+M2-TESTS,Settings timing resolution save and fallback tests,CTest results,incomplete,build-evidence/baseline.json,Foundation diagnostics tests exist; remaining domains pending
+M2-SAFE,Startup safe mode,unit test and source,proven,src/Tests/test_startup_options.c,Forces windowed and conservative parser defaults
+M3-RDNA,Standards-compliant capability-based RDNA renderer fixes,shader audit and hardware matrix,incomplete,,One generated shader path passed on RDNA3 only
+M3-DIAG-PAGE,In-game renderer diagnostics page,gameplay UI test,missing,,Pending
+M4-RESOLUTION,Native 2560x1440 and arbitrary resolution with correct UI,visual and coordinate tests,incomplete,,Desktop resolution observed only
+M4-BORDERLESS,Borderless fullscreen never changes desktop mode,display invariance tests,incomplete,,Hidden-window smoke invariance proven; borderless gameplay pending
+M4-WATCHDOG,Crash-safe display restoration watchdog,forced termination tests,missing,,Required before exclusive fullscreen testing
+M4-ASPECT,Configurable gameplay menu HUD and video aspect correction,visual tests,missing,,Pending
+M5-FRAME-UI,Frame-rate slider choices and persistence,unit and UI tests,missing,,Pending
+M5-TIMING,Render and simulation cadence preserve gameplay behavior,frame captures and gameplay tests,missing,,Pending
+M5-VSYNC,VSync and low-jitter limiter modes,pacing captures,missing,,Pending
+M6-MOUSE,Low-latency raw mouse and safe cursor capture,input tests,missing,,Pending
+M6-PRESETS,Modern and Classic control presets,input tests,missing,,Pending
+M7-ENHANCEMENTS,Modular legally distributable visual enhancements,package and visual tests,missing,,Pending
+M8-VIDEO-UX,Video menu apply revert last-known-good and reset,UI and failure tests,missing,,Pending
+M9-RDNA1,RDNA1 compatibility,human hardware test,unverified-hardware,,No representative hardware available yet
+M9-RDNA2,RDNA2 compatibility,human hardware test,unverified-hardware,,No representative hardware available yet
+M9-RDNA3,RDNA3 compatibility,human hardware test,weak,docs/evidence/foundation-verification.md,Only hidden generated-resource smoke tested
+M9-NVIDIA,NVIDIA regression coverage,CI or hardware test,unverified-hardware,,Pending
+M9-INTEL,Intel regression coverage,CI or hardware test,unverified-hardware,,Pending
+M9-GAMEPLAY,First level first door save load death transition and cutscene validation,gameplay evidence,missing,,Blocked by unfinished display safeguard not by credentials
+M10-PACKAGE,Legal Windows x64 package without proprietary assets,package audit,missing,,Pending
+M10-DISCOVERY,Steam and GOG discovery plus asset validation,clean machine test,missing,,Pending
+M10-UNINSTALL,Safe uninstall preserving game data saves and settings,clean machine test,missing,,Pending
+M11-DOCS,Build architecture testing troubleshooting licenses and attribution docs,document audit,incomplete,docs/building-windows.md,Foundation documentation exists
+AC-RX7900,RX 7900 XTX full game hardware rendering without corruption or driver crash,gameplay logs and frame captures,incomplete,,Generated-resource smoke passes but gameplay is untested
+AC-1440P,Correct 2560x1440 borderless gameplay,visual and display tests,missing,,Pending
+AC-DISPLAY,Display state invariant across launch play Alt+Tab crash and exit,before-after system samples,incomplete,docs/evidence/foundation-verification.md,Hidden smoke only
+AC-120FPS,Paced 120 Hz rendering without simulation acceleration,frame capture and gameplay timing tests,missing,,Pending
+AC-FIRST-DOOR,Previously failing first-door path no longer crashes,gameplay crash logs,missing,,Pending
+AC-INPUT,Responsive modern mouse and controls,input evidence,missing,,Pending
+AC-SAVES,Save load death reload restart preserve progress,gameplay evidence,missing,,Pending
+AC-LEGAL,Package contains no proprietary Jedi Knight assets,package manifest audit,missing,,Pending
+AC-CLEAN,Clean machine install configure play save uninstall,clean machine recording,missing,,Pending
