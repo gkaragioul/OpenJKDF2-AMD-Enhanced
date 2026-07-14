@@ -66,6 +66,12 @@ foreach ($key in @('Window_displayMonitor', 'Window_windowWidth',
 if ($windowImpl -notmatch 'Window_bDeferDisplayPersistence') {
     $missing += 'display-persistence:confirmation-only'
 }
+if (-not $windowImpl.Contains('window_focus_gained')) {
+    $missing += 'display-lifecycle:window_focus_gained'
+}
+if (-not $windowImpl.Contains('window_focus_lost')) {
+    $missing += 'display-lifecycle:window_focus_lost'
+}
 if ($windowImpl -notmatch 'if\s*\(settings\.mode\s*==\s*DISPLAY_MODE_WINDOWED\)') {
     $missing += 'display-persistence:preserve-windowed-size-in-borderless'
 }

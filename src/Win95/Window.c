@@ -936,10 +936,12 @@ void Window_HandleWindowEvent(SDL_Event* event)
             break;
         case SDL_EVENT_WINDOW_FOCUS_GAINED:
             stdPlatform_Printf("Window %d gained keyboard focus\n", event->window.windowID);
+            diag_log_event(DIAG_SEVERITY_INFO, "display", "window_focus_gained");
             Window_bNeedsKeyboardFixed = 0;
             break;
         case SDL_EVENT_WINDOW_FOCUS_LOST:
             stdPlatform_Printf("Window %d lost keyboard focus\n", event->window.windowID);
+            diag_log_event(DIAG_SEVERITY_INFO, "display", "window_focus_lost");
             Window_SetGameplayMouseCapture(0);
             if (stdControl_IsSystemKeyboardShowing() && Window_bNeedsKeyboardFixed) {
                 stdPlatform_Printf("Fixing keyboard...\n");
