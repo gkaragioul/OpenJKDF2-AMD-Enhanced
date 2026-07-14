@@ -60,7 +60,7 @@ static jkGuiMouseEntry jkGuiMouse_aEntries[NUM_MOUSE_ENTRIES+1] =
   { 0,   NULL,            0, 0, NULL, 0, 0  },
 };
 
-static jkGuiElement jkGuiMouse_aElements[26] =
+static jkGuiElement jkGuiMouse_aElements[29] =
 {
     {ELEMENT_TEXT,        0,   0, NULL,                     3, {0, 410, 640, 20}, 1, 0, 0, 0, 0, 0, {0}, 0},
     {ELEMENT_TEXT,        0,   6, "GUI_SETUP",              3, {20, 20, 600, 40}, 1, 0, 0, 0, 0, 0, {0}, 0},
@@ -79,17 +79,23 @@ static jkGuiElement jkGuiMouse_aElements[26] =
     {ELEMENT_TEXTBUTTON,  0,   2, "GUI_ADD_CONTROL",        3, { 420, 190, 200, 40 }, 1, 0, "GUI_ADD_CONTROL_HINT", NULL, jkGuiMouse_AddEditControlsClicked, NULL, {0}, 0},
     {ELEMENT_TEXTBUTTON,  0,   2, "GUI_EDIT_CONTROL",       3, { 420, 190, 200, 40 }, 1, 0, "GUI_EDIT_CONTROL_HINT", NULL, jkGuiMouse_AddEditControlsClicked, NULL, {0}, 0},
     {ELEMENT_TEXTBUTTON,  0,   2, "GUI_REMOVE_CONTROL",     3, { 420, 230, 200, 40 }, 1, 0, "GUI_REMOVE_CONTROL_HINT", NULL, jkGuiMouse_RemoveClicked, NULL, {0}, 0},
-    {ELEMENT_CHECKBOX,    0,   0, "GUI_REVERSE_AXIS",       0, { 320, 335, 300, 20 }, 1, 0, "GUI_REVERSE_HINT", NULL, NULL, NULL, {0}, 0},
-    {ELEMENT_CHECKBOX,    0,   0, "GUI_CONTROL_RAW",        0, { 320, 365, 300, 20 }, 1, 0, "GUI_RAW_HINT", NULL, NULL, NULL, {0}, 0},
-    {ELEMENT_TEXT,        0,   0, "GUI_SENSITIVITY",        2, { 50, 335, 170, 20 }, 1, 0, NULL, NULL, NULL, NULL, {0}, 0}, 
-    {ELEMENT_SLIDER,      0,   0, (char *)200,             50, { 60, 355, 205, 30 }, 1, 0, "GUI_SENSITIVITY_HINT", jkGuiMouse_SensitivityDraw, NULL, jkGUIMouse_slider_images, {0}, 0},
+    {ELEMENT_CHECKBOX,    0,   0, "GUI_REVERSE_AXIS",       0, { 320, 315, 300, 18 }, 1, 0, "GUI_REVERSE_HINT", NULL, NULL, NULL, {0}, 0},
+    {ELEMENT_CHECKBOX,    0,   0, "GUI_CONTROL_RAW",        0, { 320, 335, 300, 18 }, 1, 0, "GUI_RAW_HINT", NULL, NULL, NULL, {0}, 0},
+    {ELEMENT_TEXT,        0,   0, "GUI_SENSITIVITY",        2, { 30, 320, 170, 20 }, 1, 0, NULL, NULL, NULL, NULL, {0}, 0},
+    {ELEMENT_SLIDER,      0,   0, (char *)200,             50, { 40, 342, 245, 30 }, 1, 0, "GUI_SENSITIVITY_HINT", jkGuiMouse_SensitivityDraw, NULL, jkGUIMouse_slider_images, {0}, 0},
     {ELEMENT_TEXTBUTTON,  1,   2, "GUI_OK",                 3, { 440, 430, 200, 40 }, 1, 0, NULL, NULL, jkGuiMouse_CancelOkClicked, NULL, {0}, 0},
     {ELEMENT_TEXTBUTTON, -1,   2, "GUI_CANCEL",             3, { 0, 430, 200, 40 }, 1, 0, NULL, NULL, jkGuiMouse_CancelOkClicked, NULL, {0}, 0},
     {ELEMENT_TEXTBUTTON,  0,   2, "GUI_RESTORE_DEFAULTS",   3, { 200, 430, 240, 40 }, 1, 0, NULL, NULL, jkGuiMouse_RestoreDefaultsClicked, NULL, {0}, 0},
 
 #ifdef QOL_IMPROVEMENTS
     // 24
-    {ELEMENT_TEXT,        0,   0, slider_val_text,        3, { 60, 385, 205, 20 }, 1, 0, NULL, NULL, NULL, NULL, {0}, 0}, 
+    {ELEMENT_TEXT,        0,   0, slider_val_text,        3, { 40, 375, 245, 20 }, 1, 0, NULL, NULL, NULL, NULL, {0}, 0},
+#endif
+
+#ifdef QOL_IMPROVEMENTS
+    {ELEMENT_CHECKBOX,    0,   0, "GUIEXT_RAW_MOUSE",       0, { 320, 355, 300, 18 }, 1, 0, "GUIEXT_RAW_MOUSE_HINT", NULL, NULL, NULL, {0}, 0},
+    {ELEMENT_CHECKBOX,    0,   0, "GUIEXT_MOUSE_ACCEL",     0, { 320, 375, 300, 18 }, 1, 0, "GUIEXT_MOUSE_ACCEL_HINT", NULL, NULL, NULL, {0}, 0},
+    {ELEMENT_CHECKBOX,    0,   0, "GUIEXT_MOUSE_SMOOTHING", 0, { 320, 395, 300, 18 }, 1, 0, "GUIEXT_MOUSE_SMOOTHING_HINT", NULL, NULL, NULL, {0}, 0},
 #endif
 
     {ELEMENT_END,         0,   0, NULL,                     0, {0}, 0, 0, NULL, NULL, NULL, NULL, {0}, 0},
@@ -668,6 +674,11 @@ int jkGuiMouse_Show()
     jkGuiMouse_aElements[12].selectedTextEntry = 0;
     jkGuiMouse_aElements[13].selectedTextEntry = 0;
     jkGuiMouse_dword_5566B0 = 0;
+#ifdef QOL_IMPROVEMENTS
+    jkGuiMouse_aElements[25].selectedTextEntry = jkPlayer_rawMouseInput != 0;
+    jkGuiMouse_aElements[26].selectedTextEntry = jkPlayer_mouseAcceleration != 0;
+    jkGuiMouse_aElements[27].selectedTextEntry = jkPlayer_mouseSmoothing != 0;
+#endif
     jkGuiMouse_dword_530328 = -1;
     jkGuiMouse_dword_53032C = -1;
     jkGuiMouse_sub_416D40(&jkGuiMouse_menu, 0);
@@ -691,7 +702,14 @@ int jkGuiMouse_Show()
     if ( jkGuiMouse_aElements[17].bIsVisible )
         pSubEnt->bitflag = pSubEnt->bitflag & ~4u | (jkGuiMouse_aElements[17].selectedTextEntry != 0 ? 0 : 4);
     if ( v0 == 1 )
+    {
+#ifdef QOL_IMPROVEMENTS
+        jkPlayer_rawMouseInput = jkGuiMouse_aElements[25].selectedTextEntry != 0;
+        jkPlayer_mouseAcceleration = jkGuiMouse_aElements[26].selectedTextEntry != 0;
+        jkPlayer_mouseSmoothing = jkGuiMouse_aElements[27].selectedTextEntry != 0;
+#endif
         jkPlayer_WriteConf(jkPlayer_playerShortName);
+    }
     else
         jkPlayer_ReadConf(jkPlayer_playerShortName);
     jkGuiRend_DarrayFree(&jkGuiMouse_Darray_5566B8);

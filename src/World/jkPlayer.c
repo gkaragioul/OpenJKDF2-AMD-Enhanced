@@ -60,6 +60,7 @@ int jkPlayer_fpslimit = 0;
 int jkPlayer_enableVsync = 1;
 int jkPlayer_rawMouseInput = 1;
 int jkPlayer_mouseAcceleration = 0;
+int jkPlayer_mouseSmoothing = 0;
 int jkPlayer_controlPreset = CONTROL_PRESET_CLASSIC;
 flex_t jkPlayer_ssaaMultiple = 1.0;
 flex_t jkPlayer_gamma = 1.0;
@@ -188,6 +189,7 @@ void jkPlayer_StartupVars()
     sithCvar_RegisterBool("r_enableVsync",              1,                          &jkPlayer_enableVsync,              CVARFLAG_LOCAL);
     sithCvar_RegisterBool("in_rawMouse",                1,                          &jkPlayer_rawMouseInput,            CVARFLAG_LOCAL);
     sithCvar_RegisterBool("in_mouseAcceleration",       0,                          &jkPlayer_mouseAcceleration,        CVARFLAG_LOCAL);
+    sithCvar_RegisterBool("in_mouseSmoothing",          0,                          &jkPlayer_mouseSmoothing,           CVARFLAG_LOCAL);
     sithCvar_RegisterInt("in_controlPreset",            CONTROL_PRESET_CLASSIC,     &jkPlayer_controlPreset,           CVARFLAG_LOCAL);
     sithCvar_RegisterFlex("r_ssaaMultiple",             1.0,                        &jkPlayer_ssaaMultiple,             CVARFLAG_LOCAL);
     sithCvar_RegisterFlex("r_gamma",                    1.0,                        &jkPlayer_gamma,                    CVARFLAG_LOCAL);
@@ -239,6 +241,7 @@ void jkPlayer_ResetVars()
     jkPlayer_enableVsync = 1;
     jkPlayer_rawMouseInput = 1;
     jkPlayer_mouseAcceleration = 0;
+    jkPlayer_mouseSmoothing = 0;
     jkPlayer_controlPreset = CONTROL_PRESET_CLASSIC;
     jkPlayer_ssaaMultiple = 1.0;
     jkPlayer_gamma = 1.0;
@@ -587,6 +590,7 @@ void jkPlayer_WriteConf(char16_t *name)
         stdJSON_SaveInt(ext_fpath, "enablevsync", jkPlayer_enableVsync);
         stdJSON_SaveBool(ext_fpath, "rawmouseinput", jkPlayer_rawMouseInput);
         stdJSON_SaveBool(ext_fpath, "mouseacceleration", jkPlayer_mouseAcceleration);
+        stdJSON_SaveBool(ext_fpath, "mousesmoothing", jkPlayer_mouseSmoothing);
         stdJSON_SaveInt(ext_fpath, "controlpreset", jkPlayer_controlPreset);
         stdJSON_SaveBool(ext_fpath, "enablebloom", jkPlayer_enableBloom);
         stdJSON_SaveFloat(ext_fpath, "ssaamultiple", jkPlayer_ssaaMultiple);
@@ -789,6 +793,7 @@ int jkPlayer_ReadConf(char16_t *name)
             stdJSON_GetInt(ext_fpath, "enablevsync", jkPlayer_enableVsync));
         jkPlayer_rawMouseInput = stdJSON_GetBool(ext_fpath, "rawmouseinput", jkPlayer_rawMouseInput);
         jkPlayer_mouseAcceleration = stdJSON_GetBool(ext_fpath, "mouseacceleration", jkPlayer_mouseAcceleration);
+        jkPlayer_mouseSmoothing = stdJSON_GetBool(ext_fpath, "mousesmoothing", jkPlayer_mouseSmoothing);
         jkPlayer_controlPreset = ControlPreset_Normalize(
             stdJSON_GetInt(ext_fpath, "controlpreset", jkPlayer_controlPreset));
         jkPlayer_enableBloom = stdJSON_GetBool(ext_fpath, "enablebloom", jkPlayer_enableBloom);

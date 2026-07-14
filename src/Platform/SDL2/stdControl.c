@@ -4,7 +4,9 @@
 #include "Win95/Window.h"
 #include "stdPlatform.h"
 #include "Main/jkQuakeConsole.h"
+#include "World/jkPlayer.h"
 #include "General/ResolutionLayout.h"
+#include "General/MouseSmoothing.h"
 
 #include <SDL3/SDL.h>
 
@@ -999,6 +1001,9 @@ void stdControl_ReadControls()
 void stdControl_ReadMouse()
 {
     int wheelY;
+    static int previousX;
+    static int previousY;
+    static int smoothingHasHistory;
 
     if (!stdControl_bReadMouse)
         return;
@@ -1020,8 +1025,25 @@ void stdControl_ReadMouse()
 
     wheelY = Window_mouseWheelY;
     stdControl_aAxisStates[AXIS_MOUSE_Z] = wheelY; // Retained for Classic/custom axis bindings.
-    stdControl_aAxisStates[AXIS_MOUSE_X] = Window_lastXRel; // TODO
-    stdControl_aAxisStates[AXIS_MOUSE_Y] = Window_lastYRel; // TODO
+#ifdef QOL_IMPROVEMENTS
+    if (jkPlayer_mouseSmoothing && smoothingHasHistory)
+    {
+        stdControl_aAxisStates[AXIS_MOUSE_X] = MouseSmoothing_Filter(Window_lastXRel, previousX);
+        stdControl_aAxisStates[AXIS_MOUSE_Y] = MouseSmoothing_Filter(Window_lastYRel, previousY);
+    }
+    else
+    {
+        stdControl_aAxisStates[AXIS_MOUSE_X] = Window_lastXRel;
+        stdControl_aAxisStates[AXIS_MOUSE_Y] = Window_lastYRel;
+    }
+    previousX = Window_lastXRel;
+    previousY = Window_lastYRel;
+    smoothingHasHistory = jkPlayer_mouseSmoothing != 0
+        && (Window_lastXRel != 0 || Window_lastYRel != 0);
+#else
+    stdControl_aAxisStates[AXIS_MOUSE_X] = Window_lastXRel;
+    stdControl_aAxisStates[AXIS_MOUSE_Y] = Window_lastYRel;
+#endif
 
     if (Window_lastXRel || Window_lastYRel || Window_mouseWheelX || Window_mouseWheelY) {
         stdControl_bControlsIdle = 0;

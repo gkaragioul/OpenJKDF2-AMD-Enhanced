@@ -1,4 +1,4 @@
-MSGS 108          # <--- DON'T FORGET TO UPDATE THIS COUNT
+MSGS 114          # <--- DON'T FORGET TO UPDATE THIS COUNT
 
 #  "<key>"     <unused number>   "<string>"
 
@@ -88,6 +88,12 @@ MSGS 108          # <--- DON'T FORGET TO UPDATE THIS COUNT
    "GUIEXT_CONTROLS_APPLY_Q"                 0 "Replace your current keyboard and mouse bindings?"
    "KEY_MOUSE_WHEEL_UP"                      0 "Mouse Wheel Up"
    "KEY_MOUSE_WHEEL_DOWN"                    0 "Mouse Wheel Down"
+   "GUIEXT_RAW_MOUSE"                        0 "Raw Mouse Input"
+   "GUIEXT_RAW_MOUSE_HINT"                   0 "Use SDL relative mouse mode with unscaled Windows input when available."
+   "GUIEXT_MOUSE_ACCEL"                      0 "Mouse Acceleration"
+   "GUIEXT_MOUSE_ACCEL_HINT"                 0 "Allow Windows system scaling for relative mouse movement."
+   "GUIEXT_MOUSE_SMOOTHING"                  0 "Mouse Smoothing"
+   "GUIEXT_MOUSE_SMOOTHING_HINT"             0 "Blend the current mouse delta with the previous sample. Off is lowest latency."
 
    "GUIEXT_DISABLE_MISSION_CONFIRMATION"        0 "Disable mission start confirmation"
    "GUIEXT_DISABLE_MISSION_CONFIRMATION_HINT"   0 "Enter the mission as soon as the level is loaded?"
