@@ -81,6 +81,12 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/General/ResolutionLayout.c"
     )
     openjkdf2_add_unit_test(
+        test_aspect_policy
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_aspect_policy.c"
+        "${PROJECT_SOURCE_DIR}/src/General/AspectPolicy.c"
+        "${PROJECT_SOURCE_DIR}/src/General/ResolutionLayout.c"
+    )
+    openjkdf2_add_unit_test(
         test_frame_rate
         "${PROJECT_SOURCE_DIR}/src/Tests/test_frame_rate.c"
         "${PROJECT_SOURCE_DIR}/src/General/FrameRate.c"
