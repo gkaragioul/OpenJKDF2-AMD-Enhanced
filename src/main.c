@@ -17,6 +17,8 @@
 #include "types.h"
 
 #include "General/stdMath.h"
+#include "General/DiagnosticLog.h"
+#include "General/StartupOptions.h"
 
 #ifndef NO_JK_MMAP
 #include "Cog/sithCog.h"
@@ -358,6 +360,8 @@ KOS_INIT_FLAGS(INIT_DEFAULT | INIT_CONTROLLER);
 
 int main(int argc, char** argv)
 {
+    StartupOptions startup_options;
+    bool diagnostics_started = false;
 #ifdef TARGET_DREAMCAST
     // Added: on-screen CPU fault reporter (KOS default only prints to serial)
     dcFault_Install();
@@ -678,6 +682,41 @@ int main(int argc, char** argv)
     openjkdf2_pExecutablePath = argv[0];
 #endif // !ARCH_WASM
 
+    startup_options = startup_options_parse(argc, (const char* const*)argv);
+    if (startup_options.error[0]) {
+        fprintf(stderr, "Startup option error: %s\n", startup_options.error);
+        return 2;
+    }
+    if (startup_options.renderer_smoke_test) {
+        fprintf(stderr, "Renderer smoke testing is provided by openjkdf2-renderer-smoke.\n");
+        return 2;
+    }
+    {
+        DiagLogConfig diagnostic_config = {
+            startup_options.diagnostics_dir[0] ? startup_options.diagnostics_dir : "diagnostics",
+            startup_options.data_dir[0] ? startup_options.data_dir : NULL
+        };
+        diagnostics_started = diag_log_start(&diagnostic_config);
+        if (diagnostics_started) {
+            diag_log_event(DIAG_SEVERITY_INFO, "startup", "process_started");
+            if (startup_options.safe_mode) {
+                diag_log_event(DIAG_SEVERITY_INFO, "startup", "safe_mode_enabled");
+            }
+        }
+    }
+    for (int i = 1; i < argc; ++i) {
+        if (!strcmp(argv[i], "--safe-mode")) {
+            argv[i] = "";
+        } else if (!strcmp(argv[i], "--diagnostics-dir")) {
+            argv[i] = "";
+            if (i + 1 < argc) argv[++i] = "";
+        } else if (!strcmp(argv[i], "--data-dir")) {
+            argv[i] = "-path";
+            ++i;
+        }
+    }
+    Window_SetSafeMode(startup_options.safe_mode ? 1 : 0);
+
 #ifdef LINUX
 
 #if !defined(ARCH_WASM) && !defined(TARGET_ANDROID)
@@ -811,6 +850,11 @@ int main(int argc, char** argv)
 #ifdef PLATFORM_PHYSFS
     PHYSFS_deinit();
 #endif
+
+    if (diagnostics_started) {
+        diag_log_event(DIAG_SEVERITY_INFO, "startup", "process_finished");
+        diag_log_finish(true);
+    }
 
 #ifdef TARGET_TWL
     while (1) {

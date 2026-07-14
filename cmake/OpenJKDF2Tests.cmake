@@ -27,4 +27,9 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_log.c"
         "${PROJECT_SOURCE_DIR}/src/General/DiagnosticLog.c"
     )
+    openjkdf2_add_unit_test(
+        test_startup_options
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_startup_options.c"
+        "${PROJECT_SOURCE_DIR}/src/General/StartupOptions.c"
+    )
 endif()

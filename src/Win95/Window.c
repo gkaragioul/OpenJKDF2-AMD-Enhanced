@@ -64,6 +64,12 @@ int Window_isHiDpi = 0;
 int Window_isFullscreen = 0;
 int Window_needsRecreate = 0;
 int Window_bShouldPopSteamKeyboard = 0;
+static int Window_bSafeMode = 0;
+
+void Window_SetSafeMode(int enabled)
+{
+    Window_bSafeMode = enabled != 0;
+}
 
 void Window_SetHiDpi(int val)
 {
@@ -79,6 +85,7 @@ void Window_SetHiDpi(int val)
 
 void Window_SetFullscreen(int val)
 {
+    if (Window_bSafeMode) val = 0;
     if (Window_isFullscreen != val)
     {
         // Reset window when exiting fullscreen
@@ -1544,7 +1551,7 @@ int Window_Main_Linux(int argc, char** argv)
 
     int fullscreen = wuRegistry_GetBool("Window_isFullscreen", 0);
     int hidpi = wuRegistry_GetBool("Window_isHiDpi", 0);
-    Window_SetFullscreen(fullscreen);
+    Window_SetFullscreen(Window_bSafeMode ? 0 : fullscreen);
     Window_SetHiDpi(hidpi);
     Window_RecreateSDL2Window();
 
