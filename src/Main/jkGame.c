@@ -36,6 +36,12 @@
 #include "jk.h"
 
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 #if defined(TARGET_TWL)
 #include <nds.h>
@@ -589,6 +595,31 @@ int jkGame_Update()
                     }
                     g_should_exit = 1;
                 }
+            }
+        }
+    }
+
+    // Opt-in crash/restoration validation. This is inert unless explicitly
+    // requested by the test harness after gameplay and mouse capture are live.
+    {
+        static RuntimeProbe crashProbe = { 0 };
+        const char* pCrashMs = getenv("OPENJKDF2_VALIDATE_CRASH_MS");
+        SithWorld* pWorld = sithWorld_g_pCurrentWorld;
+        SithThing* pPlayer = pWorld ? pWorld->pLocalPlayer : NULL;
+        if (pCrashMs && pPlayer && pPlayer->sector)
+        {
+            const uint32_t nowMs = stdPlatform_GetTimeMsec();
+            const uint32_t delayMs = (uint32_t)strtoul(pCrashMs, NULL, 10);
+            if (runtime_probe_due(&crashProbe, nowMs, delayMs))
+            {
+                diag_log_event(DIAG_SEVERITY_INFO, "validation",
+                               "gameplay_crash requested=true");
+                fflush(NULL);
+#if defined(_WIN32)
+                RaiseException(EXCEPTION_ACCESS_VIOLATION, 0, 0, NULL);
+#else
+                abort();
+#endif
             }
         }
     }

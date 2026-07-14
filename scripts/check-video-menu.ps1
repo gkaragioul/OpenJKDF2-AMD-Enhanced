@@ -4,6 +4,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $menu = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Platform\SDL2\jkGUIDisplay.c')
 $strings = Get-Content -Raw -LiteralPath (Join-Path $root 'resource\ui\openjkdf2.uni')
 $startup = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Main\Main.c')
+$gameplay = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Main\jkGame.c')
 $window = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Win95\Window.h')
 $windowImpl = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Win95\Window.c')
 $missing = @()
@@ -71,6 +72,11 @@ if (-not $windowImpl.Contains('window_focus_gained')) {
 }
 if (-not $windowImpl.Contains('window_focus_lost')) {
     $missing += 'display-lifecycle:window_focus_lost'
+}
+foreach ($crashContract in @('OPENJKDF2_VALIDATE_CRASH_MS', 'gameplay_crash requested=true')) {
+    if (-not $gameplay.Contains($crashContract)) {
+        $missing += "display-lifecycle:$crashContract"
+    }
 }
 if ($windowImpl -notmatch 'if\s*\(settings\.mode\s*==\s*DISPLAY_MODE_WINDOWED\)') {
     $missing += 'display-persistence:preserve-windowed-size-in-borderless'

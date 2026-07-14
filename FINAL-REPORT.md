@@ -43,6 +43,9 @@ Key evidence includes:
 - Three focus-loss/reacquisition cycles released mouse capture, and forced
   termination restored the exact virtual-desktop cursor clip while preserving
   the 2560x1440@165 desktop mode.
+- A real gameplay access-violation crash generated a 3,949-byte DrMinGW report;
+  desktop/cursor state remained invariant and the accepted last-known-good
+  recovery prompt led to a clean rendered relaunch.
 - A clean-provenance asset-free Windows package and uninstall preservation test.
 
 ## Unresolved limitations
@@ -52,8 +55,8 @@ Key evidence includes:
   165 Hz desktop behavior and software frame caps were measured.
 - Exclusive Fullscreen remains disabled because the independent restoration
   watchdog has not passed host-authorized forced-restoration testing.
-- A real in-process gameplay crash with an active display, live timed-dialog
-  interaction, broader campaign/cutscene/dialogue/transition coverage, real GOG discovery, and a
+- Live display-change timed-dialog interaction, broader
+  campaign/cutscene/dialogue/transition coverage, real GOG discovery, and a
   separate clean Windows machine remain incomplete in the requirements ledger.
 
 These limitations are reported rather than inferred away. The safe supported
