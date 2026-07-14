@@ -41,6 +41,22 @@ int main(void)
         CHECK(storage_paths_build_legacy_command(3, legacy, output, sizeof(output)));
         CHECK(strcmp(output, "-path MyMod") == 0);
     }
+    {
+        const char* validation[] = {
+            "openjkdf2.exe", "--validation-observer=timing-domains",
+            "--frame-limit", "60", "-autostart", "-sp"
+        };
+        CHECK(storage_paths_build_legacy_command(6, validation, output, sizeof(output)));
+        CHECK(strcmp(output, "-autostart -sp") == 0);
+    }
+    {
+        const char* validation[] = {
+            "openjkdf2.exe", "--validation-observer", "timing-domains",
+            "--frame-limit=120", "-autostart"
+        };
+        CHECK(storage_paths_build_legacy_command(5, validation, output, sizeof(output)));
+        CHECK(strcmp(output, "-autostart") == 0);
+    }
     CHECK(storage_paths_build_crash_report_path("diagnostics", output, sizeof(output)));
 #ifdef _WIN32
     CHECK(strcmp(output, "diagnostics\\OpenJKDF2-crash.RPT") == 0);

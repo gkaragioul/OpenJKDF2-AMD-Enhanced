@@ -47,13 +47,17 @@ bool storage_paths_select_user_root(const char* explicit_root, bool portable,
 static bool storage_is_value_option(const char* argument)
 {
     return argument && (!strcmp(argument, "--data-dir") || !strcmp(argument, "--user-dir") ||
-                        !strcmp(argument, "--diagnostics-dir"));
+                        !strcmp(argument, "--diagnostics-dir") ||
+                        !strcmp(argument, "--validation-observer") ||
+                        !strcmp(argument, "--frame-limit"));
 }
 
 static bool storage_is_flag_option(const char* argument)
 {
     return argument && (!strcmp(argument, "--portable") || !strcmp(argument, "--safe-mode") ||
-                        !strcmp(argument, "--renderer-smoke-test"));
+                        !strcmp(argument, "--renderer-smoke-test") ||
+                        !strncmp(argument, "--validation-observer=", strlen("--validation-observer=")) ||
+                        !strncmp(argument, "--frame-limit=", strlen("--frame-limit=")));
 }
 
 bool storage_paths_build_legacy_command(int argc, const char* const* argv,
