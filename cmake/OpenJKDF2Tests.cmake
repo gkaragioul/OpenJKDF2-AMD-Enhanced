@@ -1,0 +1,21 @@
+if(NOT DEFINED BUILD_TESTING)
+    message(FATAL_ERROR "CTest must define BUILD_TESTING before OpenJKDF2 tests are configured")
+endif()
+
+function(openjkdf2_add_unit_test name source)
+    add_executable(${name} ${source} ${ARGN})
+    target_compile_features(${name} PRIVATE c_std_11)
+    target_include_directories(${name} PRIVATE "${PROJECT_SOURCE_DIR}/src")
+    add_test(NAME ${name} COMMAND ${name})
+    set_tests_properties(${name} PROPERTIES LABELS "unit")
+endfunction()
+
+if(BUILD_TESTING)
+    find_program(OPENJKDF2_POWERSHELL NAMES pwsh powershell REQUIRED)
+    add_test(
+        NAME c11_portability
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-c11-portability.ps1"
+    )
+    set_tests_properties(c11_portability PROPERTIES LABELS "unit")
+endif()

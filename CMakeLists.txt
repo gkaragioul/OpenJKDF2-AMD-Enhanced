@@ -23,6 +23,8 @@ endif()
 include(cmake_modules/version.cmake)
 project(OpenJKDF2 VERSION ${OPENJKDF2_PROJECT_VERSION})
 
+option(OPENJKDF2_BUILD_TESTS "Build asset-free OpenJKDF2 tests" OFF)
+
 # All of our supported platforms
 set(PLAT_LINUX_32 FALSE CACHE BOOL "Linux 32-bit target")
 set(PLAT_LINUX_64 FALSE CACHE BOOL "Linux 64-bit target")
@@ -326,6 +328,11 @@ if(NOT OPENJKDF2_NO_ASAN)
 endif()
 
 include(cmake_modules/misc_stdcpp_fs_fix.cmake)
+
+if(OPENJKDF2_BUILD_TESTS)
+    include(CTest)
+    include(cmake/OpenJKDF2Tests.cmake)
+endif()
 
 # Runs all the target_link_libraries, platform-specific post-build packaging, etc
 plat_link_and_package()

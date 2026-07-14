@@ -129,3 +129,4 @@ AGENTS.md
 .blocksds
 packaging/dreamcast/disc/*
 /.worktrees/
+/build/
