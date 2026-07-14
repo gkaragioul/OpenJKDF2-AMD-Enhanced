@@ -22,6 +22,13 @@ if(BUILD_TESTING)
     )
     set_tests_properties(c11_portability PROPERTIES LABELS "unit")
 
+    add_test(
+        NAME windows_manifest
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-windows-manifest.ps1"
+    )
+    set_tests_properties(windows_manifest PROPERTIES LABELS "unit")
+
     openjkdf2_add_unit_test(
         test_diagnostic_log
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_log.c"

@@ -131,3 +131,4 @@ packaging/dreamcast/disc/*
 /.worktrees/
 /build/
 /renderer-smoke-output/
+/runtime-evidence/
