@@ -28,6 +28,8 @@ StartupOptions startup_options_parse(int argc, const char* const* argv)
     }
     for (index = 1; index < argc; ++index) {
         const char* argument = argv[index];
+        const char* validation_prefix = "--validation-observer=";
+        const size_t validation_prefix_length = strlen(validation_prefix);
         if (!argument) continue;
         if (strcmp(argument, "--safe-mode") == 0) {
             options.safe_mode = true;
@@ -38,6 +40,23 @@ StartupOptions startup_options_parse(int argc, const char* const* argv)
             options.renderer_smoke_test = true;
         } else if (strcmp(argument, "--portable") == 0) {
             options.portable = true;
+        } else if (strncmp(argument, validation_prefix, validation_prefix_length) == 0 ||
+                   strcmp(argument, "--validation-observer") == 0) {
+            const char* value;
+            if (strcmp(argument, "--validation-observer") == 0) {
+                if (index + 1 >= argc) {
+                    strcpy(options.error, "--validation-observer requires a value");
+                    return options;
+                }
+                value = argv[++index];
+            } else {
+                value = argument + validation_prefix_length;
+            }
+            if (!value || strcmp(value, "timing-domains") != 0) {
+                strcpy(options.error, "--validation-observer must be timing-domains");
+                return options;
+            }
+            options.validation_observer = STARTUP_VALIDATION_TIMING_DOMAINS;
         } else if (strcmp(argument, "--diagnostics-dir") == 0 || strcmp(argument, "--data-dir") == 0 ||
                    strcmp(argument, "--user-dir") == 0) {
             char* destination;

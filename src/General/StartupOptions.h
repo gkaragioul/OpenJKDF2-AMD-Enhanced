@@ -6,6 +6,12 @@
 #define STARTUP_PATH_CAPACITY 512
 #define STARTUP_ERROR_CAPACITY 160
 
+typedef enum StartupValidationObserver
+{
+    STARTUP_VALIDATION_NONE = 0,
+    STARTUP_VALIDATION_TIMING_DOMAINS
+} StartupValidationObserver;
+
 typedef struct StartupOptions
 {
     bool safe_mode;
@@ -14,6 +20,7 @@ typedef struct StartupOptions
     bool force_windowed;
     bool conservative_renderer;
     int frame_limit;
+    StartupValidationObserver validation_observer;
     char diagnostics_dir[STARTUP_PATH_CAPACITY];
     char data_dir[STARTUP_PATH_CAPACITY];
     char user_dir[STARTUP_PATH_CAPACITY];

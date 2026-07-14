@@ -13,8 +13,35 @@ static void test_defaults(void)
     CHECK(!options.safe_mode);
     CHECK(!options.renderer_smoke_test);
     CHECK(!options.portable);
+    CHECK(options.validation_observer == STARTUP_VALIDATION_NONE);
     CHECK(options.user_dir[0] == '\0');
     CHECK(options.error[0] == '\0');
+}
+
+static void test_timing_observer_equals_form(void)
+{
+    const char* argv[] = { "openjkdf2", "--validation-observer=timing-domains" };
+    StartupOptions options = startup_options_parse(2, argv);
+    CHECK(options.validation_observer == STARTUP_VALIDATION_TIMING_DOMAINS);
+    CHECK(options.error[0] == '\0');
+}
+
+static void test_timing_observer_separate_form(void)
+{
+    const char* argv[] = { "openjkdf2", "--validation-observer", "timing-domains" };
+    StartupOptions options = startup_options_parse(3, argv);
+    CHECK(options.validation_observer == STARTUP_VALIDATION_TIMING_DOMAINS);
+    CHECK(options.error[0] == '\0');
+}
+
+static void test_timing_observer_rejects_missing_and_unknown_values(void)
+{
+    const char* missing[] = { "openjkdf2", "--validation-observer" };
+    const char* unknown[] = { "openjkdf2", "--validation-observer=unknown" };
+    StartupOptions missing_options = startup_options_parse(2, missing);
+    StartupOptions unknown_options = startup_options_parse(2, unknown);
+    CHECK(strstr(missing_options.error, "validation-observer") != NULL);
+    CHECK(strstr(unknown_options.error, "validation-observer") != NULL);
 }
 
 static void test_storage_options_preserve_paths_with_spaces(void)
@@ -79,5 +106,8 @@ int main(void)
     test_paths_and_last_wins();
     test_legacy_mod_path_is_not_a_data_directory();
     test_errors_and_passthrough();
+    test_timing_observer_equals_form();
+    test_timing_observer_separate_form();
+    test_timing_observer_rejects_missing_and_unknown_values();
     return failures ? 1 : 0;
 }
