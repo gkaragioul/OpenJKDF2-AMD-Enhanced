@@ -54,7 +54,7 @@
 #if defined(TARGET_RETRO_HOMEBREW)
 #define TICKRATE_MS (0) // no cap
 #elif defined(QOL_IMPROVEMENTS)
-#define TICKRATE_MS (jkPlayer_fpslimit ? 1000 / jkPlayer_fpslimit : 0) // no cap
+#define TICKRATE_MS (0) // SDL presentation loop owns the high-resolution frame cap
 #else
 #define TICKRATE_MS (20) // 50fps
 #endif

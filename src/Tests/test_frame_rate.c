@@ -22,6 +22,15 @@ int main(void)
     assert(FrameRate_ResolveTarget(FRAME_RATE_UNLIMITED, 165) == 0);
     assert(FrameRate_ResolveTarget(-10, 165) == 0);
 
+    assert(FrameRate_ValueFromSlider(0) == FRAME_RATE_UNLIMITED);
+    assert(FrameRate_ValueFromSlider(120) == 120);
+    assert(FrameRate_ValueFromSlider(FRAME_RATE_SLIDER_DESKTOP) == FRAME_RATE_DESKTOP_REFRESH);
+    assert(FrameRate_ValueFromSlider(999) == FRAME_RATE_DESKTOP_REFRESH);
+    assert(FrameRate_SliderFromValue(FRAME_RATE_UNLIMITED) == 0);
+    assert(FrameRate_SliderFromValue(120) == 120);
+    assert(FrameRate_SliderFromValue(FRAME_RATE_DESKTOP_REFRESH) == FRAME_RATE_SLIDER_DESKTOP);
+    assert(FrameRate_SliderFromValue(999) == FRAME_RATE_NUMERIC_MAX);
+
     assert(FrameRate_PeriodNanoseconds(120) == 8333333ULL);
     assert(FrameRate_PeriodNanoseconds(60) == 16666667ULL);
     assert(FrameRate_PeriodNanoseconds(0) == 0ULL);

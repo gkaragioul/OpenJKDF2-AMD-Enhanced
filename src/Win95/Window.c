@@ -17,6 +17,7 @@
 #include "General/DiagnosticLog.h"
 #include "General/DisplayMode.h"
 #include "General/ResolutionLayout.h"
+#include "General/FrameRate.h"
 
 #include "jk.h"
 
@@ -1447,6 +1448,14 @@ void Window_RecreateSDL2Window()
 
 void Window_Main_Loop()
 {
+    static uint64_t frameDeadlineNs = 0;
+    static int previousConfiguredRate = FRAME_RATE_UNLIMITED;
+    int desktopRefreshRate = 0;
+    int targetRate;
+    uint64_t periodNs;
+    uint64_t nowNs;
+    const SDL_DisplayMode* desktopMode;
+
     jkMain_GuiAdvance(); // TODO needed?
 #ifdef TARGET_DREAMCAST
     // Loop-phase tracer (see std3D border tracer). BLUE (set in std3D_EndScene) still
@@ -1458,6 +1467,24 @@ void Window_Main_Loop()
 #ifdef TARGET_DREAMCAST
     std3D_BorderTrace(255, 255, 255); // WHITE: presented, looping to next tick
 #endif
+
+    if (jkPlayer_fpslimit == FRAME_RATE_DESKTOP_REFRESH)
+    {
+        desktopMode = SDL_GetDesktopDisplayMode(SDL_GetPrimaryDisplay());
+        if (desktopMode)
+            desktopRefreshRate = (int)(desktopMode->refresh_rate + 0.5f);
+    }
+    targetRate = FrameRate_ResolveTarget(jkPlayer_fpslimit, desktopRefreshRate);
+    periodNs = FrameRate_PeriodNanoseconds(targetRate);
+    nowNs = SDL_GetTicksNS();
+
+    if (jkPlayer_fpslimit != previousConfiguredRate)
+        frameDeadlineNs = 0;
+    previousConfiguredRate = jkPlayer_fpslimit;
+
+    frameDeadlineNs = FrameRate_NextDeadline(frameDeadlineNs, nowNs, periodNs, NULL);
+    if (frameDeadlineNs > nowNs)
+        SDL_DelayPrecise(frameDeadlineNs - nowNs);
 
     //Window_SdlUpdate();
 }

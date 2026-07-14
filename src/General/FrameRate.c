@@ -54,3 +54,23 @@ uint64_t FrameRate_NextDeadline(uint64_t previousDeadline, uint64_t now, uint64_
         *missedDeadlines = missed > UINT32_MAX ? UINT32_MAX : (uint32_t)missed;
     return next + missed * period;
 }
+
+int FrameRate_ValueFromSlider(int sliderPosition)
+{
+    if (sliderPosition <= 0)
+        return FRAME_RATE_UNLIMITED;
+    if (sliderPosition >= FRAME_RATE_SLIDER_DESKTOP)
+        return FRAME_RATE_DESKTOP_REFRESH;
+    return sliderPosition;
+}
+
+int FrameRate_SliderFromValue(int configuredRate)
+{
+    if (configuredRate == FRAME_RATE_DESKTOP_REFRESH)
+        return FRAME_RATE_SLIDER_DESKTOP;
+    if (configuredRate <= 0)
+        return 0;
+    if (configuredRate > FRAME_RATE_NUMERIC_MAX)
+        return FRAME_RATE_NUMERIC_MAX;
+    return configuredRate;
+}

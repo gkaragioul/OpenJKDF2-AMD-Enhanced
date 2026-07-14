@@ -12,6 +12,7 @@
 #include "World/jkPlayer.h"
 #include "Win95/Window.h"
 #include "Platform/std3D.h"
+#include "General/FrameRate.h"
 
 #include "jk.h"
 
@@ -31,7 +32,7 @@ static char16_t gamma_level[256] = {0};
 static char16_t hud_level[256] = {0};
 
 static char16_t slider_val_text[5] = {0};
-static char16_t slider_val_text_2[5] = {0};
+static char16_t slider_val_text_2[32] = {0};
 
 static int slider_images[2] = {JKGUI_BM_SLIDER_BACK, JKGUI_BM_SLIDER_THUMB};
 
@@ -61,7 +62,7 @@ static jkGuiElement jkGuiDisplay_aElements[31] = {
 
     // 17
     {ELEMENT_TEXT,         0,            0, "GUIEXT_FPS_LIMIT",                 3, {20, 280, 300, 30}, 1,  0, 0, 0, 0, 0, {0}, 0},
-    {ELEMENT_SLIDER,       0,            0, (const char*)(FPS_LIMIT_MAX - FPS_LIMIT_MIN),                    0, {10, 310, 320, 30}, 1, 0, "GUIEXT_FPS_LIMIT_HINT", jkGuiDisplay_FramelimitDraw, 0, slider_images, {0}, 0},
+    {ELEMENT_SLIDER,       0,            0, (const char*)FRAME_RATE_SLIDER_DESKTOP,                    0, {10, 310, 320, 30}, 1, 0, "GUIEXT_FPS_LIMIT_HINT", jkGuiDisplay_FramelimitDraw, 0, slider_images, {0}, 0},
     {ELEMENT_TEXT,         0,            0, slider_val_text_2,        3, {20, 340, 300, 30}, 1,  0, 0, 0, 0, 0, {0}, 0},
     {ELEMENT_CHECKBOX,     0,            0, "GUIEXT_EN_VSYNC",    0, {20, 360, 300, 40}, 1,  0, NULL, 0, 0, 0, {0}, 0},
     
@@ -149,12 +150,14 @@ void jkGuiDisplay_FovDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf
 
 void jkGuiDisplay_FramelimitDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
 {
-    uint32_t tmp = FPS_LIMIT_MIN + jkGuiDisplay_aElements[18].selectedTextEntry;
+    int tmp = FrameRate_ValueFromSlider(jkGuiDisplay_aElements[18].selectedTextEntry);
     
-    if (tmp)
-        jk_snwprintf(slider_val_text_2, 5, u"%u", tmp);
+    if (tmp == FRAME_RATE_DESKTOP_REFRESH)
+        jk_snwprintf(slider_val_text_2, 32, u"Desktop Refresh");
+    else if (tmp == FRAME_RATE_UNLIMITED)
+        jk_snwprintf(slider_val_text_2, 32, u"Unlimited");
     else
-        jk_snwprintf(slider_val_text_2, 5, u"None");
+        jk_snwprintf(slider_val_text_2, 32, u"%d FPS", tmp);
 
     jkGuiDisplay_aElements[19].wstr = slider_val_text_2;
     
@@ -210,7 +213,7 @@ int jkGuiDisplay_Show()
     jkGuiDisplay_aElements[15].selectedTextEntry = jkPlayer_enableTextureFilter;
     jkGuiDisplay_aElements[16].selectedTextEntry = jkPlayer_enableOrigAspect;
 
-    jkGuiDisplay_aElements[18].selectedTextEntry = jkPlayer_fpslimit - FPS_LIMIT_MIN;
+    jkGuiDisplay_aElements[18].selectedTextEntry = FrameRate_SliderFromValue(jkPlayer_fpslimit);
     jkGuiDisplay_aElements[20].selectedTextEntry = jkPlayer_enableVsync;
     jkGuiDisplay_aElements[21].selectedTextEntry = jkPlayer_enableBloom;
     jkGuiDisplay_aElements[22].selectedTextEntry = jkPlayer_enableSSAO;
@@ -237,7 +240,7 @@ continue_menu:
         Window_SetHiDpi(jkGuiDisplay_aElements[14].selectedTextEntry);
         jkPlayer_enableTextureFilter = jkGuiDisplay_aElements[15].selectedTextEntry;
         jkPlayer_enableOrigAspect = jkGuiDisplay_aElements[16].selectedTextEntry;
-        jkPlayer_fpslimit = FPS_LIMIT_MIN + jkGuiDisplay_aElements[18].selectedTextEntry;
+        jkPlayer_fpslimit = FrameRate_ValueFromSlider(jkGuiDisplay_aElements[18].selectedTextEntry);
         jkPlayer_enableVsync = jkGuiDisplay_aElements[20].selectedTextEntry;
         jkPlayer_enableBloom = jkGuiDisplay_aElements[21].selectedTextEntry;
         jkPlayer_enableSSAO = jkGuiDisplay_aElements[22].selectedTextEntry;
