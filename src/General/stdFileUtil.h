@@ -23,13 +23,17 @@ typedef struct stdFileSearch
 {
     int field_0;
     int isNotFirst;
-    char path[128];
+    char path[1024];
     union
     {
         intptr_t field_88;
         struct dirent **namelist;
     };
     int nFoundFiles;
+    int overlayPhase;
+    int overlayEnabled;
+    char primaryPath[1024];
+    char overlayPath[1024];
 } stdFileSearch;
 
 typedef struct stdFileSearchResult

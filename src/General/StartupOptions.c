@@ -1,19 +1,7 @@
 #include "General/StartupOptions.h"
 
-#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
-
-static bool startup_equal_ignore_case(const char* left, const char* right)
-{
-    if (!left || !right) return false;
-    while (*left && *right) {
-        if (tolower((unsigned char)*left) != tolower((unsigned char)*right)) return false;
-        ++left;
-        ++right;
-    }
-    return *left == *right;
-}
 
 static bool startup_copy_value(char* destination, size_t capacity, const char* value, const char* option, char* error)
 {
@@ -51,8 +39,7 @@ StartupOptions startup_options_parse(int argc, const char* const* argv)
         } else if (strcmp(argument, "--portable") == 0) {
             options.portable = true;
         } else if (strcmp(argument, "--diagnostics-dir") == 0 || strcmp(argument, "--data-dir") == 0 ||
-                   strcmp(argument, "--user-dir") == 0 ||
-                   startup_equal_ignore_case(argument, "-path") || startup_equal_ignore_case(argument, "/path")) {
+                   strcmp(argument, "--user-dir") == 0) {
             char* destination;
             const char* option_name;
             if (index + 1 >= argc) {

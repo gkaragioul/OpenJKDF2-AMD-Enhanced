@@ -2,6 +2,7 @@
 
 #include "Main/jkMain.h"
 #include "stdPlatform.h"
+#include "General/PathOverlay.h"
 #include "jk.h"
 
 #ifdef TARGET_ANDROID
@@ -664,7 +665,11 @@ void stdMci_Shutdown()
 
 int stdMci_TryPlay(const char* fpath) {
     char tmp[256];
+    char resolved[1024];
+    if (path_overlay_resolve_read(fpath, resolved, sizeof(resolved)))
+        fpath = resolved;
     strncpy(tmp, fpath, 255);
+    tmp[255] = 0;
 
 #ifdef FS_POSIX
     char *r = (char*)malloc(strlen(tmp) + 16);

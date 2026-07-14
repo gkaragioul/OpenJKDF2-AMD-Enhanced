@@ -53,6 +53,14 @@ static void test_paths_and_last_wins(void)
     CHECK(options.error[0] == '\0');
 }
 
+static void test_legacy_mod_path_is_not_a_data_directory(void)
+{
+    const char* argv[] = { "openjkdf2", "-path", "My Mod" };
+    StartupOptions options = startup_options_parse(3, argv);
+    CHECK(options.data_dir[0] == '\0');
+    CHECK(options.error[0] == '\0');
+}
+
 static void test_errors_and_passthrough(void)
 {
     const char* missing[] = { "openjkdf2", "--data-dir" };
@@ -69,6 +77,7 @@ int main(void)
     test_safe_mode();
     test_storage_options_preserve_paths_with_spaces();
     test_paths_and_last_wins();
+    test_legacy_mod_path_is_not_a_data_directory();
     test_errors_and_passthrough();
     return failures ? 1 : 0;
 }

@@ -45,6 +45,11 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/General/PathOverlay.c"
     )
     openjkdf2_add_unit_test(
+        test_storage_paths
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_storage_paths.c"
+        "${PROJECT_SOURCE_DIR}/src/General/StoragePaths.c"
+    )
+    openjkdf2_add_unit_test(
         test_shader_stage
         "${PROJECT_SOURCE_DIR}/src/Tests/test_shader_stage.c"
         "${PROJECT_SOURCE_DIR}/src/Platform/GL/ShaderCompile.c"

@@ -2,6 +2,7 @@
 
 #include "Win95/std.h"
 #include "General/stdMemory.h"
+#include "General/PathOverlay.h"
 #include "Main/jkQuakeConsole.h"
 
 #ifdef TARGET_TWL
@@ -72,7 +73,8 @@ uint64_t Linux_TimeUs()
 
 static stdFile_t Linux_stdFileOpen(const char* fpath, const char* mode)
 {
-    char tmp[512];
+    char tmp[2048];
+    char overlayPath[2048];
 #ifdef TARGET_DREAMCAST
     // Added: read-only assets live on the GD-ROM; the CWD is writable storage.
     // Route relative asset paths back to the asset root (writable data is left
@@ -81,10 +83,17 @@ static stdFile_t Linux_stdFileOpen(const char* fpath, const char* mode)
     if (dcStorage_ResolveAssetPath(fpath, dcAsset, sizeof(dcAsset)))
         fpath = dcAsset;
 #endif
+    if (mode && (strchr(mode, 'w') || strchr(mode, 'a') || strchr(mode, '+'))) {
+        if (!path_overlay_resolve_write(fpath, overlayPath, sizeof(overlayPath))) return 0;
+        fpath = overlayPath;
+    }
+    else if (path_overlay_resolve_read(fpath, overlayPath, sizeof(overlayPath))) {
+        fpath = overlayPath;
+    }
     size_t len = strlen(fpath);
 
-    if (len > 512) {
-        len = 512;
+    if (len >= sizeof(tmp)) {
+        return 0;
     }
     _strncpy(tmp, fpath, sizeof(tmp));
 

@@ -19,6 +19,7 @@
 #include "General/ResolutionLayout.h"
 #include "General/FrameRate.h"
 #include "General/FrameTelemetry.h"
+#include "General/StoragePaths.h"
 #include "General/PresentationMode.h"
 
 #include "jk.h"
@@ -1801,11 +1802,8 @@ int Window_Main_Linux(int argc, char** argv)
     g_hInstance = 0;//hInstance;
     g_nShowCmd = 0;//nShowCmd;
     
-    for (int i = 1; i < argc; i++)
-    {
-        strcat(cmdLine, argv[i]);
-        strcat(cmdLine, " ");
-    }
+    if (!storage_paths_build_legacy_command(argc, (const char* const*)argv, cmdLine, sizeof(cmdLine)))
+        return 0;
     
     result = Main_Startup(cmdLine);
 

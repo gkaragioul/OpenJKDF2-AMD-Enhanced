@@ -19,6 +19,8 @@
 #include "General/stdMath.h"
 #include "General/DiagnosticLog.h"
 #include "General/StartupOptions.h"
+#include "General/PathOverlay.h"
+#include "General/StoragePaths.h"
 
 #ifndef NO_JK_MMAP
 #include "Cog/sithCog.h"
@@ -362,6 +364,8 @@ int main(int argc, char** argv)
 {
     StartupOptions startup_options;
     bool diagnostics_started = false;
+    char startup_asset_root[STARTUP_PATH_CAPACITY] = { 0 };
+    char startup_user_root[STARTUP_PATH_CAPACITY] = { 0 };
 #ifdef TARGET_DREAMCAST
     // Added: on-screen CPU fault reporter (KOS default only prints to serial)
     dcFault_Install();
@@ -691,31 +695,81 @@ int main(int argc, char** argv)
         fprintf(stderr, "Renderer smoke testing is provided by openjkdf2-renderer-smoke.\n");
         return 2;
     }
+
+    if (!getcwd(startup_asset_root, sizeof(startup_asset_root))) {
+        fprintf(stderr, "Unable to determine the startup directory.\n");
+        return 2;
+    }
+    if (startup_options.data_dir[0]) {
+#ifdef WIN32
+        if (!_fullpath(startup_asset_root, startup_options.data_dir, sizeof(startup_asset_root))) {
+            fprintf(stderr, "Invalid --data-dir path.\n");
+            return 2;
+        }
+#else
+        if (!realpath(startup_options.data_dir, startup_asset_root)) {
+            fprintf(stderr, "Invalid --data-dir path.\n");
+            return 2;
+        }
+#endif
+        if (!storage_paths_select_user_root(startup_options.user_dir[0] ? startup_options.user_dir : NULL,
+                                            startup_options.portable, argv[0], getenv("LOCALAPPDATA"),
+                                            startup_user_root, sizeof(startup_user_root))) {
+            fprintf(stderr, "Unable to select writable user-data directory. Use --user-dir or --portable.\n");
+            return 2;
+        }
+#ifdef WIN32
+        {
+            char partial[STARTUP_PATH_CAPACITY];
+            if (!_fullpath(partial, startup_user_root, sizeof(partial))) {
+                fprintf(stderr, "Invalid writable user-data path.\n");
+                return 2;
+            }
+            strcpy(startup_user_root, partial);
+        }
+        {
+            char partial[STARTUP_PATH_CAPACITY];
+            size_t length = strlen(startup_user_root);
+            if (length >= sizeof(partial)) return 2;
+            strcpy(partial, startup_user_root);
+            for (size_t index = 3; index <= length; ++index) {
+                if (partial[index] == '\\' || partial[index] == '/' || partial[index] == '\0') {
+                    char saved = partial[index];
+                    partial[index] = '\0';
+                    CreateDirectoryA(partial, NULL);
+                    partial[index] = saved;
+                }
+            }
+        }
+#else
+        mkdir(startup_user_root, 0700);
+#endif
+        if (!path_overlay_configure(startup_asset_root, startup_user_root) || chdir(startup_user_root) != 0) {
+            fprintf(stderr, "Unable to initialize writable user-data directory.\n");
+            return 2;
+        }
+    } else {
+        strcpy(startup_user_root, startup_asset_root);
+        if (!path_overlay_configure(startup_asset_root, startup_user_root)) return 2;
+    }
     {
         DiagLogConfig diagnostic_config = {
             startup_options.diagnostics_dir[0] ? startup_options.diagnostics_dir : "diagnostics",
-            startup_options.data_dir[0] ? startup_options.data_dir : NULL
+            startup_options.data_dir[0] ? startup_asset_root : NULL
         };
         diagnostics_started = diag_log_start(&diagnostic_config);
         if (diagnostics_started) {
             diag_log_event(DIAG_SEVERITY_INFO, "startup", "process_started");
+            diag_log_event(DIAG_SEVERITY_INFO, "storage",
+                           startup_options.data_dir[0]
+                               ? (startup_options.portable ? "path_overlay active=true writable=portable" : "path_overlay active=true writable=user")
+                               : "path_overlay active=false writable=legacy_cwd");
             if (diag_log_previous_run_unclean()) {
                 diag_log_event(DIAG_SEVERITY_WARNING, "startup", "previous_run_unclean recovery_available=true");
             }
             if (startup_options.safe_mode) {
                 diag_log_event(DIAG_SEVERITY_INFO, "startup", "safe_mode_enabled");
             }
-        }
-    }
-    for (int i = 1; i < argc; ++i) {
-        if (!strcmp(argv[i], "--safe-mode")) {
-            argv[i] = "";
-        } else if (!strcmp(argv[i], "--diagnostics-dir")) {
-            argv[i] = "";
-            if (i + 1 < argc) argv[++i] = "";
-        } else if (!strcmp(argv[i], "--data-dir")) {
-            argv[i] = "-path";
-            ++i;
         }
     }
     Window_SetSafeMode(startup_options.safe_mode ? 1 : 0);

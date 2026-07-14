@@ -3,6 +3,7 @@
 #include "stdPlatform.h"
 #include "General/stdFnames.h"
 #include "General/stdString.h"
+#include "General/PathOverlay.h"
 #ifdef TARGET_DREAMCAST
 #include "Platform/Dreamcast/dcStorage.h" // Added: asset-dir listing routes to /cd
 #endif
@@ -33,6 +34,7 @@
 
 stdFileSearch* stdFileUtil_NewFind(const char *path, int mode, const char *pFilter)
 {
+    char relativePattern[1024];
     stdFileSearch* search = (stdFileSearch *)STD_ALLOC(sizeof(stdFileSearch));
     if ( !search ) {
         return search;
@@ -43,7 +45,11 @@ stdFileSearch* stdFileUtil_NewFind(const char *path, int mode, const char *pFilt
         return search;
     if ( mode <= 2 )
     {
-        stdFnames_MakePath(search->path, 128, path, "*.*");
+        stdFnames_MakePath(relativePattern, sizeof(relativePattern), path, "*.*");
+        path_overlay_resolve_write(relativePattern, search->path, sizeof(search->path));
+        strcpy(search->primaryPath, search->path);
+        path_overlay_resolve_asset(relativePattern, search->overlayPath, sizeof(search->overlayPath));
+        search->overlayEnabled = strcmp(search->path, search->overlayPath) != 0;
         return search;
     }
     if ( mode != 3 )
@@ -51,7 +57,11 @@ stdFileSearch* stdFileUtil_NewFind(const char *path, int mode, const char *pFilt
     if ( *pFilter == '.' )
         pFilter = pFilter + 1;
     stdString_snprintf(std_g_genBuffer, 1024, "*.%s", pFilter);
-    stdFnames_MakePath(search->path, 128, path, std_g_genBuffer);
+    stdFnames_MakePath(relativePattern, sizeof(relativePattern), path, std_g_genBuffer);
+    path_overlay_resolve_write(relativePattern, search->path, sizeof(search->path));
+    strcpy(search->primaryPath, search->path);
+    path_overlay_resolve_asset(relativePattern, search->overlayPath, sizeof(search->overlayPath));
+    search->overlayEnabled = strcmp(search->path, search->overlayPath) != 0;
     
 #ifdef FS_POSIX
     for (int i = 0; i < strlen(search->path); i++)
@@ -83,6 +93,7 @@ int stdFileUtil_FindNext(stdFileSearch *ffData, stdFileSearchResult *pFileInfo)
     if ( !ffData )
         return 0;
 
+retry_overlay:
     if (ffData->isNotFirst++)
     {
         v4 = __findnext(ffData->field_88, &v6);
@@ -92,8 +103,16 @@ int stdFileUtil_FindNext(stdFileSearch *ffData, stdFileSearchResult *pFileInfo)
         v4 = __findfirst(ffData->path, &v6);
         ffData->field_88 = v4;
     }
-    if ( v4 == -1 )
+    if (v4 == -1) {
+        if (ffData->overlayEnabled && !ffData->overlayPhase) {
+            if (ffData->isNotFirst > 1 && ffData->field_88 != -1) __findclose(ffData->field_88);
+            ffData->overlayPhase = 1;
+            ffData->isNotFirst = 0;
+            strcpy(ffData->path, ffData->overlayPath);
+            goto retry_overlay;
+        }
         return 0;
+    }
 
     // Added: strcpy -> strncpy
     _strncpy(pFileInfo->fpath, v6.name, sizeof(pFileInfo->fpath)-1);
@@ -107,7 +126,7 @@ void stdFileUtil_DisposeFind(stdFileSearch *ffData)
 {
     if ( ffData )
     {
-        if ( ffData->isNotFirst )
+        if (ffData->isNotFirst && ffData->field_88 != -1)
             __findclose(ffData->field_88);
         STD_FREE(ffData);
     }
@@ -115,13 +134,15 @@ void stdFileUtil_DisposeFind(stdFileSearch *ffData)
 
 void stdFileUtil_FindReset(stdFileSearch *search)
 {
-    if ( search && search->isNotFirst )
+    if (search && search->isNotFirst && search->field_88 != -1)
     {
         __findclose(search->field_88);
     }
     if ( search )
     {
         search->isNotFirst = 0;
+        search->overlayPhase = 0;
+        strcpy(search->path, search->primaryPath);
     }
 }
 
@@ -154,8 +175,10 @@ int stdFileUtil_CountMatches(const char *pPath, int mode, const char *pFilter)
 
 int stdFileUtil_FileExists(const char *pFilename)
 {
+    char resolved[2048];
     struct _WIN32_FIND_DATAA findData;
-    HANDLE h = FindFirstFileA(pFilename, (LPWIN32_FIND_DATAA)&findData);
+    if (!path_overlay_resolve_read(pFilename, resolved, sizeof(resolved))) return 0;
+    HANDLE h = FindFirstFileA(resolved, (LPWIN32_FIND_DATAA)&findData);
     if ( h != INVALID_HANDLE_VALUE )
     {
         FindClose(h);

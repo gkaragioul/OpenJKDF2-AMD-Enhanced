@@ -16,6 +16,7 @@
 #include "Win95/stdSound.h"
 #include "Devices/sithSoundMixer.h"
 #include "General/stdString.h"
+#include "General/PathOverlay.h"
 #include "stdPlatform.h"
 #include "Platform/std3D.h"
 #ifdef TARGET_DREAMCAST
@@ -302,6 +303,16 @@ int jkCutscene_sub_421310(char* fpath)
 #if defined(SDL2_RENDER) || defined(TARGET_RETRO_HOMEBREW)
     sithSoundMixer_StopSong();
     stdMci_Stop();
+
+#if defined(SDL2_RENDER) && !defined(TARGET_DREAMCAST)
+    {
+        char resolved[1024];
+        if (path_overlay_resolve_read(tmp, resolved, sizeof(resolved))) {
+            _strncpy(tmp, resolved, sizeof(tmp));
+            tmp[sizeof(tmp) - 1] = 0;
+        }
+    }
+#endif
 
 #ifdef LINUX
     char *r = (char*)malloc(strlen(tmp) + 16);
