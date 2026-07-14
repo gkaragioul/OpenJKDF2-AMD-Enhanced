@@ -42,6 +42,12 @@ function Get-AssetSnapshot([string]$Root) {
         "$($_.FullName.Substring($Root.Length))|$($_.Length)|$($_.LastWriteTimeUtc.Ticks)"
     })
 }
+function Get-Percentile([long[]]$Values, [double]$Percentile) {
+    if (-not $Values -or $Values.Count -eq 0) { return $null }
+    $sorted = @($Values | Sort-Object)
+    $index = [Math]::Max(0, [Math]::Ceiling($Percentile * $sorted.Count) - 1)
+    return [long]$sorted[$index]
+}
 
 $before = Get-AssetSnapshot $assetRoot
 $displayBefore = [OpenJKDF2InputProbe]::Current()
@@ -60,6 +66,7 @@ try {
     $start.Environment["OPENJKDF2_VALIDATE_INPUT_MS"] = "14000"
     $start.Environment["OPENJKDF2_VALIDATE_INPUT_PRESET"] = $Preset
     $start.Environment["OPENJKDF2_VALIDATE_INPUT_SCREENSHOT"] = "diagnostics\$screenshotName"
+    $start.Environment["OPENJKDF2_VALIDATE_MOUSE_LATENCY"] = "1"
     $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot + '" --diagnostics-dir diagnostics -autostart -sp -episode JK1 -map 01narshadda.jkl'
     $process = [Diagnostics.Process]::Start($start)
     $windowDeadline = [DateTime]::UtcNow.AddSeconds(10)
@@ -93,6 +100,28 @@ $diagnostics = Join-Path $userRoot "diagnostics"
 $jsonl = Join-Path $diagnostics "openjkdf2.jsonl"
 $state = Get-Content -Raw -LiteralPath (Join-Path $diagnostics "run-state.json") | ConvertFrom-Json
 $event = Select-String -LiteralPath $jsonl -Pattern "input complete" | Select-Object -Last 1
+$queueSamples = @(
+    Select-String -LiteralPath $jsonl -Pattern 'mouse_latency stage=dispatch seq=\d+ queue_us=(\d+)' | ForEach-Object {
+        if ($_.Matches.Count) { [long]$_.Matches[0].Groups[1].Value }
+    }
+)
+$consumeSamples = @(
+    Select-String -LiteralPath $jsonl -Pattern 'mouse_latency stage=consume seq=\d+ consume_us=(\d+) total_us=(\d+)' | ForEach-Object {
+        if ($_.Matches.Count) {
+            [pscustomobject]@{
+                consume_us = [long]$_.Matches[0].Groups[1].Value
+                total_us = [long]$_.Matches[0].Groups[2].Value
+            }
+        }
+    }
+)
+$consumeUs = @($consumeSamples | ForEach-Object { $_.consume_us })
+$totalUs = @($consumeSamples | ForEach-Object { $_.total_us })
+$queueP95Us = Get-Percentile $queueSamples 0.95
+$consumeP95Us = Get-Percentile $consumeUs 0.95
+$totalP95Us = Get-Percentile $totalUs 0.95
+$minimumLatencySamples = 6
+$maximumP95LatencyUs = 50000
 $result = [ordered]@{
     schema = 1; startup_result = $process.ExitCode
     display_before = $displayBefore; display_after = $displayAfter; display_invariant = $displayBefore -eq $displayAfter
@@ -103,6 +132,11 @@ $result = [ordered]@{
     moved = [bool](Select-String -LiteralPath $jsonl -Pattern "input complete moved=true" -Quiet)
     turned = [bool](Select-String -LiteralPath $jsonl -Pattern "input complete moved=true turned=true" -Quiet)
     input_event = if ($event) { $event.Line } else { $null }
+    latency_sample_count = $consumeSamples.Count
+    queue_p95_us = $queueP95Us
+    consume_p95_us = $consumeP95Us
+    total_p95_us = $totalP95Us
+    latency_within_50ms = $consumeSamples.Count -ge $minimumLatencySamples -and $null -ne $totalP95Us -and $totalP95Us -le $maximumP95LatencyUs
     screenshot_exists = Test-Path -LiteralPath (Join-Path $diagnostics $screenshotName)
     clean_state = $state.status -eq "clean"
     process_finished = [bool](Select-String -LiteralPath $jsonl -Pattern "process_finished" -Quiet)
@@ -112,6 +146,6 @@ $result | ConvertTo-Json | Set-Content -LiteralPath $resultPath -Encoding utf8
 $result | ConvertTo-Json
 if ($result.startup_result -ne 1 -or -not $result.display_invariant -or -not $result.asset_metadata_invariant -or -not $result.focus_verified -or
     -not $result.preset_bindings_valid -or -not $result.moved -or -not $result.turned -or -not $result.screenshot_exists -or
-    -not $result.clean_state -or -not $result.process_finished) {
+    -not $result.latency_within_50ms -or -not $result.clean_state -or -not $result.process_finished) {
     throw "$Preset input verification failed; inspect $resultPath"
 }

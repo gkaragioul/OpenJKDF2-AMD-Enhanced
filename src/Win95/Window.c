@@ -563,6 +563,10 @@ int Window_mouseX = 0;
 int Window_mouseY = 0;
 int Window_mouseWheelX = 0;
 int Window_mouseWheelY = 0;
+uint64_t Window_validationMouseEventNs = 0;
+uint64_t Window_validationMouseHandlerNs = 0;
+unsigned int Window_validationMouseSequence = 0;
+unsigned int Window_validationMouseConsumedSequence = 0;
 int Window_lastMouseX = 0;
 int Window_lastMouseY = 0;
 static int Window_mouseCaptureActive = 0;
@@ -1380,6 +1384,22 @@ void Window_SdlUpdate()
                 stdControl_SetSDLKeydown(event.key.scancode, 0, (uint32_t)(event.key.timestamp / 1000000));
                 break;
             case SDL_EVENT_MOUSE_MOTION:
+                if (getenv("OPENJKDF2_VALIDATE_MOUSE_LATENCY") &&
+                    (event.motion.xrel != 0.0f || event.motion.yrel != 0.0f))
+                {
+                    char latencyEvent[192];
+                    uint64_t nowNs = SDL_GetTicksNS();
+                    uint64_t queueUs = nowNs >= event.motion.timestamp
+                        ? (nowNs - event.motion.timestamp) / 1000ULL : 0;
+                    Window_validationMouseEventNs = event.motion.timestamp;
+                    Window_validationMouseHandlerNs = nowNs;
+                    ++Window_validationMouseSequence;
+                    snprintf(latencyEvent, sizeof(latencyEvent),
+                             "mouse_latency stage=dispatch seq=%u queue_us=%llu",
+                             Window_validationMouseSequence,
+                             (unsigned long long)queueUs);
+                    diag_log_event(DIAG_SEVERITY_INFO, "input", latencyEvent);
+                }
                 Window_HandleMouseMove(&event.motion);
                 break;
             case SDL_EVENT_MOUSE_BUTTON_DOWN:

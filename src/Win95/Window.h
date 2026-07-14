@@ -69,6 +69,10 @@ extern int Window_mouseWheelY;
 extern int Window_mouseWheelX;
 extern int Window_bShouldPopSteamKeyboard;
 extern int Window_bNeedsKeyboardFixed;
+extern uint64_t Window_validationMouseEventNs;
+extern uint64_t Window_validationMouseHandlerNs;
+extern unsigned int Window_validationMouseSequence;
+extern unsigned int Window_validationMouseConsumedSequence;
 
 #if !defined(SDL2_RENDER) && defined(WIN32)
 //static int (*Window_ShowCursorUnwindowed)(int a1) = (void*)Window_ShowCursorUnwindowed_ADDR;

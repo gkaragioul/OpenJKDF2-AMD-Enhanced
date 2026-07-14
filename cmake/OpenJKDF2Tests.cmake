@@ -85,6 +85,13 @@ if(BUILD_TESTING)
     )
     set_tests_properties(release_documentation_contract PROPERTIES LABELS "unit")
 
+    add_test(
+        NAME mouse_latency_telemetry_contract
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-mouse-latency-telemetry.ps1"
+    )
+    set_tests_properties(mouse_latency_telemetry_contract PROPERTIES LABELS "unit")
+
     openjkdf2_add_unit_test(
         test_diagnostic_log
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_log.c"

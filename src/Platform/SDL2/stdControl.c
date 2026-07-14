@@ -7,6 +7,7 @@
 #include "World/jkPlayer.h"
 #include "General/ResolutionLayout.h"
 #include "General/MouseSmoothing.h"
+#include "General/DiagnosticLog.h"
 
 #include <SDL3/SDL.h>
 
@@ -1047,6 +1048,25 @@ void stdControl_ReadMouse()
 
     if (Window_lastXRel || Window_lastYRel || Window_mouseWheelX || Window_mouseWheelY) {
         stdControl_bControlsIdle = 0;
+    }
+
+    if (getenv("OPENJKDF2_VALIDATE_MOUSE_LATENCY") &&
+        Window_validationMouseSequence != Window_validationMouseConsumedSequence &&
+        (Window_lastXRel || Window_lastYRel))
+    {
+        char latencyEvent[224];
+        uint64_t nowNs = SDL_GetTicksNS();
+        uint64_t consumeUs = nowNs >= Window_validationMouseHandlerNs
+            ? (nowNs - Window_validationMouseHandlerNs) / 1000ULL : 0;
+        uint64_t totalUs = nowNs >= Window_validationMouseEventNs
+            ? (nowNs - Window_validationMouseEventNs) / 1000ULL : 0;
+        Window_validationMouseConsumedSequence = Window_validationMouseSequence;
+        snprintf(latencyEvent, sizeof(latencyEvent),
+                 "mouse_latency stage=consume seq=%u consume_us=%llu total_us=%llu",
+                 Window_validationMouseConsumedSequence,
+                 (unsigned long long)consumeUs,
+                 (unsigned long long)totalUs);
+        diag_log_event(DIAG_SEVERITY_INFO, "input", latencyEvent);
     }
 
     if ( stdControl_readDeltaTime < 25 )
