@@ -17,6 +17,7 @@
 #include "Devices/sithSoundMixer.h"
 #include "General/stdString.h"
 #include "General/PathOverlay.h"
+#include "General/TimingDomainsRuntime.h"
 #include "stdPlatform.h"
 #include "Platform/std3D.h"
 #ifdef TARGET_DREAMCAST
@@ -584,6 +585,7 @@ int jkCutscene_sub_421410()
     jkCutscene_isRendering = 0;
     jkGui_SetModeGame(); // Added?
     jk_ShowCursor(1);
+    TimingDomainsRuntime_NotifyCutscene();
     return 1;
 }
 

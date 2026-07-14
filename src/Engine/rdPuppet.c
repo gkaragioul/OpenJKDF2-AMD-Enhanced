@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "General/stdMath.h"
+#include "General/TimingDomainsRuntime.h"
 #include "Engine/rdroid.h"
 #include "Engine/rdThing.h"
 #include "stdPlatform.h"
@@ -389,6 +390,7 @@ int rdPuppet_RemoveTrack(rdPuppet *pPuppet, int track)
     pPuppet->aTracks[track].status = 0;
     pPuppet->aTracks[track].keyframe = 0;
     pPuppet->aTracks[track].callback = 0;
+    TimingDomainsRuntime_NotifyAnimation();
     return 1;
 }
 

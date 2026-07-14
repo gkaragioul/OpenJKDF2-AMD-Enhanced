@@ -33,6 +33,10 @@
 #include "General/PresentationMode.h"
 #include "General/QualityPreset.h"
 #include "General/RuntimeProbe.h"
+#include "General/TimingDomainsRuntime.h"
+#include "Gameplay/sithTime.h"
+#include "Main/jkCutscene.h"
+#include "Main/jkMain.h"
 
 #include "stdPlatform.h"
 #include "jk.h"
@@ -425,6 +429,25 @@ int jkGame_Update()
 #endif
 
 #if defined(SDL2_RENDER) && !defined(TARGET_RETRO_HOMEBREW)
+    if (TimingDomainsRuntime_IsEnabled())
+    {
+        static int timingFrameCapApplied = 0;
+        if (!timingFrameCapApplied)
+        {
+            jkPlayer_fpslimit = TimingDomainsRuntime_FrameLimit();
+            jkPlayer_enableVsync = 0;
+            FrameTelemetry_Reset();
+            timingFrameCapApplied = 1;
+        }
+        TimingDomainsRuntime_Tick((uint64_t)sithTime_g_msecGameTime, Linux_TimeUs());
+        if (TimingDomainsRuntime_ShouldStartCutscene())
+            jkCutscene_sub_421310("resource\\video\\01-02A.SMK");
+        if (TimingDomainsRuntime_ShouldRequestLevelTransition())
+            jkMain_LoadLevelSingleplayer("JK1", "01-02A");
+        if (TimingDomainsRuntime_IsFinished())
+            g_should_exit = 1;
+    }
+
     // First-level opening-door observer for guarded acceptance testing.
     {
         static RuntimeProbe doorProbe = { 0 };

@@ -21,6 +21,7 @@
 #include "Engine/sithPhysics.h"
 #include "General/stdHashtbl.h"
 #include "General/stdString.h"
+#include "General/TimingDomainsRuntime.h"
 #include "Main/jkGame.h"
 #include "Cog/sithCogExec.h"
 #include "Cog/sithCog.h"
@@ -712,6 +713,7 @@ void sithAI_CreateAIFramesFomMarker(SithThing *pNewThing, SithThing *pMarker, rd
 
 void sithAI_Tick(SithThing *thing, flex_t deltaSeconds)
 {
+    TimingDomainsRuntime_NotifyAI();
     if ( thing->type == SITH_THING_ACTOR && thing->actorParams.health > 0.0 )
     {
         if (thing->actor->flags & SITHAI_MODE_TURNING)

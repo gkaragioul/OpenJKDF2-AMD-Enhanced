@@ -19,6 +19,7 @@
 #include "General/stdMath.h"
 #include "General/DiagnosticLog.h"
 #include "General/StartupOptions.h"
+#include "General/TimingDomainsRuntime.h"
 #include "General/PathOverlay.h"
 #include "General/StoragePaths.h"
 
@@ -772,6 +773,13 @@ int main(int argc, char** argv)
 #endif
         }
     }
+    if (!TimingDomainsRuntime_Configure(startup_options.validation_observer,
+                                        startup_options.diagnostics_dir[0] ? startup_options.diagnostics_dir : "diagnostics",
+                                        startup_options.frame_limit)) {
+        fprintf(stderr, "Timing-domain validation requires --frame-limit 60 or 120 and a diagnostics directory.\n");
+        if (diagnostics_started) diag_log_finish(false);
+        return 2;
+    }
     Window_SetSafeMode(startup_options.safe_mode ? 1 : 0);
 
 #ifdef LINUX
@@ -908,6 +916,7 @@ int main(int argc, char** argv)
     PHYSFS_deinit();
 #endif
 
+    TimingDomainsRuntime_Shutdown();
     if (diagnostics_started) {
         diag_log_event(DIAG_SEVERITY_INFO, "startup", "process_finished");
         diag_log_finish(true);

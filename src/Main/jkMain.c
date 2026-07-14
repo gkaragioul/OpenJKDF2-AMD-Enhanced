@@ -23,6 +23,7 @@
 #include "Main/jkEpisode.h"
 #include "Main/jkRes.h"
 #include "Main/jkStrings.h"
+#include "General/TimingDomainsRuntime.h"
 #include "Gui/jkGUIRend.h"
 #include "Gui/jkGUI.h"
 #include "Gui/jkGUIMultiTally.h"
@@ -1041,6 +1042,7 @@ int jkMain_LoadLevelSingleplayer(char *pGobPath, char *pEpisodeName)
             jkGuiRend_thing_four = 1;
         jkSmack_stopTick = 1;
         jkSmack_nextGuiState = 5;
+        TimingDomainsRuntime_NotifyLevelTransition();
     }
     else
     {

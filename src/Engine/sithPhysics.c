@@ -1,6 +1,7 @@
 #include "sithPhysics.h"
 
 #include "General/stdMath.h"
+#include "General/TimingDomainsRuntime.h"
 #include "Primitives/rdMath.h"
 #include "Engine/sithCollision.h"
 #include "World/sithSurface.h"
@@ -158,6 +159,8 @@ void sithPhysics_UpdateThing(SithThing *pThing, flex_t secDeltaTime)
 {
     if (!pThing->sector)
         return;
+
+    TimingDomainsRuntime_NotifyPhysics();
 
     rdVector_Zero3(&pThing->physicsParams.deltaVelocity);
     rdVector_Zero3(&pThing->physicsParams.gravityForce);

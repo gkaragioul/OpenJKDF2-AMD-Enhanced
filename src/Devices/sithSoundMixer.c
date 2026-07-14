@@ -13,6 +13,7 @@
 #include "World/jkPlayer.h"
 #include "Dss/sithDSSThing.h"
 #include "General/stdMath.h"
+#include "General/TimingDomainsRuntime.h"
 #include "jk.h"
 
 int sithSoundMixer_Startup()
@@ -1296,7 +1297,10 @@ int32_t sithSoundMixer_GetThingSoundIdx(SithThing *thing, sithSound *sound)
 
 void sithSoundMixer_StopSound(sithPlayingSound *hChannel)
 {
+    int wasPlaying;
     if (!hChannel) return; // Added
+
+    wasPlaying = (hChannel->flags & SITHSOUNDFLAG_PLAYING) != 0;
 
     if ( (hChannel->flags & SITHSOUNDFLAG_PLAYING) != 0 )
     {
@@ -1314,6 +1318,8 @@ void sithSoundMixer_StopSound(sithPlayingSound *hChannel)
     }
 
     sithSoundMixer_FreePlayingSound(hChannel);
+    if (wasPlaying)
+        TimingDomainsRuntime_NotifyDialogue();
 }
 
 sithPlayingSound* sithSoundMixer_GetSoundFromIdx(int idx)

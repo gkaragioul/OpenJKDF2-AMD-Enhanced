@@ -30,6 +30,8 @@ StartupOptions startup_options_parse(int argc, const char* const* argv)
         const char* argument = argv[index];
         const char* validation_prefix = "--validation-observer=";
         const size_t validation_prefix_length = strlen(validation_prefix);
+        const char* frame_limit_prefix = "--frame-limit=";
+        const size_t frame_limit_prefix_length = strlen(frame_limit_prefix);
         if (!argument) continue;
         if (strcmp(argument, "--safe-mode") == 0) {
             options.safe_mode = true;
@@ -57,6 +59,23 @@ StartupOptions startup_options_parse(int argc, const char* const* argv)
                 return options;
             }
             options.validation_observer = STARTUP_VALIDATION_TIMING_DOMAINS;
+        } else if (strncmp(argument, frame_limit_prefix, frame_limit_prefix_length) == 0 ||
+                   strcmp(argument, "--frame-limit") == 0) {
+            const char* value;
+            if (strcmp(argument, "--frame-limit") == 0) {
+                if (index + 1 >= argc) {
+                    strcpy(options.error, "--frame-limit requires a value");
+                    return options;
+                }
+                value = argv[++index];
+            } else {
+                value = argument + frame_limit_prefix_length;
+            }
+            if (!value || (strcmp(value, "60") != 0 && strcmp(value, "120") != 0)) {
+                strcpy(options.error, "--frame-limit must be 60 or 120");
+                return options;
+            }
+            options.frame_limit = strcmp(value, "60") == 0 ? 60 : 120;
         } else if (strcmp(argument, "--diagnostics-dir") == 0 || strcmp(argument, "--data-dir") == 0 ||
                    strcmp(argument, "--user-dir") == 0) {
             char* destination;

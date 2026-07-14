@@ -2,6 +2,7 @@
 
 #include "jk.h"
 #include "Gameplay/sithTime.h"
+#include "General/TimingDomainsRuntime.h"
 
 int sithEvent_Startup()
 {
@@ -146,7 +147,10 @@ void sithEvent_Process()
 
         // Added: nullptr check
         if (sithEvent_aTasks[i->taskNum].pfProcess)
+        {
             sithEvent_aTasks[i->taskNum].pfProcess(0, &i->params);
+            TimingDomainsRuntime_NotifyScript();
+        }
         
         sithEvent_FreeEvent(i);
         i = sithEvent_g_pFirstQueuedEvent;

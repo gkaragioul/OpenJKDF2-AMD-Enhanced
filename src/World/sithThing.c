@@ -3,6 +3,7 @@
 #include "General/stdHashtbl.h"
 #include "General/util.h"
 #include "General/stdString.h"
+#include "General/TimingDomainsRuntime.h"
 #include "World/jkPlayer.h"
 #include "World/sithWorld.h"
 #include "Gameplay/sithPlayerActions.h"
@@ -588,6 +589,7 @@ void sithThing_RemoveThing(SithThing* pThing)
     int32_t v2; // esi
     int32_t v3; // eax
     int32_t v5; // eax
+    int wasParticle = pThing && pThing->type == SITH_THING_PARTICLE;
 
     if ( sithNet_isMulti && sithNet_isServer && (pThing->guid & 0xFFFF0000) == 0 )
         sithMulti_RemoveStaticThing(pThing->guid);
@@ -613,6 +615,8 @@ void sithThing_RemoveThing(SithThing* pThing)
     v5 = sithNet_thingsIdx;
     sithNet_things[sithNet_thingsIdx + 1] = v2;
     sithNet_thingsIdx = v5 + 1;
+    if (wasParticle)
+        TimingDomainsRuntime_NotifyParticle();
 }
 
 void sithThing_FreeThing(SithThing* pThing)

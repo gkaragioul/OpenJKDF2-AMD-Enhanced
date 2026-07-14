@@ -44,6 +44,19 @@ static void test_timing_observer_rejects_missing_and_unknown_values(void)
     CHECK(strstr(unknown_options.error, "validation-observer") != NULL);
 }
 
+static void test_frame_limit_for_validation(void)
+{
+    const char* sixty[] = { "openjkdf2", "--frame-limit", "60" };
+    const char* one_twenty[] = { "openjkdf2", "--frame-limit=120" };
+    const char* invalid[] = { "openjkdf2", "--frame-limit", "144" };
+    StartupOptions sixty_options = startup_options_parse(3, sixty);
+    StartupOptions one_twenty_options = startup_options_parse(2, one_twenty);
+    StartupOptions invalid_options = startup_options_parse(3, invalid);
+    CHECK(sixty_options.frame_limit == 60 && sixty_options.error[0] == '\0');
+    CHECK(one_twenty_options.frame_limit == 120 && one_twenty_options.error[0] == '\0');
+    CHECK(strstr(invalid_options.error, "frame-limit") != NULL);
+}
+
 static void test_storage_options_preserve_paths_with_spaces(void)
 {
     const char* argv[] = {
@@ -109,5 +122,6 @@ int main(void)
     test_timing_observer_equals_form();
     test_timing_observer_separate_form();
     test_timing_observer_rejects_missing_and_unknown_values();
+    test_frame_limit_for_validation();
     return failures ? 1 : 0;
 }

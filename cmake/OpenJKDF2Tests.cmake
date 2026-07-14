@@ -99,6 +99,13 @@ if(BUILD_TESTING)
     )
     set_tests_properties(enhancement_runtime_telemetry_contract PROPERTIES LABELS "unit")
 
+    add_test(
+        NAME timing_domains_runtime_contract
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-timing-domains-runtime.ps1"
+    )
+    set_tests_properties(timing_domains_runtime_contract PROPERTIES LABELS "unit")
+
     openjkdf2_add_unit_test(
         test_diagnostic_log
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_log.c"

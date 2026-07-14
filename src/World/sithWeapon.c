@@ -23,6 +23,7 @@
 #include "Devices/sithConsole.h"
 #include "Dss/sithDSSThing.h"
 #include "General/stdMath.h"
+#include "General/TimingDomainsRuntime.h"
 #include "jk.h"
 
 // MOTS added
@@ -499,6 +500,9 @@ SithThing* sithWeapon_WeaponFire(SithThing *pShooter, SithThing *pProjectileTemp
         sithAIAwareness_CreateTransmittingEvent(pShooter->sector, &pShooter->position, 1, 4.0, pShooter);
 
     spawned = sithWeapon_WeaponFireProjectile(pShooter, pProjectileTemplate, pFireDir, pFirePos, hFireSnd, submode, extra, projectileFlags, secDeltaTime, 0);
+
+    if (spawned)
+        TimingDomainsRuntime_NotifyWeapon();
 
     if ( spawned && sithMessage_g_outputstream )
         sithDSSThing_Fire(pShooter, pProjectileTemplate, pFireDir, pFirePos, hFireSnd, submode, extra, projectileFlags, secDeltaTime, spawned->guid, -1, 255, 0);
