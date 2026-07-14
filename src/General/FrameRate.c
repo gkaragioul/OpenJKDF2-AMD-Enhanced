@@ -74,3 +74,8 @@ int FrameRate_SliderFromValue(int configuredRate)
         return FRAME_RATE_NUMERIC_MAX;
     return configuredRate;
 }
+
+int FrameRate_HasTimingCaution(int configuredRate)
+{
+    return configuredRate <= FRAME_RATE_UNLIMITED || configuredRate > 100;
+}

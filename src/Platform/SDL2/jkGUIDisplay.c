@@ -44,7 +44,7 @@ static char16_t gamma_level[256] = {0};
 static char16_t hud_level[256] = {0};
 
 static char16_t slider_val_text[5] = {0};
-static char16_t slider_val_text_2[32] = {0};
+static char16_t slider_val_text_2[48] = {0};
 static char16_t slider_val_text_3[32] = {0};
 static char16_t quality_val_text[32] = {0};
 static char16_t anisotropy_val_text[32] = {0};
@@ -292,11 +292,13 @@ void jkGuiDisplay_FramelimitDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffe
     int tmp = FrameRate_ValueFromSlider(jkGuiDisplay_aElements[18].selectedTextEntry);
     
     if (tmp == FRAME_RATE_DESKTOP_REFRESH)
-        jk_snwprintf(slider_val_text_2, 32, u"Desktop Refresh");
+        jk_snwprintf(slider_val_text_2, 48, u"Desktop Refresh (timing caution)");
     else if (tmp == FRAME_RATE_UNLIMITED)
-        jk_snwprintf(slider_val_text_2, 32, u"Unlimited");
+        jk_snwprintf(slider_val_text_2, 48, u"Unlimited (timing caution)");
+    else if (FrameRate_HasTimingCaution(tmp))
+        jk_snwprintf(slider_val_text_2, 48, u"%d FPS (timing caution)", tmp);
     else
-        jk_snwprintf(slider_val_text_2, 32, u"%d FPS", tmp);
+        jk_snwprintf(slider_val_text_2, 48, u"%d FPS", tmp);
 
     jkGuiDisplay_aElements[19].wstr = slider_val_text_2;
     

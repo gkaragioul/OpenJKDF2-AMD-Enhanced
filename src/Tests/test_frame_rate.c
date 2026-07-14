@@ -31,6 +31,14 @@ int main(void)
     assert(FrameRate_SliderFromValue(FRAME_RATE_DESKTOP_REFRESH) == FRAME_RATE_SLIDER_DESKTOP);
     assert(FrameRate_SliderFromValue(999) == FRAME_RATE_NUMERIC_MAX);
 
+    assert(!FrameRate_HasTimingCaution(30));
+    assert(!FrameRate_HasTimingCaution(60));
+    assert(!FrameRate_HasTimingCaution(100));
+    assert(FrameRate_HasTimingCaution(120));
+    assert(FrameRate_HasTimingCaution(240));
+    assert(FrameRate_HasTimingCaution(FRAME_RATE_DESKTOP_REFRESH));
+    assert(FrameRate_HasTimingCaution(FRAME_RATE_UNLIMITED));
+
     assert(FrameRate_PeriodNanoseconds(120) == 8333333ULL);
     assert(FrameRate_PeriodNanoseconds(60) == 16666667ULL);
     assert(FrameRate_PeriodNanoseconds(0) == 0ULL);

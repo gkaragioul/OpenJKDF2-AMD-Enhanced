@@ -15,7 +15,7 @@ M4-RESOLUTION,Native 2560x1440 and arbitrary resolution with correct UI,visual a
 M4-BORDERLESS,Borderless fullscreen never changes desktop mode,display invariance tests,weak,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,Five-second gameplay run preserved 2560x1440 at 165 Hz; Alt+Tab and multi-monitor tests pending
 M4-WATCHDOG,Crash-safe display restoration watchdog,forced termination tests,incomplete,docs/evidence/watchdog-verification.md,Parent-exit detection works but host denies display-state application; Exclusive remains gated off
 M4-ASPECT,Configurable gameplay menu HUD and video aspect correction,visual tests,missing,,Pending
-M5-FRAME-UI,Frame-rate slider choices and persistence,unit and UI tests,missing,,Pending
+M5-FRAME-UI,Frame-rate slider choices and persistence,unit and UI tests,incomplete,src/Tests/test_frame_rate.c,Numeric slider includes required rates plus Desktop Refresh and Unlimited with high-rate cautions; profile persistence is implemented but interactive UI persistence remains unverified
 M5-TIMING,Render and simulation cadence preserve gameplay behavior,frame captures and gameplay tests,incomplete,docs/evidence/timing-invariance-2026-07-14.md,60 and 120 FPS first-door travel remained invariant within 7 ms; other gameplay timing domains remain pending
 M5-VSYNC,VSync and low-jitter limiter modes,pacing captures,incomplete,docs/evidence/timing-invariance-2026-07-14.md,VSync-off 60 and 120 FPS median and p95 pacing verified; On Adaptive and cap-only mode coverage remains pending
 M6-MOUSE,Low-latency raw mouse and safe cursor capture,input tests,incomplete,docs/evidence/modern-input-2026-07-14.md,Relative mouse input changed player yaw in two real-input runs; Alt+Tab capture loops and latency measurement remain pending

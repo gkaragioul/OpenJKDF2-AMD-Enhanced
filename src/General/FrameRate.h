@@ -16,5 +16,6 @@ uint64_t FrameRate_PeriodNanoseconds(int targetRate);
 uint64_t FrameRate_NextDeadline(uint64_t previousDeadline, uint64_t now, uint64_t period, uint32_t* missedDeadlines);
 int FrameRate_ValueFromSlider(int sliderPosition);
 int FrameRate_SliderFromValue(int configuredRate);
+int FrameRate_HasTimingCaution(int configuredRate);
 
 #endif
