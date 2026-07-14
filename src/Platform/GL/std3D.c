@@ -21,6 +21,7 @@
 #include "Platform/GL/ShaderCompile.h"
 #include "General/DiagnosticLog.h"
 #include "General/AspectPolicy.h"
+#include "General/QualityPreset.h"
 #include "Main/jkCutscene.h"
 #include "Platform/GL/jkgm.h"
 
@@ -770,7 +771,7 @@ int std3D_StartScene()
     
     std3D_swapFramebuffers();
     
-    double supersample_level = jkPlayer_ssaaMultiple; // Can also be set lower
+    double supersample_level = QualityPreset_ClampSsaa(jkPlayer_ssaaMultiple);
     int32_t tex_w = (int32_t)((double)Window_xSize * supersample_level);
     int32_t tex_h = (int32_t)((double)Window_ySize * supersample_level);
 

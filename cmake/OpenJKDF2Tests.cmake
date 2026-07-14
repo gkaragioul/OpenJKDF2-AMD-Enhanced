@@ -43,6 +43,13 @@ if(BUILD_TESTING)
     )
     set_tests_properties(video_menu_contract PROPERTIES LABELS "unit")
 
+    add_test(
+        NAME enhancement_framework_contract
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-enhancement-framework.ps1"
+    )
+    set_tests_properties(enhancement_framework_contract PROPERTIES LABELS "unit")
+
     openjkdf2_add_unit_test(
         test_diagnostic_log
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_log.c"

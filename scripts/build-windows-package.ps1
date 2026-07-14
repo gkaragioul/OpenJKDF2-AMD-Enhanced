@@ -36,7 +36,7 @@ foreach ($name in @(
     "PackageTools.psm1", "Launch-OpenJKDF2.ps1", "OpenJKDF2 AMD Enhanced.cmd",
     "OpenJKDF2 AMD Enhanced Portable.cmd", "Install.ps1", "Uninstall.ps1",
     "README-PACKAGE.md", "CONFIGURATION.example.json", "THIRD-PARTY-NOTICES.md",
-    "TROUBLESHOOTING.md", "CHANGELOG.md"
+    "TROUBLESHOOTING.md", "CHANGELOG.md", "ENHANCEMENT-PACKS.md"
 )) {
     Copy-Item -LiteralPath (Join-Path $packageSource $name) -Destination (Join-Path $stage $name)
 }

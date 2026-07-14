@@ -13,7 +13,7 @@ try {
         "OpenJKDF2-AMD-Enhanced.exe", "OpenAL32.dll", "Launch-OpenJKDF2.ps1",
         "OpenJKDF2 AMD Enhanced.cmd", "OpenJKDF2 AMD Enhanced Portable.cmd",
         "Install.ps1", "Uninstall.ps1", "LICENSE.md", "THIRD-PARTY-NOTICES.md",
-        "TROUBLESHOOTING.md", "CHANGELOG.md", "CONFIGURATION.example.json",
+        "TROUBLESHOOTING.md", "CHANGELOG.md", "ENHANCEMENT-PACKS.md", "CONFIGURATION.example.json",
         "PACKAGE-MANIFEST.json", "BUILD-PROVENANCE.json"
     )) {
         if (-not (Test-Path -LiteralPath (Join-Path $root $required) -PathType Leaf)) { throw "Required package file missing: $required" }

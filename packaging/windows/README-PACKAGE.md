@@ -1,4 +1,7 @@
-# OpenJKDF2 AMD Enhanced — Windows x64
+# OpenJKDF2 AMD Enhanced - Windows x64
+
+Optional legally obtained visual packs are documented in
+`ENHANCEMENT-PACKS.md`; none are bundled with this package.
 
 This is an independent community source port. It is not affiliated with or
 endorsed by LucasArts, Lucasfilm, Disney, AMD, Valve, GOG, or upstream OpenJKDF2.

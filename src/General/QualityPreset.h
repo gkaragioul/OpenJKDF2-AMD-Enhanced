@@ -17,12 +17,18 @@ typedef struct QualityPresetSettings
     double mipmapBias;
     int bloom;
     int ssao;
+    double ssaaMultiple;
+    int texturePrecache;
+    int assetEnhancements;
 } QualityPresetSettings;
 
 QualityPreset QualityPreset_Normalize(int value);
 QualityPresetSettings QualityPreset_Get(int preset);
 int QualityPreset_AnisotropyFromSlider(int position);
 int QualityPreset_SliderFromAnisotropy(int anisotropy);
-int QualityPreset_Matches(int preset, int textureFiltering, int anisotropy, double mipmapBias, int bloom, int ssao);
+double QualityPreset_ClampSsaa(double value);
+int QualityPreset_Matches(int preset, int textureFiltering, int anisotropy, double mipmapBias,
+                          int bloom, int ssao, double ssaaMultiple, int texturePrecache,
+                          int assetEnhancements);
 
 #endif

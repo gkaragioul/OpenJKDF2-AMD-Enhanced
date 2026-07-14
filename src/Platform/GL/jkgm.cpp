@@ -16,6 +16,10 @@
 #include "General/md5.h"
 #include "Engine/rdMaterial.h"
 #include "Platform/std3D.h"
+extern "C" {
+#include "General/DiagnosticLog.h"
+#include "General/PathOverlay.h"
+}
 #include "stdPlatform.h"
 #include "jk.h"
 
@@ -341,11 +345,13 @@ static std::unordered_map<std::string, jkgm_cache_entry_t> jkgm_cache;
 static std::unordered_map<std::string, jkgm_cache_entry_t> jkgm_cache_hash;
 static bool jkgm_cache_once = false;
 static bool jkgm_fastpath_disable = false;
+static bool jkgm_pack_miss_logged = false;
 
 void jkgm_startup()
 {
     jkgm_cache_once = false;
     jkgm_fastpath_disable = false;
+    jkgm_pack_miss_logged = false;
 
     for (auto i : jkgm_cache) {
         jkgm_free_cache_entry(&i.second);
@@ -369,16 +375,19 @@ static std::string jkgm_hash_to_str(uint8_t *p) {
     return std::string(tmp);
 }
 
-const fs::path jkgm_materials_path{ "jkgm/materials/" };
+static fs::path jkgm_materials_path;
 
 void jkgm_populate_cache()
 {
+    char resolvedMaterials[2048];
     if (jkgm_cache_once) return;
 
-    if (!fs::exists(jkgm_materials_path)) {
+    if (!path_overlay_resolve_read("jkgm/materials", resolvedMaterials, sizeof(resolvedMaterials))) {
         jkgm_fastpath_disable = true;
+        diag_log_event(DIAG_SEVERITY_INFO, "enhancements", "original_asset_fallback reason=no_optional_pack");
         return;
     }
+    jkgm_materials_path = fs::path(resolvedMaterials);
 
     for (const auto& fs_entry : fs::directory_iterator(jkgm_materials_path)) {
         if (!fs_entry.is_directory()) {
@@ -386,8 +395,8 @@ void jkgm_populate_cache()
         }
         const auto dir_iter_str = fs_entry.path().filename().string();
 
-        std::string base_path = "jkgm/materials/" + dir_iter_str + "/";
-        std::string metadata_path = base_path + "metadata.json";
+        fs::path base_path = fs_entry.path();
+        fs::path metadata_path = base_path / "metadata.json";
 
         try
         {
@@ -418,7 +427,7 @@ void jkgm_populate_cache()
 
                 entry.emissive_tex = it.value("emissive_map", "");
                 if (entry.emissive_tex != "") {
-                    entry.emissive_tex = base_path + entry.emissive_tex;
+                    entry.emissive_tex = (base_path / entry.emissive_tex).lexically_normal().string();
                 }
 
                 //TODO safety/bounds checks
@@ -443,7 +452,7 @@ void jkgm_populate_cache()
 
                     entry.displacement_tex = it.value("displacement_map", "");
                     if (entry.displacement_tex != "") {
-                        entry.displacement_tex = base_path + entry.displacement_tex;
+                        entry.displacement_tex = (base_path / entry.displacement_tex).lexically_normal().string();
                     }
                     //printf("%s %f\n", entry.displacement_tex.c_str(), entry.displacement_factor);
                 }
@@ -453,7 +462,7 @@ void jkgm_populate_cache()
                     entry.displacement_tex = "";
                 }
                     
-                entry.albedo_tex = base_path + it.value("albedo_map", "");
+                entry.albedo_tex = (base_path / it.value("albedo_map", "")).lexically_normal().string();
 
                 entry.albedo_data = NULL;
                 entry.emissive_data = NULL;
@@ -489,7 +498,7 @@ void jkgm_populate_cache()
         }
         catch(nlohmann::json::parse_error& e)
         {
-            std::cout << "Parse error while reading metadata `" << metadata_path << "`:";
+            std::cout << "Parse error while reading optional enhancement metadata:";
             std::cout << "message: " << e.what() << '\n'
                   << "exception id: " << e.id << '\n'
                   << "byte position of error: " << e.byte << std::endl;
@@ -498,7 +507,7 @@ void jkgm_populate_cache()
         }
         catch(nlohmann::json::exception& e)
         {
-            std::cout << "Exception while parsing metadata `" << metadata_path << "`:";
+            std::cout << "Exception while parsing optional enhancement metadata:";
             std::cout << "message: " << e.what() << '\n'
                   << "exception id: " << e.id << '\n' << std::endl;
 
@@ -583,14 +592,22 @@ void jkgm_populate_shortcuts(tVBuffer *vbuf, rdDDrawSurface *texture, rdMaterial
 
     texture->cache_entry = NULL;
 
-    if (jkgm_cache.find(cache_key) != jkgm_cache.end()) {
+    auto path_match = jkgm_cache.find(cache_key);
+    auto hash_match = jkgm_cache_hash.find(hash);
+    if (path_match != jkgm_cache.end()) {
         texture->skip_jkgm = 0;
+        texture->cache_entry = &path_match->second;
     }
-    else if (jkgm_cache_hash.find(hash) != jkgm_cache_hash.end()) {
+    else if (hash_match != jkgm_cache_hash.end()) {
         texture->skip_jkgm = 0;
+        texture->cache_entry = &hash_match->second;
     }
     else {
         texture->skip_jkgm = 1;
+        if (!jkgm_pack_miss_logged) {
+            diag_log_event(DIAG_SEVERITY_INFO, "enhancements", "original_asset_fallback reason=no_matching_override");
+            jkgm_pack_miss_logged = true;
+        }
     }
 
     // Also preload non-PNG textures
@@ -603,8 +620,6 @@ void jkgm_populate_shortcuts(tVBuffer *vbuf, rdDDrawSurface *texture, rdMaterial
         }
         return;
     }
-
-    texture->cache_entry = &jkgm_cache[cache_key];
 
     rdTexture *pRdTexture = &material->textures[cel];
     //pRdTexture->has_jkgm_override = 1;
@@ -657,12 +672,10 @@ int jkgm_std3D_AddToTextureCache(tVBuffer *vbuf, rdDDrawSurface *texture, int is
     }
 
     
-    if (!jkgm_cache_once) {
-        if (!fs::exists(jkgm_materials_path)) {
-            jkgm_fastpath_disable = true;
-            return 0;
-        }
-    }
+    if (!jkgm_cache_once)
+        jkgm_populate_cache();
+    if (jkgm_fastpath_disable)
+        return 0;
     
     uint32_t width, height;
     width = vbuf->format.width;

@@ -11,7 +11,7 @@ QualityPreset QualityPreset_Normalize(int value)
 
 QualityPresetSettings QualityPreset_Get(int preset)
 {
-    QualityPresetSettings settings = {1, 4, 0.75, 0, 0};
+    QualityPresetSettings settings = {1, 4, 0.75, 0, 0, 1.0, 1, 1};
 
     switch (QualityPreset_Normalize(preset))
     {
@@ -19,17 +19,21 @@ QualityPresetSettings QualityPreset_Get(int preset)
             settings.textureFiltering = 0;
             settings.anisotropy = 1;
             settings.mipmapBias = 1.0;
+            settings.texturePrecache = 0;
+            settings.assetEnhancements = 0;
             break;
         case QUALITY_PRESET_HIGH:
             settings.anisotropy = 8;
             settings.mipmapBias = 0.65;
             settings.bloom = 1;
+            settings.ssaaMultiple = 1.25;
             break;
         case QUALITY_PRESET_ULTRA:
             settings.anisotropy = 16;
             settings.mipmapBias = 0.5;
             settings.bloom = 1;
             settings.ssao = 1;
+            settings.ssaaMultiple = 1.5;
             break;
         case QUALITY_PRESET_CUSTOM:
         case QUALITY_PRESET_BALANCED:
@@ -61,7 +65,18 @@ int QualityPreset_SliderFromAnisotropy(int anisotropy)
     return 4;
 }
 
-int QualityPreset_Matches(int preset, int textureFiltering, int anisotropy, double mipmapBias, int bloom, int ssao)
+double QualityPreset_ClampSsaa(double value)
+{
+    if (!isfinite(value) || value < 1.0)
+        return 1.0;
+    if (value > 2.0)
+        return 2.0;
+    return value;
+}
+
+int QualityPreset_Matches(int preset, int textureFiltering, int anisotropy, double mipmapBias,
+                          int bloom, int ssao, double ssaaMultiple, int texturePrecache,
+                          int assetEnhancements)
 {
     QualityPresetSettings settings;
     QualityPreset normalized = QualityPreset_Normalize(preset);
@@ -74,5 +89,8 @@ int QualityPreset_Matches(int preset, int textureFiltering, int anisotropy, doub
         && settings.anisotropy == anisotropy
         && fabs(settings.mipmapBias - mipmapBias) < 0.001
         && settings.bloom == !!bloom
-        && settings.ssao == !!ssao;
+        && settings.ssao == !!ssao
+        && fabs(settings.ssaaMultiple - ssaaMultiple) < 0.001
+        && settings.texturePrecache == !!texturePrecache
+        && settings.assetEnhancements == !!assetEnhancements;
 }

@@ -373,8 +373,14 @@ void jkGuiDisplay_QualityDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *
     if (preset != QUALITY_PRESET_CUSTOM)
     {
         QualityPresetSettings settings = QualityPreset_Get(preset);
+        jkGuiDisplay_aElementsAdvanced[9].selectedTextEntry = settings.assetEnhancements;
+        jkGuiDisplay_aElementsAdvanced[10].selectedTextEntry = settings.texturePrecache;
         jkGuiDisplay_aElementsAdvanced[19].selectedTextEntry = QualityPreset_SliderFromAnisotropy(settings.anisotropy);
         jk_snwprintf(mipmap_bias_text, 32, u"%.2f", settings.mipmapBias);
+        jkGuiDisplay_aElements[15].selectedTextEntry = settings.textureFiltering;
+        jkGuiDisplay_aElements[22].selectedTextEntry = settings.bloom;
+        jkGuiDisplay_aElements[23].selectedTextEntry = settings.ssao;
+        jk_snwprintf(render_level, 255, u"%.2f", settings.ssaaMultiple);
     }
     jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
     jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_aElementsAdvanced[17], menu, 1);
@@ -455,6 +461,12 @@ int jkGuiDisplay_ShowAdvanced()
                 jkPlayer_enableSSAO = settings.ssao;
                 jkPlayer_anisotropy = settings.anisotropy;
                 jkPlayer_mipmapBias = settings.mipmapBias;
+                jkPlayer_ssaaMultiple = settings.ssaaMultiple;
+                jkPlayer_bEnableTexturePrecache = settings.texturePrecache;
+                jkPlayer_bEnableJkgm = settings.assetEnhancements;
+                jkGuiDisplay_aElementsAdvanced[9].selectedTextEntry = jkPlayer_bEnableJkgm;
+                jkGuiDisplay_aElementsAdvanced[10].selectedTextEntry = jkPlayer_bEnableTexturePrecache;
+                jk_snwprintf(render_level, 255, u"%.2f", jkPlayer_ssaaMultiple);
             }
             else
             {
@@ -536,16 +548,6 @@ continue_menu:
         jkPlayer_enableVsync = PresentationMode_VsyncFromSlider(jkGuiDisplay_aElements[21].selectedTextEntry);
         jkPlayer_enableBloom = jkGuiDisplay_aElements[22].selectedTextEntry;
         jkPlayer_enableSSAO = jkGuiDisplay_aElements[23].selectedTextEntry;
-        if (!QualityPreset_Matches(jkPlayer_qualityPreset,
-                                   jkPlayer_enableTextureFilter,
-                                   jkPlayer_anisotropy,
-                                   jkPlayer_mipmapBias,
-                                   jkPlayer_enableBloom,
-                                   jkPlayer_enableSSAO))
-        {
-            jkPlayer_qualityPreset = QUALITY_PRESET_CUSTOM;
-        }
-
         char tmp[256];
         stdString_WcharToChar(tmp, render_level, 255);
 
@@ -553,7 +555,20 @@ continue_menu:
             jkPlayer_ssaaMultiple = 1.0;
         }
         else {
-            jkPlayer_ssaaMultiple = ftmp;
+            jkPlayer_ssaaMultiple = QualityPreset_ClampSsaa(ftmp);
+        }
+
+        if (!QualityPreset_Matches(jkPlayer_qualityPreset,
+                                   jkPlayer_enableTextureFilter,
+                                   jkPlayer_anisotropy,
+                                   jkPlayer_mipmapBias,
+                                   jkPlayer_enableBloom,
+                                   jkPlayer_enableSSAO,
+                                   jkPlayer_ssaaMultiple,
+                                   jkPlayer_bEnableTexturePrecache,
+                                   jkPlayer_bEnableJkgm))
+        {
+            jkPlayer_qualityPreset = QUALITY_PRESET_CUSTOM;
         }
 
         stdString_WcharToChar(tmp, gamma_level, 255);

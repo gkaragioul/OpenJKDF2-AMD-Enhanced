@@ -724,7 +724,7 @@ void jkPlayer_ParseLegacyExt()
         if (_sscanf(stdConffile_g_aLine, "ssaamultiple %f", &ftmp) != 1)
             jkPlayer_ssaaMultiple = 1.0;
         else
-            jkPlayer_ssaaMultiple = ftmp;
+            jkPlayer_ssaaMultiple = QualityPreset_ClampSsaa(ftmp);
     }
 
     if (stdConffile_ReadLine())
@@ -837,7 +837,8 @@ int jkPlayer_ReadConf(char16_t *name)
         if (jkPlayer_mipmapBias < 0.25) jkPlayer_mipmapBias = 0.25;
         if (jkPlayer_mipmapBias > 4.0) jkPlayer_mipmapBias = 4.0;
         jkPlayer_enableBloom = stdJSON_GetBool(ext_fpath, "enablebloom", jkPlayer_enableBloom);
-        jkPlayer_ssaaMultiple = stdJSON_GetFloat(ext_fpath, "ssaamultiple", jkPlayer_ssaaMultiple);
+        jkPlayer_ssaaMultiple = QualityPreset_ClampSsaa(
+            stdJSON_GetFloat(ext_fpath, "ssaamultiple", jkPlayer_ssaaMultiple));
         jkPlayer_enableSSAO = stdJSON_GetInt(ext_fpath, "enablessao", jkPlayer_enableSSAO);
         jkPlayer_gamma = stdJSON_GetFloat(ext_fpath, "gamma", jkPlayer_gamma);
 

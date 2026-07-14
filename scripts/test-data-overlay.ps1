@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory = $true)][string]$DataDir,
     [Parameter(Mandatory = $true)][string]$UserDir,
     [string]$Executable = "build/msvc-release/openjkdf2-64.exe",
-    [int]$TimeoutSeconds = 30
+    [int]$TimeoutSeconds = 30,
+    [switch]$EmptyEnhancementPack
 )
 
 $ErrorActionPreference = "Stop"
@@ -36,6 +37,12 @@ function Get-AssetSnapshot([string]$Root) {
     @(Get-ChildItem -LiteralPath $Root -Recurse -File | Sort-Object FullName | ForEach-Object {
         "$($_.FullName.Substring($Root.Length))|$($_.Length)|$($_.LastWriteTimeUtc.Ticks)"
     })
+}
+
+if ($EmptyEnhancementPack) {
+    $packRoot = Join-Path $userRoot "jkgm\materials\empty-contract-pack"
+    [void](New-Item -ItemType Directory -Path $packRoot -Force)
+    '{"materials":[]}' | Set-Content -LiteralPath (Join-Path $packRoot "metadata.json") -Encoding utf8
 }
 
 $before = Get-AssetSnapshot $assetRoot
@@ -84,6 +91,8 @@ $result = [ordered]@{
     clean_state = $state.status -eq "clean"
     storage_event = [bool](Select-String -LiteralPath $jsonl -Pattern "path_overlay active=true writable=user" -Quiet)
     validation_event = [bool](Select-String -LiteralPath $jsonl -Pattern "gameplay_screenshot_requested" -Quiet)
+    enhancement_pack_seeded = [bool]$EmptyEnhancementPack
+    original_asset_fallback = [bool](Select-String -LiteralPath $jsonl -Pattern "original_asset_fallback reason=no_matching_override" -Quiet)
     process_finished = [bool](Select-String -LiteralPath $jsonl -Pattern "process_finished" -Quiet)
     user_files = @(Get-ChildItem -LiteralPath $userRoot -Recurse -File | ForEach-Object { $_.FullName.Substring($userRoot.Length).TrimStart("\", "/") })
 }
@@ -93,6 +102,7 @@ $result | ConvertTo-Json -Depth 4
 if ($result.startup_result -ne 1 -or -not $result.display_invariant -or -not $result.asset_metadata_invariant -or
     $width -ne 2560 -or $height -ne 1440 -or $meanLuminance -lt 20 -or $litFraction -lt 0.5 -or
     -not $result.clean_state -or -not $result.storage_event -or
+    ($EmptyEnhancementPack -and -not $result.original_asset_fallback) -or
     -not $result.validation_event -or -not $result.process_finished) {
     throw "Data-overlay verification failed; inspect $resultPath"
 }
