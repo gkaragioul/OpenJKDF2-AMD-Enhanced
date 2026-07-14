@@ -15,6 +15,7 @@
 #include "Platform/wuRegistry.h"
 #include "Main/jkQuakeConsole.h"
 #include "General/DiagnosticLog.h"
+#include "General/DisplaySelection.h"
 #include "General/DisplayMode.h"
 #include "General/ResolutionLayout.h"
 #include "General/AspectPolicy.h"
@@ -79,6 +80,10 @@ int Window_needsRecreate = 0;
 int Window_bShouldPopSteamKeyboard = 0;
 static int Window_bSafeMode = 0;
 static int Window_bRestorationGuardReady = 0;
+static int Window_displayMonitor = 0;
+static int Window_windowWidth = WINDOW_DEFAULT_WIDTH;
+static int Window_windowHeight = WINDOW_DEFAULT_HEIGHT;
+static int Window_requestedRefreshHz = 0;
 static PresentationVsyncMode Window_appliedVsync = PRESENTATION_VSYNC_OFF;
 static int Window_contextFallbackTier = 0;
 static char Window_rendererVendor[256] = "";
@@ -615,6 +620,147 @@ static void Window_SetGameplayMouseCapture(int enabled)
 
 int Window_xPos = SDL_WINDOWPOS_CENTERED;
 int Window_yPos = SDL_WINDOWPOS_CENTERED;
+
+static SDL_DisplayID Window_DisplayIdForOrdinal(int monitor)
+{
+    SDL_DisplayID result = 0;
+    int count = 0;
+    SDL_DisplayID* displays = SDL_GetDisplays(&count);
+    if (displays && monitor >= 0 && monitor < count)
+        result = displays[monitor];
+    if (displays) SDL_free(displays);
+    return result ? result : SDL_GetPrimaryDisplay();
+}
+
+int Window_GetDisplayInventory(DisplayInventory* out_inventory)
+{
+    SDL_DisplayID* displays;
+    SDL_DisplayID primary;
+    int count = 0;
+    int index;
+    if (!out_inventory) return 0;
+    memset(out_inventory, 0, sizeof(*out_inventory));
+    displays = SDL_GetDisplays(&count);
+    primary = SDL_GetPrimaryDisplay();
+    if (!displays || count <= 0)
+    {
+        const SDL_DisplayMode* desktop = primary ? SDL_GetDesktopDisplayMode(primary) : NULL;
+        if (displays) SDL_free(displays);
+        if (!desktop) return 0;
+        out_inventory->monitor_count = 1;
+        out_inventory->monitors[0].desktop_width = desktop->w;
+        out_inventory->monitors[0].desktop_height = desktop->h;
+        out_inventory->monitors[0].desktop_refresh_hz = (int)(desktop->refresh_rate + 0.5f);
+        return 1;
+    }
+    if (count > DISPLAY_SELECTION_MAX_MONITORS) count = DISPLAY_SELECTION_MAX_MONITORS;
+    out_inventory->monitor_count = count;
+    for (index = 0; index < count; ++index)
+    {
+        DisplayMonitor* target = &out_inventory->monitors[index];
+        const SDL_DisplayMode* desktop = SDL_GetDesktopDisplayMode(displays[index]);
+        SDL_DisplayMode** modes;
+        int mode_count = 0;
+        int mode_index;
+        if (displays[index] == primary) out_inventory->primary_monitor = index;
+        if (desktop)
+        {
+            target->desktop_width = desktop->w;
+            target->desktop_height = desktop->h;
+            target->desktop_refresh_hz = (int)(desktop->refresh_rate + 0.5f);
+        }
+        modes = SDL_GetFullscreenDisplayModes(displays[index], &mode_count);
+        for (mode_index = 0; modes && mode_index < mode_count &&
+             target->mode_count < DISPLAY_SELECTION_MAX_MODES; ++mode_index)
+        {
+            const SDL_DisplayMode* mode = modes[mode_index];
+            DisplayResolution candidate;
+            int duplicate = 0;
+            int existing;
+            if (!mode || mode->w <= 0 || mode->h <= 0) continue;
+            candidate.width = mode->w;
+            candidate.height = mode->h;
+            candidate.refresh_hz = (int)(mode->refresh_rate + 0.5f);
+            for (existing = 0; existing < target->mode_count; ++existing)
+            {
+                const DisplayResolution* current = &target->modes[existing];
+                if (current->width == candidate.width &&
+                    current->height == candidate.height &&
+                    current->refresh_hz == candidate.refresh_hz)
+                {
+                    duplicate = 1;
+                    break;
+                }
+            }
+            if (!duplicate) target->modes[target->mode_count++] = candidate;
+        }
+        if (modes) SDL_free(modes);
+    }
+    SDL_free(displays);
+    return 1;
+}
+
+const char* Window_GetDisplayName(int monitor)
+{
+    SDL_DisplayID display = Window_DisplayIdForOrdinal(monitor);
+    const char* name = display ? SDL_GetDisplayName(display) : NULL;
+    return name ? name : "Display";
+}
+
+DisplaySettings Window_GetDisplaySettings(void)
+{
+    DisplaySettings settings = {
+        Window_displayMode, Window_displayMonitor, Window_screenXSize,
+        Window_screenYSize,
+        Window_displayMode == DISPLAY_MODE_WINDOWED ? 0 : Window_CurrentRefreshRate(),
+        Window_isHiDpi
+    };
+    if (Window_displayMode == DISPLAY_MODE_WINDOWED)
+    {
+        settings.width = Window_windowWidth;
+        settings.height = Window_windowHeight;
+    }
+    return settings;
+}
+
+int Window_ApplyDisplaySettings(DisplaySettings requested, DisplaySelectionReason* reason)
+{
+    DisplayInventory inventory;
+    DisplaySelectionResult result;
+    if (!Window_GetDisplayInventory(&inventory))
+    {
+        if (reason) *reason = DISPLAY_SELECTION_NO_DISPLAYS;
+        return 0;
+    }
+    result = display_selection_resolve(&inventory, requested, Window_bRestorationGuardReady);
+    if (reason) *reason = result.reason;
+    if (!result.accepted) return 0;
+    Window_displayMonitor = result.settings.monitor;
+    Window_requestedRefreshHz = result.settings.refresh_hz;
+    if (result.settings.mode == DISPLAY_MODE_WINDOWED)
+    {
+        Window_windowWidth = result.settings.width;
+        Window_windowHeight = result.settings.height;
+    }
+    Window_SetDisplayMode(result.settings.mode);
+    Window_SetHiDpi(result.settings.hidpi);
+    Window_screenXSize = result.settings.width;
+    Window_screenYSize = result.settings.height;
+    Window_xSize = result.settings.width;
+    Window_ySize = result.settings.height;
+    Window_needsRecreate = 1;
+    return 1;
+}
+
+void Window_CommitDisplaySettings(DisplaySettings settings)
+{
+    (void)settings;
+}
+
+int Window_IsRestorationGuardReady(void)
+{
+    return Window_bRestorationGuardReady;
+}
 int last_jkGame_isDDraw = 0;
 #ifdef QUAKE_CONSOLE
 int last_jkQuakeConsole_bOpen = 0;
@@ -1559,7 +1705,7 @@ void Window_RecreateSDL2Window()
 
     SDL_Rect desktop_bounds = { 0, 0, Window_screenXSize, Window_screenYSize };
     if (Window_displayMode == DISPLAY_MODE_BORDERLESS) {
-        SDL_DisplayID display = SDL_GetPrimaryDisplay();
+        SDL_DisplayID display = Window_DisplayIdForOrdinal(Window_displayMonitor);
         if (display && SDL_GetDisplayBounds(display, &desktop_bounds)) {
             Window_screenXSize = desktop_bounds.w;
             Window_screenYSize = desktop_bounds.h;
@@ -1568,6 +1714,17 @@ void Window_RecreateSDL2Window()
         }
         flags |= SDL_WINDOW_BORDERLESS;
         flags &= ~SDL_WINDOW_RESIZABLE;
+    }
+
+    else if (Window_displayMode == DISPLAY_MODE_WINDOWED) {
+        SDL_DisplayID display = Window_DisplayIdForOrdinal(Window_displayMonitor);
+        SDL_Rect bounds;
+        Window_screenXSize = Window_windowWidth;
+        Window_screenYSize = Window_windowHeight;
+        if (display && SDL_GetDisplayBounds(display, &bounds)) {
+            Window_xPos = bounds.x + (bounds.w - Window_screenXSize) / 2;
+            Window_yPos = bounds.y + (bounds.h - Window_screenYSize) / 2;
+        }
     }
 
 #if defined(ARCH_WASM)

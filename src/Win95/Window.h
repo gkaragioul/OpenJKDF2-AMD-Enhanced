@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "globals.h"
+#include "General/DisplaySelection.h"
 #include "General/DisplayMode.h"
 #include "General/RendererDiagnostics.h"
 
@@ -48,6 +49,12 @@ void Window_SetDisplayMode(DisplayMode mode);
 int Window_ConfirmDisplaySettings(unsigned int timeoutMs);
 void Window_GetRendererDiagnostics(RendererDiagnostics* diagnostics);
 int Window_GetAppliedVsyncMode(void);
+int Window_GetDisplayInventory(DisplayInventory* out_inventory);
+const char* Window_GetDisplayName(int monitor);
+DisplaySettings Window_GetDisplaySettings(void);
+int Window_ApplyDisplaySettings(DisplaySettings requested, DisplaySelectionReason* reason);
+void Window_CommitDisplaySettings(DisplaySettings settings);
+int Window_IsRestorationGuardReady(void);
 
 
 extern int Window_screenXSize;

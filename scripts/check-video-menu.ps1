@@ -4,6 +4,7 @@ $root = Split-Path -Parent $PSScriptRoot
 $menu = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Platform\SDL2\jkGUIDisplay.c')
 $strings = Get-Content -Raw -LiteralPath (Join-Path $root 'resource\ui\openjkdf2.uni')
 $startup = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Main\Main.c')
+$window = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Win95\Window.h')
 $missing = @()
 
 $declaredCount = [int]([regex]::Match($strings, '(?m)^MSGS\s+(\d+)').Groups[1].Value)
@@ -33,6 +34,12 @@ foreach ($contract in @(
     'config_recovery_snapshot\(REGISTRY_FNAME, REGISTRY_LKG_FNAME\)')) {
     $source = if ($contract -like 'config_recovery*') { $startup } else { $menu }
     if ($source -notmatch $contract) { $missing += "behavior:$contract" }
+}
+
+foreach ($api in @('Window_GetDisplayInventory', 'Window_GetDisplayName',
+                    'Window_GetDisplaySettings', 'Window_ApplyDisplaySettings',
+                    'Window_CommitDisplaySettings', 'Window_IsRestorationGuardReady')) {
+    if ($window -notmatch [regex]::Escape($api)) { $missing += "display-api:$api" }
 }
 
 if ($missing.Count) { throw ('Video menu contract missing: ' + ($missing -join ', ')) }
