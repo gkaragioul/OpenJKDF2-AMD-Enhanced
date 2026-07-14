@@ -292,6 +292,17 @@ else()
     add_executable(${BIN_NAME} ${GAME_MAIN_SOURCE_FILES})
     target_link_libraries(${BIN_NAME} PRIVATE ${SDL2_COMMON_LIBS} sith_engine)
 
+    if(PLAT_MSVC)
+        add_executable(
+            openjkdf2-display-watchdog
+            src/Tools/display_watchdog_main.c
+            src/Platform/Win32/DisplayRestore.c
+        )
+        target_compile_features(openjkdf2-display-watchdog PRIVATE c_std_11)
+        target_include_directories(openjkdf2-display-watchdog PRIVATE "${PROJECT_SOURCE_DIR}/src")
+        target_link_libraries(openjkdf2-display-watchdog PRIVATE user32)
+    endif()
+
     if(TARGET_BUILD_TESTS AND TARGET_MACOS)
         if(NOT EXPERIMENTAL_FIXED_POINT)
             add_executable(rle_test src/Tests/rle_test.c)

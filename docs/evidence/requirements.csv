@@ -13,7 +13,7 @@ M3-RDNA,Standards-compliant capability-based RDNA renderer fixes,shader audit an
 M3-DIAG-PAGE,In-game renderer diagnostics page,gameplay UI test,missing,,Pending
 M4-RESOLUTION,Native 2560x1440 and arbitrary resolution with correct UI,visual and coordinate tests,incomplete,,Desktop resolution observed only
 M4-BORDERLESS,Borderless fullscreen never changes desktop mode,display invariance tests,weak,docs/evidence/foundation-verification.md,Desktop-sized borderless smoke invariant; gameplay and multi-monitor tests pending
-M4-WATCHDOG,Crash-safe display restoration watchdog,forced termination tests,missing,,Required before exclusive fullscreen testing
+M4-WATCHDOG,Crash-safe display restoration watchdog,forced termination tests,incomplete,docs/evidence/watchdog-verification.md,Parent-exit detection works but host denies display-state application; Exclusive remains gated off
 M4-ASPECT,Configurable gameplay menu HUD and video aspect correction,visual tests,missing,,Pending
 M5-FRAME-UI,Frame-rate slider choices and persistence,unit and UI tests,missing,,Pending
 M5-TIMING,Render and simulation cadence preserve gameplay behavior,frame captures and gameplay tests,missing,,Pending
