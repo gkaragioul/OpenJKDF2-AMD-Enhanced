@@ -403,7 +403,7 @@ static int jkGuiDisplay_ShowAspectOptions(void)
     return clicked;
 }
 
-static void jkGuiDisplay_ShowDiagnostics(void)
+void jkGuiDisplay_ShowDiagnostics(void)
 {
     RendererDiagnostics diagnostics;
     char formatted[2048];
@@ -423,7 +423,9 @@ static void jkGuiDisplay_ShowDiagnostics(void)
     jkGuiRend_MenuSetReturnKeyShortcutElement(&jkGuiDisplay_diagnosticsMenu, &jkGuiDisplay_diagnosticsElements[10]);
     jkGuiRend_MenuSetEscapeKeyShortcutElement(&jkGuiDisplay_diagnosticsMenu, &jkGuiDisplay_diagnosticsElements[10]);
     jkGuiSetup_sub_412EF0(&jkGuiDisplay_diagnosticsMenu, 0);
+    diag_log_event(DIAG_SEVERITY_INFO, "diagnostics", "diagnostics_page displayed=true");
     jkGuiRend_DisplayAndReturnClicked(&jkGuiDisplay_diagnosticsMenu);
+    diag_log_event(DIAG_SEVERITY_INFO, "diagnostics", "diagnostics_page dismissed=true");
 }
 
 static int jkGuiDisplay_ApplyDisplayChange(DisplaySettings proposed)

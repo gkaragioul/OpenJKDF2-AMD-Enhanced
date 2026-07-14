@@ -22,6 +22,7 @@ static void (*jkGuiDisplay_sub_4149C0)() = (void*)jkGuiDisplay_sub_4149C0_ADDR;
 void jkGuiDisplay_Startup();
 void jkGuiDisplay_Shutdown();
 int jkGuiDisplay_Show();
+void jkGuiDisplay_ShowDiagnostics();
 void jkGuiDisplay_sub_4149C0();
 #endif
 

@@ -17,6 +17,7 @@
 #include "Gui/jkGUIDialog.h"
 #include "Gui/jkGUIPlayer.h"
 #include "Gui/jkGUISetup.h"
+#include "Gui/jkGUIDisplay.h"
 #include "Gui/jkGUIMods.h"
 #include "Win95/stdComm.h"
 #include "Win95/stdGdi.h"
@@ -29,6 +30,8 @@
 #include "General/stdFnames.h"
 #include "Main/sithCvar.h"
 #include "stdPlatform.h"
+
+#include <stdlib.h>
 
 // Added
 extern int jkCredits_cdOverride;
@@ -140,6 +143,13 @@ void jkGuiMain_Show()
     stdBitmap_EnsureData(jkGui_stdBitmaps[JKGUI_BM_BK_MAIN]);
 
     jkGui_SetModeMenu(jkGui_stdBitmaps[JKGUI_BM_BK_MAIN]->palette);
+    if (getenv("OPENJKDF2_VALIDATE_DIAGNOSTICS_PAGE"))
+    {
+        jkGuiDisplay_ShowDiagnostics();
+        g_should_exit = 1;
+        jkGui_SetModeGame();
+        return;
+    }
     if ( !jkGuiMain_bIdk || (jkGuiMain_bIdk = 0, jkGuiPlayer_ShowNewPlayer(1), !stdComm_dword_8321F8)
 #ifndef TARGET_NO_MULTIPLAYER_MENUS 
         || jkGuiMultiplayer_Show2() != 1 
