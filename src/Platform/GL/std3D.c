@@ -1430,13 +1430,17 @@ void std3D_DrawMenu()
     }
     else
     {
+        ResolutionLayoutRect hudDestination = AspectPolicy_Destination(
+            Window_xSize, Window_ySize, 640, 480, jkPlayer_preserveHudAspect);
+        float hudOriginX = (float)hudDestination.x;
+        float hudOriginY = (float)hudDestination.y;
         GL_tmpVerticesAmt = 0;
         GL_tmpTrisAmt = 0;
 
         // Main View
         std3D_DrawMenuSubrect(0, 128, menu_w, menu_h-256, 0, 128, 0.0);
 
-        float hudScale = Window_ySize / 480.0;
+        float hudScale = (float)hudDestination.height / 480.0f;
 
         /*if (menu_w >= 3600)
             hudScale = 4;
@@ -1446,11 +1450,11 @@ void std3D_DrawMenu()
             hudScale = 2;*/
 
         // Left and Right HUD
-        std3D_DrawMenuSubrect(0, menu_h - 64, 64, 64, 0, Window_ySize - 64*hudScale, hudScale);
-        std3D_DrawMenuSubrect(menu_w - 64, menu_h - 64, 64, 64, Window_xSize - 64*hudScale, Window_ySize - 64*hudScale, hudScale);
+        std3D_DrawMenuSubrect(0, menu_h - 64, 64, 64, hudOriginX, hudOriginY + (float)hudDestination.height - 64*hudScale, hudScale);
+        std3D_DrawMenuSubrect(menu_w - 64, menu_h - 64, 64, 64, hudOriginX + (float)hudDestination.width - 64*hudScale, hudOriginY + (float)hudDestination.height - 64*hudScale, hudScale);
 
         // Items
-        std3D_DrawMenuSubrect((menu_w / 2) - 128, menu_h - 64, 256, 64, (Window_xSize / 2) - (128*hudScale), Window_ySize - 64*hudScale, hudScale);
+        std3D_DrawMenuSubrect((menu_w / 2) - 128, menu_h - 64, 256, 64, hudOriginX + ((float)hudDestination.width / 2) - (128*hudScale), hudOriginY + (float)hudDestination.height - 64*hudScale, hudScale);
 
         // Text
         float textScale = hudScale;
@@ -1460,10 +1464,10 @@ void std3D_DrawMenu()
         float textWidth = menu_w - (48*2);
         float textHeight = jkDev_BMFontHeight * 5.5;
         float destTextWidth = textWidth * textScale;
-        std3D_DrawMenuSubrect(48, 0, menu_w - (48*2), textHeight, (Window_xSize / 2) - (destTextWidth / 2), 0, textScale);
+        std3D_DrawMenuSubrect(48, 0, menu_w - (48*2), textHeight, hudOriginX + ((float)hudDestination.width / 2) - (destTextWidth / 2), hudOriginY, textScale);
 
         // Active forcepowers/items
-        std3D_DrawMenuSubrect(menu_w - 48, 0, 48, 128, Window_xSize - (48*hudScale), 0, hudScale);
+        std3D_DrawMenuSubrect(menu_w - 48, 0, 48, 128, hudOriginX + (float)hudDestination.width - (48*hudScale), hudOriginY, hudScale);
     }
 
     glActiveTexture(GL_TEXTURE0 + 4);

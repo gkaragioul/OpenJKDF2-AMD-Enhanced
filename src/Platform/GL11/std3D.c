@@ -863,9 +863,9 @@ void std3D_DrawMenu()
     }
     else
     {
-        // In-game HUD overlay: the buffer is full-resolution; stretch it 1:1 over
-        // the already-rendered 3D scene (index-0 texels are discarded above).
-        std3D_DrawMenuSubrect(0, 0, (float)srcW, (float)srcH, 0, 0, 0.0f, 255, 255, 255);
+        ResolutionLayoutRect destination = AspectPolicy_Destination(
+            dw, dh, 640, 480, jkPlayer_preserveHudAspect);
+        std3D_DrawMenuDestination(0, 0, 640, 480, &destination);
     }
 
     // Composite the accumulated HUD/UI overlay on top of the menu/scene.

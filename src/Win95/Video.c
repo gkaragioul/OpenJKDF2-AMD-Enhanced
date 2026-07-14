@@ -13,6 +13,7 @@
 #include "Main/jkDev.h"
 #include "Main/jkGame.h"
 #include "World/jkPlayer.h"
+#include "General/AspectPolicy.h"
 
 static flex_d_t aGammaTable[10] = {
     1.0,
@@ -116,14 +117,14 @@ void Video_swCompositeOverlaysIntoWorld(void)
     stdDisplay_VBufferLock(pWorld);
     stdDisplay_VBufferLock(Video_pMenuBuffer);
 
-    // HUD: the menu buffer's top-left 640x480 texels, scaled into the 4:3-centered region of the
-    // world buffer (matches std3D_DrawMenu's in-game present, which samples that same 640x480 sub-rect
-    // and letterboxes it 4:3). The world buffer shares the window aspect, so this stays centered.
+    // HUD: apply the same policy used by both hardware presentation paths.
     {
-        int dstH = worldH;
-        int dstW = (worldH * 640) / 480;
-        int dstX = (worldW - dstW) / 2;
-        Video_swBlitScaledKeyed(pWorld, Video_pMenuBuffer, 640, 480, dstX, 0, dstW, dstH);
+        ResolutionLayoutRect destination = AspectPolicy_Destination(
+            worldW, worldH, 640, 480, jkPlayer_preserveHudAspect);
+        Video_swBlitScaledKeyed(
+            pWorld, Video_pMenuBuffer, 640, 480,
+            (int)destination.x, (int)destination.y,
+            (int)destination.width, (int)destination.height);
     }
     stdDisplay_VBufferUnlock(Video_pMenuBuffer);
 
