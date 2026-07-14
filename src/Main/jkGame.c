@@ -14,6 +14,7 @@
 #include "Win95/stdComm.h"
 #include "Platform/std3D.h"
 #include "Win95/stdDisplay.h"
+#include "Win95/Window.h"
 #include "Main/jkHud.h"
 #include "Main/jkHudInv.h"
 #include "Main/jkHudScope.h"
@@ -27,6 +28,8 @@
 #include "General/stdString.h"
 #include "General/DiagnosticLog.h"
 #include "General/FrameTelemetry.h"
+#include "General/FrameRate.h"
+#include "General/PresentationMode.h"
 #include "General/RuntimeProbe.h"
 
 #include "stdPlatform.h"
@@ -586,6 +589,81 @@ int jkGame_Update()
                     }
                     g_should_exit = 1;
                 }
+            }
+        }
+    }
+
+    // Opt-in production presentation observer. It applies the requested VSync
+    // mode and frame cap, measures the real swap/pacing loop, then exits cleanly.
+    {
+        static RuntimeProbe presentationProbe = { 0 };
+        static bool presentationApplied = false;
+        static bool presentationCaptureRequested = false;
+        const char* pPresentationMs = getenv("OPENJKDF2_VALIDATE_PRESENTATION_MS");
+        SithWorld* pWorld = sithWorld_g_pCurrentWorld;
+        SithThing* pPlayer = pWorld ? pWorld->pLocalPlayer : NULL;
+        if (pPresentationMs && pPlayer && pPlayer->sector)
+        {
+            const uint32_t nowMs = stdPlatform_GetTimeMsec();
+            const uint32_t delayMs = (uint32_t)strtoul(pPresentationMs, NULL, 10);
+            if (!presentationApplied)
+            {
+                const char* pMode = getenv("OPENJKDF2_VALIDATE_PRESENTATION_VSYNC");
+                const char* pFrameCap = getenv("OPENJKDF2_VALIDATE_PRESENTATION_FRAME_CAP");
+                int requestedMode;
+                int frameCap = FRAME_RATE_UNLIMITED;
+                char applyEvent[160];
+                if (!runtime_probe_parse_vsync(pMode, &requestedMode) ||
+                    (pFrameCap && !runtime_probe_parse_rate(pFrameCap, &frameCap)))
+                {
+                    diag_log_event(DIAG_SEVERITY_ERROR, "validation",
+                                   "presentation request_rejected=true");
+                    g_should_exit = 1;
+                }
+                else
+                {
+                    jkPlayer_enableVsync = requestedMode;
+                    jkPlayer_fpslimit = frameCap;
+                    FrameTelemetry_Reset();
+                    snprintf(applyEvent, sizeof(applyEvent),
+                             "presentation requested=%s frame_cap=%d",
+                             PresentationMode_VsyncName(requestedMode), frameCap);
+                    diag_log_event(DIAG_SEVERITY_INFO, "validation", applyEvent);
+                }
+                presentationApplied = true;
+            }
+            if (!presentationCaptureRequested && runtime_probe_due(&presentationProbe, nowMs, delayMs))
+            {
+                const char* pShotPath = getenv("OPENJKDF2_VALIDATE_PRESENTATION_SCREENSHOT");
+                if (pShotPath)
+                    std3D_RequestWindowScreenshot(pShotPath);
+                else
+                {
+                    diag_log_event(DIAG_SEVERITY_ERROR, "validation",
+                                   "presentation screenshot_path_missing=true");
+                    g_should_exit = 1;
+                }
+                presentationCaptureRequested = true;
+            }
+            if (presentationCaptureRequested && std3D_IsWindowScreenshotComplete())
+            {
+                FrameTelemetrySnapshot snapshot = FrameTelemetry_GetSnapshot();
+                FrameTelemetryStatistics statistics = { 0 };
+                const int haveStatistics = FrameTelemetry_CalculateStatistics(&snapshot, &statistics);
+                const int appliedMode = Window_GetAppliedVsyncMode();
+                char completeEvent[512];
+                snprintf(completeEvent, sizeof(completeEvent),
+                         "presentation complete requested=%s applied=%s frame_cap=%d samples=%u median_ms=%.4f p95_ms=%.4f p99_ms=%.4f worst_ms=%.4f clean_exit=true",
+                         PresentationMode_VsyncName(jkPlayer_enableVsync),
+                         PresentationMode_VsyncName(appliedMode), jkPlayer_fpslimit,
+                         haveStatistics ? statistics.sampleCount : 0u,
+                         haveStatistics ? statistics.medianMilliseconds : 0.0,
+                         haveStatistics ? statistics.p95Milliseconds : 0.0,
+                         haveStatistics ? statistics.p99Milliseconds : 0.0,
+                         haveStatistics ? statistics.worstMilliseconds : 0.0);
+                diag_log_event(haveStatistics ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                               "validation", completeEvent);
+                g_should_exit = 1;
             }
         }
     }

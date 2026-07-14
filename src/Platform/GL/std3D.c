@@ -1025,6 +1025,33 @@ void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, 
     std3D_DrawMenuSubrectScaled(x, y, w, h, dstX, dstY, scale, scale);
 }
 
+static char std3D_pendingWindowScreenshot[1024] = "";
+static int std3D_windowScreenshotPending = 0;
+static int std3D_windowScreenshotComplete = 0;
+
+void std3D_RequestWindowScreenshot(const char* pFpath)
+{
+    if (!pFpath || !pFpath[0] || std3D_windowScreenshotPending)
+        return;
+    snprintf(std3D_pendingWindowScreenshot, sizeof(std3D_pendingWindowScreenshot), "%s", pFpath);
+    std3D_windowScreenshotComplete = 0;
+    std3D_windowScreenshotPending = 1;
+}
+
+int std3D_IsWindowScreenshotComplete(void)
+{
+    return std3D_windowScreenshotComplete;
+}
+
+static void std3D_CaptureRequestedWindowScreenshot(void)
+{
+    if (!std3D_windowScreenshotPending)
+        return;
+    std3D_ScreenshotWindow(std3D_pendingWindowScreenshot);
+    std3D_windowScreenshotPending = 0;
+    std3D_windowScreenshotComplete = 1;
+}
+
 static void std3D_CaptureAspectProbe(void)
 {
     static int captured = 0;
@@ -1602,6 +1629,7 @@ void std3D_DrawMenu()
     std3D_DrawMapOverlay();
     std3D_DrawUIRenderList();
     std3D_CaptureAspectProbe();
+    std3D_CaptureRequestedWindowScreenshot();
 
     last_flags = 0;
 }

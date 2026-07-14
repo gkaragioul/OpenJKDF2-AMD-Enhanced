@@ -21,5 +21,6 @@ float runtime_probe_angle_delta_degrees(float start_degrees, float end_degrees);
 bool runtime_probe_turned(float start_degrees, float end_degrees, float minimum_degrees);
 bool runtime_probe_parse_degrees(const char* text, float* out_degrees);
 bool runtime_probe_parse_rate(const char* text, int* out_rate);
+bool runtime_probe_parse_vsync(const char* text, int* out_mode);
 
 #endif

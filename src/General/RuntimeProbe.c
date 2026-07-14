@@ -1,6 +1,7 @@
 #include "General/RuntimeProbe.h"
 
 #include <errno.h>
+#include <ctype.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -86,5 +87,34 @@ bool runtime_probe_parse_rate(const char* text, int* out_rate)
     if (errno == ERANGE || end == text || !end || end[0] != '\0' || value < 30 || value > 1000)
         return false;
     *out_rate = (int)value;
+    return true;
+}
+
+static bool runtime_probe_text_equal_ignore_case(const char* left, const char* right)
+{
+    if (!left || !right)
+        return false;
+    while (*left && *right)
+    {
+        if (tolower((unsigned char)*left) != tolower((unsigned char)*right))
+            return false;
+        ++left;
+        ++right;
+    }
+    return *left == '\0' && *right == '\0';
+}
+
+bool runtime_probe_parse_vsync(const char* text, int* out_mode)
+{
+    if (!text || !text[0] || !out_mode)
+        return false;
+    if (runtime_probe_text_equal_ignore_case(text, "off"))
+        *out_mode = 0;
+    else if (runtime_probe_text_equal_ignore_case(text, "on"))
+        *out_mode = 1;
+    else if (runtime_probe_text_equal_ignore_case(text, "adaptive"))
+        *out_mode = -1;
+    else
+        return false;
     return true;
 }

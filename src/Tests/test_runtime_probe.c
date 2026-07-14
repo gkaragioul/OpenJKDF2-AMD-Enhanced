@@ -58,5 +58,18 @@ int main(void)
         assert(!runtime_probe_parse_rate("1001", &rate));
         assert(!runtime_probe_parse_rate("60", NULL));
     }
+
+    {
+        int mode = 99;
+        assert(runtime_probe_parse_vsync("off", &mode) && mode == 0);
+        assert(runtime_probe_parse_vsync("on", &mode) && mode == 1);
+        assert(runtime_probe_parse_vsync("adaptive", &mode) && mode == -1);
+        assert(runtime_probe_parse_vsync("ADAPTIVE", &mode) && mode == -1);
+        assert(!runtime_probe_parse_vsync(NULL, &mode));
+        assert(!runtime_probe_parse_vsync("", &mode));
+        assert(!runtime_probe_parse_vsync("fast", &mode));
+        assert(!runtime_probe_parse_vsync("on ", &mode));
+        assert(!runtime_probe_parse_vsync("off", NULL));
+    }
     return 0;
 }

@@ -47,6 +47,7 @@ void Window_SetFullscreen(int val);
 void Window_SetDisplayMode(DisplayMode mode);
 int Window_ConfirmDisplaySettings(unsigned int timeoutMs);
 void Window_GetRendererDiagnostics(RendererDiagnostics* diagnostics);
+int Window_GetAppliedVsyncMode(void);
 
 
 extern int Window_screenXSize;

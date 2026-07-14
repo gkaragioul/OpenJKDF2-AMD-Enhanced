@@ -539,6 +539,11 @@ void Window_GetRendererDiagnostics(RendererDiagnostics* diagnostics)
     diagnostics->frame_cap = Window_rendererFrameCap;
 }
 
+int Window_GetAppliedVsyncMode(void)
+{
+    return (int)Window_appliedVsync;
+}
+
 int Window_lastSampleMs = 0;
 int Window_bMouseLeft = 0;
 int Window_bMouseRight = 0;

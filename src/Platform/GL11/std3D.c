@@ -877,6 +877,8 @@ void std3D_Screenshot(const char* pFpath) {}
 // Added: GL11 has no window-present capture path (no FBO compositing); stub
 // like std3D_Screenshot above rather than leaving OPENJKDF2_AUTOSHOT unlinkable.
 void std3D_ScreenshotWindow(const char* pFpath) {}
+void std3D_RequestWindowScreenshot(const char* pFpath) { std3D_ScreenshotWindow(pFpath); }
+int std3D_IsWindowScreenshotComplete(void) { return 1; }
 void std3D_ResetUIRenderList()
 {
     std3D_uiVerticesAmt = 0;
