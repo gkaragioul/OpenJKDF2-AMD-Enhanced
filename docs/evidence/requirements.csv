@@ -28,7 +28,7 @@ M9-RDNA3,RDNA3 compatibility,human hardware test,weak,docs/evidence/rdna3-gamepl
 M9-NVIDIA,NVIDIA regression coverage,CI or hardware test,unverified-hardware,,Pending
 M9-INTEL,Intel regression coverage,CI or hardware test,unverified-hardware,,Pending
 M9-GAMEPLAY,First level first door save load death transition and cutscene validation,gameplay evidence,incomplete,docs/evidence/timing-invariance-2026-07-14.md,First-door progression plus save/load death/reload and restart passed; level transition dialogue and cutscene coverage remain pending
-M10-PACKAGE,Legal Windows x64 package without proprietary assets,package audit,proven,docs/evidence/windows-package-2026-07-14.md,Final clean-provenance Release ZIP verified all 35 manifest files with zero proprietary findings
+M10-PACKAGE,Legal Windows x64 package without proprietary assets,package audit,proven,docs/evidence/windows-package-2026-07-14.md,Current clean-provenance Release ZIP from 58959a12 verified all 36 manifest files with zero proprietary findings
 M10-DISCOVERY,Steam and GOG discovery plus asset validation,clean machine test,incomplete,docs/evidence/windows-package-2026-07-14.md,Automatic Steam discovery and asset validation passed; real GOG and interactive browse paths remain unverified
 M10-UNINSTALL,Safe uninstall preserving game data saves and settings,clean machine test,proven,docs/evidence/windows-package-2026-07-14.md,Normal uninstall removed app and shortcut while preserving user data; guarded portable preservation also passed
 M11-DOCS,Build architecture testing troubleshooting licenses and attribution docs,document audit,incomplete,docs/building-windows.md,Foundation documentation exists

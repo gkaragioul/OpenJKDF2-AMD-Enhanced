@@ -67,6 +67,11 @@ Measured results:
 Visual inspection found coherent geometry, original textures, character model,
 and both HUD corners, with no obvious corruption in the captured frame.
 
+The clean-provenance Windows ZIP was subsequently rebuilt from commit
+`58959a12`. Package verification found all 36 manifest entries valid, zero
+proprietary findings, and the enhancement-pack guide present. Its SHA-256 is
+`2dabdeba6c16ba1298a3a2dbe534449e82e4b60e3db2000498dba1f273f732d6`.
+
 ## Boundaries
 
 This proves modular source contracts and the no-match original-asset fallback
