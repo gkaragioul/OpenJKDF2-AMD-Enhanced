@@ -1,4 +1,4 @@
-MSGS 135          # <--- DON'T FORGET TO UPDATE THIS COUNT
+MSGS 139          # <--- DON'T FORGET TO UPDATE THIS COUNT
 
 #  "<key>"     <unused number>   "<string>"
 
@@ -28,7 +28,11 @@ MSGS 135          # <--- DON'T FORGET TO UPDATE THIS COUNT
    "GUIEXT_EN_FULLSCREEN"                 0 "Enable Fullscreen"
    "GUIEXT_EN_HIDPI"                      0 "Enable HiDPI"
    "GUIEXT_EN_TEXTURE_FILTERING"          0 "Enable Texture Filtering"
-   "GUIEXT_EN_SQUARE_ASPECT"              0 "Use 1:1 aspect"
+   "GUIEXT_ASPECT_OPTIONS"                0 "Aspect Options"
+   "GUIEXT_ASPECT_GAMEPLAY"               0 "Preserve original gameplay aspect"
+   "GUIEXT_ASPECT_MENUS"                  0 "Preserve menu aspect"
+   "GUIEXT_ASPECT_HUD"                    0 "Preserve HUD aspect"
+   "GUIEXT_ASPECT_VIDEOS"                 0 "Preserve authored video aspect"
    "GUIEXT_FPS_LIMIT"                     0 "FPS Limit"
    "GUIEXT_FPS_LIMIT_HINT"                0 "Set the rendering cap. Rates above 100 FPS, Desktop Refresh, and Unlimited require timing verification."
    "GUIEXT_EN_VSYNC"                      0 "Enable VSync"

@@ -33,6 +33,7 @@ enum jkGuiDecisionButton_t
     GUI_CONTROLS = 104,
 
     GUI_ADVANCED = 105,
+    GUI_ASPECT_OPTIONS = 106,
     GUI_SAFE_60 = 4600,
     GUI_RESET_VIDEO = 4601,
     GUI_SAFE_VIDEO = 4602,
@@ -78,7 +79,7 @@ static jkGuiElement jkGuiDisplay_aElements[32] = {
     {ELEMENT_CHECKBOX,     0,            0, "GUIEXT_EN_FULLSCREEN",    0, {400, 150, 200, 40}, 1,  0, NULL, 0, 0, 0, {0}, 0},
     {ELEMENT_CHECKBOX,     0,            0, "GUIEXT_EN_HIDPI",    0, {400, 180, 200, 40}, 1,  0, NULL, 0, 0, 0, {0}, 0},
     {ELEMENT_CHECKBOX,     0,            0, "GUIEXT_EN_TEXTURE_FILTERING",    0, {400, 210, 200, 40}, 1,  0, NULL, 0, 0, 0, {0}, 0},
-    {ELEMENT_CHECKBOX,     0,            0, "GUIEXT_EN_SQUARE_ASPECT",    0, {20, 240, 300, 40}, 1,  0, NULL, 0, 0, 0, {0}, 0},
+    {ELEMENT_TEXTBUTTON,  GUI_ASPECT_OPTIONS, 2, "GUIEXT_ASPECT_OPTIONS", 3, {20, 240, 300, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
 
     // 17
     {ELEMENT_TEXT,         0,            0, "GUIEXT_FPS_LIMIT",                 3, {20, 280, 300, 30}, 1,  0, 0, 0, 0, 0, {0}, 0},
@@ -160,6 +161,41 @@ static jkGuiElement jkGuiDisplay_diagnosticsElements[12] = {
     { ELEMENT_END,        0, 0, NULL, 0, {0}, 0, 0, NULL, 0, 0, 0, {0}, 0},
 };
 static jkGuiMenu jkGuiDisplay_diagnosticsMenu = { jkGuiDisplay_diagnosticsElements, 0, 0xFF, 0xE1, 0x0F, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0 };
+
+static jkGuiElement jkGuiDisplay_aspectElements[8] = {
+    { ELEMENT_TEXT,       0, 6, "GUIEXT_ASPECT_OPTIONS", 3, {20, 20, 600, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_CHECKBOX,   0, 0, "GUIEXT_ASPECT_GAMEPLAY", 0, {80, 110, 480, 45}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_CHECKBOX,   0, 0, "GUIEXT_ASPECT_MENUS", 0, {80, 165, 480, 45}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_CHECKBOX,   0, 0, "GUIEXT_ASPECT_HUD", 0, {80, 220, 480, 45}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_CHECKBOX,   0, 0, "GUIEXT_ASPECT_VIDEOS", 0, {80, 275, 480, 45}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBUTTON, 1, 2, "GUI_OK", 3, {440, 430, 200, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBUTTON, -1, 2, "GUI_CANCEL", 3, {0, 430, 200, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_END,        0, 0, NULL, 0, {0}, 0, 0, NULL, 0, 0, 0, {0}, 0},
+};
+static jkGuiMenu jkGuiDisplay_aspectMenu = { jkGuiDisplay_aspectElements, 0, 0xFF, 0xE1, 0x0F, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0 };
+
+static int jkGuiDisplay_ShowAspectOptions(void)
+{
+    int clicked;
+
+    jkGuiDisplay_aspectElements[1].selectedTextEntry = jkPlayer_enableOrigAspect;
+    jkGuiDisplay_aspectElements[2].selectedTextEntry = jkPlayer_preserveMenuAspect;
+    jkGuiDisplay_aspectElements[3].selectedTextEntry = jkPlayer_preserveHudAspect;
+    jkGuiDisplay_aspectElements[4].selectedTextEntry = jkPlayer_preserveVideoAspect;
+    jkGuiRend_MenuSetReturnKeyShortcutElement(&jkGuiDisplay_aspectMenu, &jkGuiDisplay_aspectElements[5]);
+    jkGuiRend_MenuSetEscapeKeyShortcutElement(&jkGuiDisplay_aspectMenu, &jkGuiDisplay_aspectElements[6]);
+    jkGuiSetup_sub_412EF0(&jkGuiDisplay_aspectMenu, 0);
+    clicked = jkGuiRend_DisplayAndReturnClicked(&jkGuiDisplay_aspectMenu);
+    if (clicked == 1)
+    {
+        jkPlayer_enableOrigAspect = jkGuiDisplay_aspectElements[1].selectedTextEntry;
+        jkPlayer_preserveMenuAspect = jkGuiDisplay_aspectElements[2].selectedTextEntry;
+        jkPlayer_preserveHudAspect = jkGuiDisplay_aspectElements[3].selectedTextEntry;
+        jkPlayer_preserveVideoAspect = jkGuiDisplay_aspectElements[4].selectedTextEntry;
+        jkPlayer_WriteConf(jkPlayer_playerShortName);
+    }
+    return clicked;
+}
 
 static void jkGuiDisplay_ShowDiagnostics(void)
 {
@@ -259,6 +295,7 @@ void jkGuiDisplay_Startup()
     jkGui_InitMenu(&jkGuiDisplay_menu, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
     jkGui_InitMenu(&jkGuiDisplay_menuAdvanced, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
     jkGui_InitMenu(&jkGuiDisplay_diagnosticsMenu, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
+    jkGui_InitMenu(&jkGuiDisplay_aspectMenu, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
     jkGuiDisplay_aElements[25].wstr = render_level;
 
     jkGuiDisplay_aElements[27].wstr = gamma_level;
@@ -458,7 +495,6 @@ int jkGuiDisplay_Show()
     jkGuiDisplay_aElements[13].selectedTextEntry = Window_isFullscreen;
     jkGuiDisplay_aElements[14].selectedTextEntry = Window_isHiDpi;
     jkGuiDisplay_aElements[15].selectedTextEntry = jkPlayer_enableTextureFilter;
-    jkGuiDisplay_aElements[16].selectedTextEntry = jkPlayer_enableOrigAspect;
 
     jkGuiDisplay_aElements[18].selectedTextEntry = FrameRate_SliderFromValue(jkPlayer_fpslimit);
     jkGuiDisplay_aElements[21].selectedTextEntry = PresentationMode_SliderFromVsync(jkPlayer_enableVsync);
@@ -479,6 +515,11 @@ continue_menu:
         jkGuiDisplay_ShowAdvanced();
         goto continue_menu;
     }
+    else if (v0 == GUI_ASPECT_OPTIONS)
+    {
+        jkGuiDisplay_ShowAspectOptions();
+        goto continue_menu;
+    }
     else if ( v0 != -1 )
     {
         DisplayMode proposedMode = jkGuiDisplay_aElements[13].selectedTextEntry
@@ -491,7 +532,6 @@ continue_menu:
         jkGuiDisplay_aElements[13].selectedTextEntry = Window_isFullscreen;
         jkGuiDisplay_aElements[14].selectedTextEntry = Window_isHiDpi;
         jkPlayer_enableTextureFilter = jkGuiDisplay_aElements[15].selectedTextEntry;
-        jkPlayer_enableOrigAspect = jkGuiDisplay_aElements[16].selectedTextEntry;
         jkPlayer_fpslimit = FrameRate_ValueFromSlider(jkGuiDisplay_aElements[18].selectedTextEntry);
         jkPlayer_enableVsync = PresentationMode_VsyncFromSlider(jkGuiDisplay_aElements[21].selectedTextEntry);
         jkPlayer_enableBloom = jkGuiDisplay_aElements[22].selectedTextEntry;
