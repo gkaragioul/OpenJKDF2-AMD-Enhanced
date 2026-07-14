@@ -27,11 +27,13 @@
 #include "Main/jkRes.h"
 #include "General/stdString.h"
 #include "General/util.h"
+#include "General/DiagnosticLog.h"
 #include "General/stdFnames.h"
 #include "Main/sithCvar.h"
 #include "stdPlatform.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 
 // Added
 extern int jkCredits_cdOverride;
@@ -146,6 +148,25 @@ void jkGuiMain_Show()
     if (getenv("OPENJKDF2_VALIDATE_DIAGNOSTICS_PAGE"))
     {
         jkGuiDisplay_ShowDiagnostics();
+        g_should_exit = 1;
+        jkGui_SetModeGame();
+        return;
+    }
+    if (getenv("OPENJKDF2_VALIDATE_DISPLAY_PAGE"))
+    {
+        char event[96];
+        int result;
+        if (!jkPlayer_ReadConf(u"Validation"))
+        {
+            jkPlayer_CreateConf(u"Validation");
+            jkPlayer_ReadConf(u"Validation");
+        }
+        snprintf(event, sizeof(event), "display_page displayed=true fps_limit=%d", jkPlayer_fpslimit);
+        diag_log_event(DIAG_SEVERITY_INFO, "validation", event);
+        result = jkGuiDisplay_Show();
+        snprintf(event, sizeof(event), "display_page dismissed=true result=%d fps_limit=%d",
+                 result, jkPlayer_fpslimit);
+        diag_log_event(DIAG_SEVERITY_INFO, "validation", event);
         g_should_exit = 1;
         jkGui_SetModeGame();
         return;
