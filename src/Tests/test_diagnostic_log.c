@@ -7,9 +7,12 @@
 #if defined(_WIN32)
 #include <direct.h>
 #define make_dir(path) _mkdir(path)
+#define change_dir(path) _chdir(path)
 #else
+#include <unistd.h>
 #include <sys/stat.h>
 #define make_dir(path) mkdir(path, 0700)
+#define change_dir(path) chdir(path)
 #endif
 
 static int failures;
@@ -75,7 +78,9 @@ int main(void)
         DIAG_SEVERITY_WARNING,
         "renderer",
         "quote=\" newline=\n file=C:\\Users\\alice\\Games\\JK\\episode\\JK1.gob"));
+    CHECK(change_dir(output_dir) == 0);
     CHECK(diag_log_finish(true));
+    CHECK(change_dir("..") == 0);
 
     text = read_file("test-output-diagnostic-log/openjkdf2.jsonl");
     CHECK(text != NULL);
@@ -96,7 +101,11 @@ int main(void)
 
     CHECK(diag_log_start(&config));
     CHECK(!diag_log_previous_run_unclean());
+    diag_log_force_unclean();
     CHECK(diag_log_finish(true));
+    text = read_file("test-output-diagnostic-log/run-state.json");
+    CHECK(text != NULL && strstr(text, "\"status\":\"unclean\"") != NULL);
+    free(text);
 
     return failures == 0 ? 0 : 1;
 }

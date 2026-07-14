@@ -65,6 +65,8 @@
 #include "General/util.h"
 #include "General/stdFileUtil.h"
 #include "General/stdJSON.h"
+#include "General/ConfigRecovery.h"
+#include "General/DiagnosticLog.h"
 #include "Dss/jkDSS.h"
 #include "Main/InstallHelper.h"
 #include "sithCvar.h"
@@ -94,6 +96,41 @@
 #endif
 
 static HostServices hs;
+
+#if defined(SDL2_RENDER)
+static void Main_OfferConfigRecovery(void)
+{
+    const SDL_MessageBoxButtonData buttons[] = {
+        { SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, "Restore and launch safely" },
+        { SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 0, "Keep current settings" },
+    };
+    const SDL_MessageBoxData message = {
+        SDL_MESSAGEBOX_WARNING,
+        NULL,
+        "OpenJKDF2 AMD Enhanced - Recovery",
+        "The previous run did not shut down cleanly. Restore the last configuration that completed renderer startup?",
+        SDL_arraysize(buttons),
+        buttons,
+        NULL
+    };
+    int button = 0;
+
+    if (!config_recovery_should_offer(diag_log_previous_run_unclean(),
+                                      config_recovery_has_snapshot(REGISTRY_LKG_FNAME),
+                                      Window_IsSafeMode() != 0)) return;
+
+    if (SDL_ShowMessageBox(&message, &button) && button == 1) {
+        if (config_recovery_restore(REGISTRY_LKG_FNAME, REGISTRY_FNAME)) {
+            Window_SetSafeMode(1);
+            diag_log_event(DIAG_SEVERITY_INFO, "recovery", "last_known_good_restored safe_mode=true");
+        } else {
+            diag_log_event(DIAG_SEVERITY_ERROR, "recovery", "last_known_good_restore_failed");
+        }
+    } else {
+        diag_log_event(DIAG_SEVERITY_WARNING, "recovery", "last_known_good_declined");
+    }
+}
+#endif
 
 #ifdef QOL_IMPROVEMENTS
 int32_t Main_bDedicatedServer = 0;
@@ -368,6 +405,10 @@ int Main_Startup(const char *cmdline)
     stdStartup(&hs); // Added
     InstallHelper_SetCwd(); // Added
 
+#if defined(SDL2_RENDER)
+    Main_OfferConfigRecovery();
+#endif
+
     wuRegistry_Startup(HKEY_LOCAL_MACHINE, "Software\\LucasArts Entertainment Company\\JediKnight\\v1.0", (BYTE*)"0.1");
     //stdStartup(&hs); // Moved
 
@@ -438,7 +479,16 @@ int Main_Startup(const char *cmdline)
         jkCredits_Startup("ui\\credits.uni");
         jkSmack_Startup();
 
-        std3D_Startup(); // Added
+        if (!std3D_Startup()) { // Added
+            diag_log_event(DIAG_SEVERITY_ERROR, "recovery", "renderer_startup_failed last_known_good_retained=true");
+            diag_log_force_unclean();
+            return 0;
+        }
+        if (config_recovery_snapshot(REGISTRY_FNAME, REGISTRY_LKG_FNAME)) {
+            diag_log_event(DIAG_SEVERITY_INFO, "recovery", "last_known_good_snapshot_updated");
+        } else {
+            diag_log_event(DIAG_SEVERITY_WARNING, "recovery", "last_known_good_snapshot_update_failed");
+        }
 #ifdef QUAKE_CONSOLE
         jkQuakeConsole_Startup(); // Added
 #endif

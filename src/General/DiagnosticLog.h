@@ -20,6 +20,7 @@ typedef struct DiagLogConfig
 
 bool diag_log_start(const DiagLogConfig* config);
 bool diag_log_previous_run_unclean(void);
+void diag_log_force_unclean(void);
 bool diag_log_event(DiagSeverity severity, const char* subsystem, const char* event);
 bool diag_log_finish(bool clean);
 bool diag_redact_path(const char* path, const char* data_dir, char* output, size_t output_size);

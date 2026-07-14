@@ -8,9 +8,12 @@
 #if defined(_WIN32)
 #include <direct.h>
 #define diag_mkdir(path) _mkdir(path)
+#define diag_getcwd(buffer, size) _getcwd(buffer, (int)(size))
 #else
+#include <unistd.h>
 #include <sys/stat.h>
 #define diag_mkdir(path) mkdir(path, 0700)
+#define diag_getcwd(buffer, size) getcwd(buffer, size)
 #endif
 
 typedef struct DiagLogState
@@ -21,11 +24,32 @@ typedef struct DiagLogState
     char data_dir[512];
     bool active;
     bool previous_run_unclean;
+    bool force_unclean;
 } DiagLogState;
 
 static DiagLogState diag_state;
 
 static bool diag_char_equal(char left, char right);
+
+static bool diag_absolute_directory(char* output, size_t size, const char* directory)
+{
+    char cwd[512];
+    int written;
+    bool absolute;
+    if (!output || !size || !directory || !directory[0]) return false;
+#if defined(_WIN32)
+    absolute = (directory[0] == '/' || directory[0] == '\\' ||
+                (directory[1] == ':' && directory[2] != '\0'));
+#else
+    absolute = directory[0] == '/';
+#endif
+    if (absolute) written = snprintf(output, size, "%s", directory);
+    else {
+        if (!diag_getcwd(cwd, sizeof(cwd))) return false;
+        written = snprintf(output, size, "%s/%s", cwd, directory);
+    }
+    return written >= 0 && (size_t)written < size;
+}
 
 static bool diag_path_join(char* output, size_t size, const char* directory, const char* filename)
 {
@@ -116,8 +140,8 @@ bool diag_log_start(const DiagLogConfig* config)
     char text_path[640];
     char jsonl_path[640];
     if (!config || !config->diagnostics_dir || !config->diagnostics_dir[0] || diag_state.active) return false;
-    if (strlen(config->diagnostics_dir) >= sizeof(diag_state.directory)) return false;
-    strcpy(diag_state.directory, config->diagnostics_dir);
+    if (!diag_absolute_directory(diag_state.directory, sizeof(diag_state.directory),
+                                 config->diagnostics_dir)) return false;
     diag_state.previous_run_unclean = diag_read_previous_run_unclean(diag_state.directory);
     if (config->data_dir) {
         if (strlen(config->data_dir) >= sizeof(diag_state.data_dir)) return false;
@@ -145,6 +169,11 @@ bool diag_log_start(const DiagLogConfig* config)
 bool diag_log_previous_run_unclean(void)
 {
     return diag_state.active && diag_state.previous_run_unclean;
+}
+
+void diag_log_force_unclean(void)
+{
+    if (diag_state.active) diag_state.force_unclean = true;
 }
 
 bool diag_log_event(DiagSeverity severity, const char* subsystem, const char* event)
@@ -197,7 +226,7 @@ bool diag_log_finish(bool clean)
     result = fclose(diag_state.jsonl) == 0 && result;
     diag_state.text = NULL;
     diag_state.jsonl = NULL;
-    result = diag_write_run_state(clean ? "clean" : "unclean") && result;
+    result = diag_write_run_state(clean && !diag_state.force_unclean ? "clean" : "unclean") && result;
     memset(&diag_state, 0, sizeof(diag_state));
     return result;
 }

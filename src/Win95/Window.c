@@ -79,6 +79,11 @@ void Window_SetSafeMode(int enabled)
     Window_bSafeMode = enabled != 0;
 }
 
+int Window_IsSafeMode(void)
+{
+    return Window_bSafeMode;
+}
+
 void Window_SetHiDpi(int val)
 {
     if (Window_isHiDpi != val)

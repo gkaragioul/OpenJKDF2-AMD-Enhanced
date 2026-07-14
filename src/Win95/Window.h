@@ -67,6 +67,7 @@ extern int Window_bNeedsKeyboardFixed;
 #else
 int Window_Main_Linux(int argc, char** argv);
 void Window_SetSafeMode(int enabled);
+int Window_IsSafeMode(void);
 //int Window_AddMsgHandler(WindowHandler_t a1);
 //int Window_RemoveMsgHandler(WindowHandler_t a1);
 int Window_ShowCursorUnwindowed(int a1);
