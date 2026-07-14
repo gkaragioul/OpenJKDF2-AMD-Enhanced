@@ -55,6 +55,8 @@ int main(void)
     CHECK(display_transaction_requires_confirmation(original,
         settings(original.mode, original.monitor, original.width, original.height, 120, original.hidpi)));
     CHECK(display_transaction_requires_confirmation(original,
+        settings(original.mode, original.monitor, original.width, 1080, original.refresh_hz, original.hidpi)));
+    CHECK(display_transaction_requires_confirmation(original,
         settings(original.mode, original.monitor, original.width, original.height, original.refresh_hz, 1)));
 
     return failures ? 1 : 0;

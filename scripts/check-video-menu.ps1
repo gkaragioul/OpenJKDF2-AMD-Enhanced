@@ -5,6 +5,7 @@ $menu = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Platform\SDL2\jkGUID
 $strings = Get-Content -Raw -LiteralPath (Join-Path $root 'resource\ui\openjkdf2.uni')
 $startup = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Main\Main.c')
 $window = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Win95\Window.h')
+$windowImpl = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Win95\Window.c')
 $missing = @()
 
 $declaredCount = [int]([regex]::Match($strings, '(?m)^MSGS\s+(\d+)').Groups[1].Value)
@@ -40,6 +41,16 @@ foreach ($api in @('Window_GetDisplayInventory', 'Window_GetDisplayName',
                     'Window_GetDisplaySettings', 'Window_ApplyDisplaySettings',
                     'Window_CommitDisplaySettings', 'Window_IsRestorationGuardReady')) {
     if ($window -notmatch [regex]::Escape($api)) { $missing += "display-api:$api" }
+}
+
+foreach ($key in @('Window_displayMonitor', 'Window_windowWidth',
+                    'Window_windowHeight', 'Window_refreshHz')) {
+    if ($windowImpl -notmatch ('wuRegistry_SaveInt\("' + [regex]::Escape($key) + '"')) {
+        $missing += "display-persistence:$key"
+    }
+}
+if ($windowImpl -notmatch 'Window_bDeferDisplayPersistence') {
+    $missing += 'display-persistence:confirmation-only'
 }
 
 if ($missing.Count) { throw ('Video menu contract missing: ' + ($missing -join ', ')) }

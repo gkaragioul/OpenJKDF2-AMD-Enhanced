@@ -84,6 +84,7 @@ static int Window_displayMonitor = 0;
 static int Window_windowWidth = WINDOW_DEFAULT_WIDTH;
 static int Window_windowHeight = WINDOW_DEFAULT_HEIGHT;
 static int Window_requestedRefreshHz = 0;
+static int Window_bDeferDisplayPersistence = 0;
 static PresentationVsyncMode Window_appliedVsync = PRESENTATION_VSYNC_OFF;
 static int Window_contextFallbackTier = 0;
 static char Window_rendererVendor[256] = "";
@@ -112,7 +113,8 @@ void Window_SetHiDpi(int val)
         Window_needsRecreate = 1;
     }
 
-    wuRegistry_SaveBool("Window_isHiDpi", Window_isHiDpi);
+    if (!Window_bDeferDisplayPersistence)
+        wuRegistry_SaveBool("Window_isHiDpi", Window_isHiDpi);
 }
 
 void Window_SetFullscreen(int val)
@@ -144,8 +146,11 @@ void Window_SetDisplayMode(DisplayMode mode)
         Window_needsRecreate = 1;
     }
 
-    wuRegistry_SaveBool("Window_isFullscreen", Window_isFullscreen);
-    wuRegistry_SaveInt("Window_displayMode", (int)Window_displayMode);
+    if (!Window_bDeferDisplayPersistence)
+    {
+        wuRegistry_SaveBool("Window_isFullscreen", Window_isFullscreen);
+        wuRegistry_SaveInt("Window_displayMode", (int)Window_displayMode);
+    }
 
     {
         char event[96];
@@ -742,8 +747,10 @@ int Window_ApplyDisplaySettings(DisplaySettings requested, DisplaySelectionReaso
         Window_windowWidth = result.settings.width;
         Window_windowHeight = result.settings.height;
     }
+    Window_bDeferDisplayPersistence = 1;
     Window_SetDisplayMode(result.settings.mode);
     Window_SetHiDpi(result.settings.hidpi);
+    Window_bDeferDisplayPersistence = 0;
     Window_screenXSize = result.settings.width;
     Window_screenYSize = result.settings.height;
     Window_xSize = result.settings.width;
@@ -754,7 +761,17 @@ int Window_ApplyDisplaySettings(DisplaySettings requested, DisplaySelectionReaso
 
 void Window_CommitDisplaySettings(DisplaySettings settings)
 {
-    (void)settings;
+    Window_displayMonitor = settings.monitor;
+    Window_windowWidth = settings.width;
+    Window_windowHeight = settings.height;
+    Window_requestedRefreshHz = settings.refresh_hz;
+    wuRegistry_SaveBool("Window_isFullscreen", settings.mode != DISPLAY_MODE_WINDOWED);
+    wuRegistry_SaveInt("Window_displayMode", (int)settings.mode);
+    wuRegistry_SaveBool("Window_isHiDpi", settings.hidpi);
+    wuRegistry_SaveInt("Window_displayMonitor", settings.monitor);
+    wuRegistry_SaveInt("Window_windowWidth", settings.width);
+    wuRegistry_SaveInt("Window_windowHeight", settings.height);
+    wuRegistry_SaveInt("Window_refreshHz", settings.refresh_hz);
 }
 
 int Window_IsRestorationGuardReady(void)
@@ -1973,8 +1990,24 @@ int Window_Main_Linux(int argc, char** argv)
     int fullscreen = wuRegistry_GetBool("Window_isFullscreen", 1);
     int display_mode = wuRegistry_GetInt("Window_displayMode", fullscreen ? DISPLAY_MODE_BORDERLESS : DISPLAY_MODE_WINDOWED);
     int hidpi = wuRegistry_GetBool("Window_isHiDpi", 0);
-    Window_SetDisplayMode(Window_bSafeMode ? DISPLAY_MODE_WINDOWED : display_mode_from_config(display_mode));
-    Window_SetHiDpi(hidpi);
+    DisplaySettings saved_settings = {
+        Window_bSafeMode ? DISPLAY_MODE_WINDOWED : display_mode_from_config(display_mode),
+        wuRegistry_GetInt("Window_displayMonitor", 0),
+        wuRegistry_GetInt("Window_windowWidth", WINDOW_DEFAULT_WIDTH),
+        wuRegistry_GetInt("Window_windowHeight", WINDOW_DEFAULT_HEIGHT),
+        wuRegistry_GetInt("Window_refreshHz", 0),
+        hidpi
+    };
+    DisplaySelectionReason selection_reason;
+    if (!Window_ApplyDisplaySettings(saved_settings, &selection_reason))
+    {
+        DisplaySettings safe_settings = {
+            DISPLAY_MODE_WINDOWED, 0, WINDOW_DEFAULT_WIDTH, WINDOW_DEFAULT_HEIGHT, 0, 0
+        };
+        Window_ApplyDisplaySettings(safe_settings, &selection_reason);
+        diag_log_event(DIAG_SEVERITY_WARNING, "display",
+                       "saved_display_settings_invalid fallback=safe_windowed");
+    }
     Window_RecreateSDL2Window();
 
     if (!result) return result;
