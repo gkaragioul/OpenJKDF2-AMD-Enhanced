@@ -34,6 +34,7 @@ enum jkGuiDecisionButton_t
 
     GUI_ADVANCED = 105,
     GUI_ASPECT_OPTIONS = 106,
+    GUI_DISPLAY_OPTIONS = 107,
     GUI_SAFE_60 = 4600,
     GUI_RESET_VIDEO = 4601,
     GUI_SAFE_VIDEO = 4602,
@@ -50,6 +51,14 @@ static char16_t slider_val_text_3[32] = {0};
 static char16_t quality_val_text[32] = {0};
 static char16_t anisotropy_val_text[32] = {0};
 static char16_t mipmap_bias_text[32] = {0};
+static char16_t display_mode_text[64] = {0};
+static char16_t display_monitor_text[256] = {0};
+static char16_t display_resolution_text[64] = {0};
+static char16_t display_width_text[16] = {0};
+static char16_t display_height_text[16] = {0};
+static char16_t display_refresh_text[64] = {0};
+static char16_t display_effective_text[128] = {0};
+static DisplayInventory display_inventory;
 static char16_t diagnostics_lines[9][256] = {{0}};
 
 static int slider_images[2] = {JKGUI_BM_SLIDER_BACK, JKGUI_BM_SLIDER_THUMB};
@@ -59,6 +68,11 @@ void jkGuiDisplay_FramelimitDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffe
 void jkGuiDisplay_VsyncDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
 void jkGuiDisplay_QualityDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
 void jkGuiDisplay_AnisotropyDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
+void jkGuiDisplay_DisplayModeDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
+void jkGuiDisplay_DisplayMonitorDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
+void jkGuiDisplay_DisplayResolutionDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
+void jkGuiDisplay_DisplayRefreshDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
+static int jkGuiDisplay_ApplyDisplayChange(DisplaySettings proposed);
 
 static jkGuiElement jkGuiDisplay_aElements[32] = {
     { ELEMENT_TEXT,        0,            0, NULL,                   3, {0, 410, 640, 20},   1, 0, NULL,                        0, 0, 0, {0}, 0},
@@ -76,7 +90,7 @@ static jkGuiElement jkGuiDisplay_aElements[32] = {
     {ELEMENT_SLIDER,       0,            0, (const char*)(FOV_MAX - FOV_MIN),                    0, {10, 160, 320, 30}, 1, 0, "GUIEXT_FOV_HINT", jkGuiDisplay_FovDraw, 0, slider_images, {0}, 0},
     {ELEMENT_TEXT,         0,            0, slider_val_text,        3, {20, 190, 300, 30}, 1,  0, 0, 0, 0, 0, {0}, 0},
     {ELEMENT_CHECKBOX,     0,            0, "GUIEXT_FOV_VERTICAL",    0, {20, 210, 200, 40}, 1,  0, NULL, 0, 0, 0, {0}, 0},
-    {ELEMENT_CHECKBOX,     0,            0, "GUIEXT_EN_FULLSCREEN",    0, {400, 150, 200, 40}, 1,  0, NULL, 0, 0, 0, {0}, 0},
+    {ELEMENT_TEXTBUTTON,  GUI_DISPLAY_OPTIONS, 2, "GUIEXT_DISPLAY_OPTIONS", 3, {380, 145, 240, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
     {ELEMENT_CHECKBOX,     0,            0, "GUIEXT_EN_HIDPI",    0, {400, 180, 200, 40}, 1,  0, NULL, 0, 0, 0, {0}, 0},
     {ELEMENT_CHECKBOX,     0,            0, "GUIEXT_EN_TEXTURE_FILTERING",    0, {400, 210, 200, 40}, 1,  0, NULL, 0, 0, 0, {0}, 0},
     {ELEMENT_TEXTBUTTON,  GUI_ASPECT_OPTIONS, 2, "GUIEXT_ASPECT_OPTIONS", 3, {20, 240, 300, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
@@ -174,6 +188,198 @@ static jkGuiElement jkGuiDisplay_aspectElements[8] = {
 };
 static jkGuiMenu jkGuiDisplay_aspectMenu = { jkGuiDisplay_aspectElements, 0, 0xFF, 0xE1, 0x0F, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0 };
 
+static jkGuiElement jkGuiDisplay_displayOptionsElements[23] = {
+    { ELEMENT_TEXT,       0, 6, "GUIEXT_DISPLAY_OPTIONS", 3, {20, 20, 600, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, "GUIEXT_DISPLAY_MODE", 2, {40, 80, 150, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_SLIDER,     0, 0, (const char*)2, 0, {190, 80, 260, 24}, 1, 0, NULL, jkGuiDisplay_DisplayModeDraw, 0, slider_images, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, display_mode_text, 3, {460, 80, 160, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, "GUIEXT_DISPLAY_MONITOR", 2, {40, 120, 150, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_SLIDER,     0, 0, (const char*)0, 0, {190, 120, 260, 24}, 1, 0, NULL, jkGuiDisplay_DisplayMonitorDraw, 0, slider_images, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, display_monitor_text, 3, {460, 120, 160, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, "GUIEXT_DISPLAY_RESOLUTION", 2, {40, 160, 150, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_SLIDER,     0, 0, (const char*)0, 0, {190, 160, 260, 24}, 1, 0, NULL, jkGuiDisplay_DisplayResolutionDraw, 0, slider_images, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, display_resolution_text, 3, {460, 160, 160, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, "GUIEXT_DISPLAY_WIDTH", 2, {40, 205, 100, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBOX,    0, 0, display_width_text, 8, {140, 202, 100, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, "GUIEXT_DISPLAY_HEIGHT", 2, {270, 205, 100, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBOX,    0, 0, display_height_text, 8, {370, 202, 100, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, "GUIEXT_DISPLAY_REFRESH", 2, {40, 250, 150, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_SLIDER,     0, 0, (const char*)1, 0, {190, 250, 260, 24}, 1, 0, NULL, jkGuiDisplay_DisplayRefreshDraw, 0, slider_images, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, display_refresh_text, 3, {460, 250, 160, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, "GUIEXT_DISPLAY_EFFECTIVE", 2, {40, 300, 150, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, display_effective_text, 3, {190, 300, 420, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBUTTON, 1, 2, "GUIEXT_APPLY", 3, {440, 430, 200, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBUTTON,-1, 2, "GUI_CANCEL", 3, {0, 430, 200, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, "GUIEXT_EXCLUSIVE_UNAVAILABLE", 2, {40, 350, 560, 35}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_END,        0, 0, NULL, 0, {0}, 0, 0, NULL, 0, 0, 0, {0}, 0},
+};
+static jkGuiMenu jkGuiDisplay_displayOptionsMenu = { jkGuiDisplay_displayOptionsElements, 0, 0xFF, 0xE1, 0x0F, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0 };
+
+
+static DisplayMonitor* jkGuiDisplay_SelectedMonitor(void)
+{
+    int monitor = jkGuiDisplay_displayOptionsElements[5].selectedTextEntry;
+    if (monitor < 0 || monitor >= display_inventory.monitor_count) monitor = 0;
+    return &display_inventory.monitors[monitor];
+}
+
+void jkGuiDisplay_DisplayModeDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
+{
+    static const char16_t* names[] = {u"Windowed", u"Borderless", u"Exclusive"};
+    int mode = element->selectedTextEntry;
+    if (mode < DISPLAY_MODE_WINDOWED || mode > DISPLAY_MODE_EXCLUSIVE) mode = DISPLAY_MODE_WINDOWED;
+    if (mode == DISPLAY_MODE_EXCLUSIVE && !Window_IsRestorationGuardReady())
+        jk_snwprintf(display_mode_text, 64, u"Exclusive (Unavailable)");
+    else
+        jk_snwprintf(display_mode_text, 64, u"%ls", names[mode]);
+    jkGuiDisplay_displayOptionsElements[21].bIsVisible = !Window_IsRestorationGuardReady();
+    jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_displayOptionsElements[3], menu, 1);
+}
+
+void jkGuiDisplay_DisplayMonitorDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
+{
+    int monitor = element->selectedTextEntry;
+    char16_t name[192];
+    if (monitor < 0 || monitor >= display_inventory.monitor_count) monitor = 0;
+    element->selectedTextEntry = monitor;
+    stdString_CharToWchar(name, Window_GetDisplayName(monitor), 191);
+    jk_snwprintf(display_monitor_text, 256, u"%d - %ls", monitor + 1, name);
+    jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_displayOptionsElements[6], menu, 1);
+}
+
+void jkGuiDisplay_DisplayResolutionDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
+{
+    DisplayMonitor* monitor = jkGuiDisplay_SelectedMonitor();
+    int mode = jkGuiDisplay_displayOptionsElements[2].selectedTextEntry;
+    int selection = element->selectedTextEntry;
+    element->extraInt = monitor->mode_count > 0 ? monitor->mode_count : 1;
+    if (selection < 0 || selection > monitor->mode_count) selection = monitor->mode_count;
+    element->selectedTextEntry = selection;
+    if (mode == DISPLAY_MODE_BORDERLESS)
+    {
+        jk_snwprintf(display_width_text, 16, u"%d", monitor->desktop_width);
+        jk_snwprintf(display_height_text, 16, u"%d", monitor->desktop_height);
+        jk_snwprintf(display_resolution_text, 64, u"Desktop %dx%d", monitor->desktop_width, monitor->desktop_height);
+        element->enableHover = 0;
+    }
+    else if (selection < monitor->mode_count)
+    {
+        DisplayResolution selected = monitor->modes[selection];
+        jk_snwprintf(display_width_text, 16, u"%d", selected.width);
+        jk_snwprintf(display_height_text, 16, u"%d", selected.height);
+        jk_snwprintf(display_resolution_text, 64, u"%dx%d", selected.width, selected.height);
+        element->enableHover = 1;
+    }
+    else
+    {
+        jk_snwprintf(display_resolution_text, 64, u"Custom");
+        element->enableHover = mode == DISPLAY_MODE_WINDOWED;
+    }
+    jkGuiDisplay_displayOptionsElements[11].enableHover =
+        jkGuiDisplay_displayOptionsElements[13].enableHover =
+            mode == DISPLAY_MODE_WINDOWED && selection >= monitor->mode_count;
+    jk_snwprintf(display_effective_text, 128, u"Monitor %d - %ls - %ls",
+                 jkGuiDisplay_displayOptionsElements[5].selectedTextEntry + 1,
+                 display_resolution_text, mode == DISPLAY_MODE_WINDOWED
+                    ? u"Compositor" : (mode == DISPLAY_MODE_EXCLUSIVE
+                    ? u"Requested" : u"Desktop"));
+    jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_displayOptionsElements[9], menu, 1);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_displayOptionsElements[11], menu, 1);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_displayOptionsElements[13], menu, 1);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_displayOptionsElements[18], menu, 1);
+}
+
+void jkGuiDisplay_DisplayRefreshDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
+{
+    int mode = jkGuiDisplay_displayOptionsElements[2].selectedTextEntry;
+    DisplayMonitor* monitor = jkGuiDisplay_SelectedMonitor();
+    int resolution = jkGuiDisplay_displayOptionsElements[8].selectedTextEntry;
+    if (mode == DISPLAY_MODE_EXCLUSIVE)
+    {
+        int refresh = resolution < monitor->mode_count ? monitor->modes[resolution].refresh_hz : 0;
+        element->selectedTextEntry = 1;
+        element->enableHover = 0;
+        jk_snwprintf(display_refresh_text, 64, u"Requested %d Hz", refresh);
+    }
+    else
+    {
+        element->selectedTextEntry = 0;
+        element->enableHover = 0;
+        jk_snwprintf(display_refresh_text, 64, mode == DISPLAY_MODE_BORDERLESS
+            ? u"Desktop %d Hz" : u"Compositor", monitor->desktop_refresh_hz);
+    }
+    jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_displayOptionsElements[16], menu, 1);
+}
+
+static int jkGuiDisplay_ShowDisplayOptions(void)
+{
+    DisplaySettings current = Window_GetDisplaySettings();
+    DisplayMonitor* monitor;
+    int index;
+    int clicked;
+    if (!Window_GetDisplayInventory(&display_inventory)) return 0;
+    if (current.monitor < 0 || current.monitor >= display_inventory.monitor_count)
+        current.monitor = display_inventory.primary_monitor;
+    monitor = &display_inventory.monitors[current.monitor];
+    jkGuiDisplay_displayOptionsElements[2].selectedTextEntry = current.mode;
+    jkGuiDisplay_displayOptionsElements[5].selectedTextEntry = current.monitor;
+    jkGuiDisplay_displayOptionsElements[5].extraInt =
+        display_inventory.monitor_count > 1 ? display_inventory.monitor_count - 1 : 1;
+    jkGuiDisplay_displayOptionsElements[8].selectedTextEntry = monitor->mode_count;
+    for (index = 0; index < monitor->mode_count; ++index)
+    {
+        DisplayResolution mode = monitor->modes[index];
+        if (mode.width == current.width && mode.height == current.height &&
+            (current.mode != DISPLAY_MODE_EXCLUSIVE || mode.refresh_hz == current.refresh_hz))
+        {
+            jkGuiDisplay_displayOptionsElements[8].selectedTextEntry = index;
+            break;
+        }
+    }
+    jk_snwprintf(display_width_text, 16, u"%d", current.width);
+    jk_snwprintf(display_height_text, 16, u"%d", current.height);
+    jkGuiDisplay_displayOptionsElements[21].bIsVisible = !Window_IsRestorationGuardReady();
+    jkGuiRend_MenuSetReturnKeyShortcutElement(&jkGuiDisplay_displayOptionsMenu, &jkGuiDisplay_displayOptionsElements[19]);
+    jkGuiRend_MenuSetEscapeKeyShortcutElement(&jkGuiDisplay_displayOptionsMenu, &jkGuiDisplay_displayOptionsElements[20]);
+    jkGuiSetup_sub_412EF0(&jkGuiDisplay_displayOptionsMenu, 0);
+    clicked = jkGuiRend_DisplayAndReturnClicked(&jkGuiDisplay_displayOptionsMenu);
+    if (clicked == 1)
+    {
+        DisplaySettings proposed = current;
+        char value[32];
+        int resolution = jkGuiDisplay_displayOptionsElements[8].selectedTextEntry;
+        proposed.mode = (DisplayMode)jkGuiDisplay_displayOptionsElements[2].selectedTextEntry;
+        proposed.monitor = jkGuiDisplay_displayOptionsElements[5].selectedTextEntry;
+        monitor = &display_inventory.monitors[proposed.monitor];
+        if (proposed.mode == DISPLAY_MODE_BORDERLESS)
+        {
+            proposed.width = monitor->desktop_width;
+            proposed.height = monitor->desktop_height;
+            proposed.refresh_hz = monitor->desktop_refresh_hz;
+        }
+        else if (resolution >= 0 && resolution < monitor->mode_count)
+        {
+            proposed.width = monitor->modes[resolution].width;
+            proposed.height = monitor->modes[resolution].height;
+            proposed.refresh_hz = proposed.mode == DISPLAY_MODE_EXCLUSIVE ? monitor->modes[resolution].refresh_hz : 0;
+        }
+        else
+        {
+            stdString_WcharToChar(value, display_width_text, sizeof(value));
+            if (_sscanf(value, "%d", &proposed.width) != 1) proposed.width = current.width;
+            stdString_WcharToChar(value, display_height_text, sizeof(value));
+            if (_sscanf(value, "%d", &proposed.height) != 1) proposed.height = current.height;
+            proposed.refresh_hz = 0;
+        }
+        return jkGuiDisplay_ApplyDisplayChange(proposed);
+    }
+    return 0;
+}
+
 static int jkGuiDisplay_ShowAspectOptions(void)
 {
     int clicked;
@@ -220,35 +426,40 @@ static void jkGuiDisplay_ShowDiagnostics(void)
     jkGuiRend_DisplayAndReturnClicked(&jkGuiDisplay_diagnosticsMenu);
 }
 
-static int jkGuiDisplay_ApplyDisplayChange(DisplayMode mode, int hidpi)
+static int jkGuiDisplay_ApplyDisplayChange(DisplaySettings proposed)
 {
-    DisplaySettings original = {
-        Window_displayMode, 0, Window_screenXSize, Window_screenYSize, 0, Window_isHiDpi
-    };
-    DisplaySettings proposed = original;
+    DisplaySettings original = Window_GetDisplaySettings();
     DisplayTransaction transaction;
-    proposed.mode = mode;
-    proposed.hidpi = hidpi;
+    DisplaySelectionReason reason = DISPLAY_SELECTION_OK;
     display_transaction_init(&transaction, original);
 
-    Window_SetDisplayMode(proposed.mode);
-    Window_SetHiDpi(proposed.hidpi);
     if (!display_transaction_requires_confirmation(original, proposed))
         return 1;
+
+    if (!Window_ApplyDisplaySettings(proposed, &reason))
+    {
+        char16_t title[] = u"Display settings";
+        char16_t message[128];
+        jk_snwprintf(message, 128, u"Display settings could not be applied (reason %d).", (int)reason);
+        jkGuiDialog_ErrorDialog(title, message);
+        diag_log_event(DIAG_SEVERITY_WARNING, "display", "display_settings_apply_failed");
+        return 0;
+    }
 
     display_transaction_begin(&transaction, proposed, SDL_GetTicks(), 15000);
     Window_RecreateSDL2Window();
     if (Window_ConfirmDisplaySettings(15000))
     {
         display_transaction_confirm(&transaction);
+        Window_CommitDisplaySettings(Window_GetDisplaySettings());
         diag_log_event(DIAG_SEVERITY_INFO, "display", "display_settings_confirmed");
         return 1;
     }
 
     display_transaction_cancel(&transaction);
     original = display_transaction_result(&transaction);
-    Window_SetDisplayMode(original.mode);
-    Window_SetHiDpi(original.hidpi);
+    if (!Window_ApplyDisplaySettings(original, &reason))
+        diag_log_event(DIAG_SEVERITY_ERROR, "display", "display_settings_restore_failed");
     Window_RecreateSDL2Window();
     diag_log_event(DIAG_SEVERITY_WARNING, "display", "display_settings_reverted");
     return 0;
@@ -256,7 +467,10 @@ static int jkGuiDisplay_ApplyDisplayChange(DisplayMode mode, int hidpi)
 
 static int jkGuiDisplay_ApplyDefaults(VideoDefaults defaults)
 {
-    if (!jkGuiDisplay_ApplyDisplayChange(defaults.display_mode, defaults.hidpi))
+    DisplaySettings proposed = Window_GetDisplaySettings();
+    proposed.mode = defaults.display_mode;
+    proposed.hidpi = defaults.hidpi;
+    if (!jkGuiDisplay_ApplyDisplayChange(proposed))
         return 0;
 
     jkPlayer_fov = defaults.fov;
@@ -296,6 +510,7 @@ void jkGuiDisplay_Startup()
     jkGui_InitMenu(&jkGuiDisplay_menuAdvanced, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
     jkGui_InitMenu(&jkGuiDisplay_diagnosticsMenu, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
     jkGui_InitMenu(&jkGuiDisplay_aspectMenu, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
+    jkGui_InitMenu(&jkGuiDisplay_displayOptionsMenu, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
     jkGuiDisplay_aElements[25].wstr = render_level;
 
     jkGuiDisplay_aElements[27].wstr = gamma_level;
@@ -504,7 +719,6 @@ int jkGuiDisplay_Show()
 
     jkGuiDisplay_aElements[10].selectedTextEntry = jkPlayer_fov - FOV_MIN;
     jkGuiDisplay_aElements[12].selectedTextEntry = jkPlayer_fovIsVertical;
-    jkGuiDisplay_aElements[13].selectedTextEntry = Window_isFullscreen;
     jkGuiDisplay_aElements[14].selectedTextEntry = Window_isHiDpi;
     jkGuiDisplay_aElements[15].selectedTextEntry = jkPlayer_enableTextureFilter;
 
@@ -532,17 +746,19 @@ continue_menu:
         jkGuiDisplay_ShowAspectOptions();
         goto continue_menu;
     }
+    else if (v0 == GUI_DISPLAY_OPTIONS)
+    {
+        jkGuiDisplay_ShowDisplayOptions();
+        goto continue_menu;
+    }
     else if ( v0 != -1 )
     {
-        DisplayMode proposedMode = jkGuiDisplay_aElements[13].selectedTextEntry
-            ? (Window_displayMode == DISPLAY_MODE_WINDOWED ? DISPLAY_MODE_BORDERLESS : Window_displayMode)
-            : DISPLAY_MODE_WINDOWED;
+        DisplaySettings proposedDisplay = Window_GetDisplaySettings();
+        proposedDisplay.hidpi = jkGuiDisplay_aElements[14].selectedTextEntry;
 
         jkPlayer_fov = FOV_MIN + jkGuiDisplay_aElements[10].selectedTextEntry;
         jkPlayer_fovIsVertical = jkGuiDisplay_aElements[12].selectedTextEntry;
-        jkGuiDisplay_ApplyDisplayChange(proposedMode, jkGuiDisplay_aElements[14].selectedTextEntry);
-        jkGuiDisplay_aElements[13].selectedTextEntry = Window_isFullscreen;
-        jkGuiDisplay_aElements[14].selectedTextEntry = Window_isHiDpi;
+        jkGuiDisplay_ApplyDisplayChange(proposedDisplay);
         jkPlayer_enableTextureFilter = jkGuiDisplay_aElements[15].selectedTextEntry;
         jkPlayer_fpslimit = FrameRate_ValueFromSlider(jkGuiDisplay_aElements[18].selectedTextEntry);
         jkPlayer_enableVsync = PresentationMode_VsyncFromSlider(jkGuiDisplay_aElements[21].selectedTextEntry);

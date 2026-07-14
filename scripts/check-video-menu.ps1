@@ -20,6 +20,20 @@ foreach ($key in @('GUIEXT_APPLY', 'GUIEXT_RESET_VIDEO', 'GUIEXT_SAFE_VIDEO',
     if ($menu -notmatch [regex]::Escape('"' + $key + '"')) { $missing += "menu:$key" }
 }
 
+foreach ($key in @('GUIEXT_DISPLAY_OPTIONS', 'GUIEXT_DISPLAY_MODE',
+                    'GUIEXT_DISPLAY_MONITOR', 'GUIEXT_DISPLAY_RESOLUTION',
+                    'GUIEXT_DISPLAY_WIDTH', 'GUIEXT_DISPLAY_HEIGHT',
+                    'GUIEXT_DISPLAY_REFRESH', 'GUIEXT_DISPLAY_EFFECTIVE',
+                    'GUIEXT_EXCLUSIVE_UNAVAILABLE')) {
+    if ($strings -notmatch [regex]::Escape('"' + $key + '"')) { $missing += "localization:$key" }
+    if ($menu -notmatch [regex]::Escape('"' + $key + '"')) { $missing += "display-options-menu:$key" }
+}
+foreach ($contract in @('jkGuiDisplay_ShowDisplayOptions', 'Window_GetDisplayInventory',
+                         'Window_GetDisplaySettings', 'Window_ApplyDisplaySettings',
+                         'Window_CommitDisplaySettings')) {
+    if ($menu -notmatch [regex]::Escape($contract)) { $missing += "display-options-behavior:$contract" }
+}
+
 if (($menu | Select-String -Pattern 'ELEMENT_TEXTBUTTON,\s+1,\s+2,\s+"GUIEXT_APPLY"' -AllMatches).Matches.Count -lt 2) {
     $missing += 'apply-buttons:display-and-advanced'
 }

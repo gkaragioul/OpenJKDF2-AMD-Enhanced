@@ -1,4 +1,4 @@
-MSGS 140          # <--- DON'T FORGET TO UPDATE THIS COUNT
+MSGS 149          # <--- DON'T FORGET TO UPDATE THIS COUNT
 
 #  "<key>"     <unused number>   "<string>"
 
@@ -26,6 +26,15 @@ MSGS 140          # <--- DON'T FORGET TO UPDATE THIS COUNT
    "GUIEXT_FOV_HINT"                      0 "Set FOV"
    "GUIEXT_FOV_VERTICAL"                  0 "FOV is vertical (Hor+)"
    "GUIEXT_EN_FULLSCREEN"                 0 "Enable Fullscreen"
+   "GUIEXT_DISPLAY_OPTIONS"                0 "Display Options"
+   "GUIEXT_DISPLAY_MODE"                   0 "Mode"
+   "GUIEXT_DISPLAY_MONITOR"                0 "Monitor"
+   "GUIEXT_DISPLAY_RESOLUTION"             0 "Resolution"
+   "GUIEXT_DISPLAY_WIDTH"                  0 "Width"
+   "GUIEXT_DISPLAY_HEIGHT"                 0 "Height"
+   "GUIEXT_DISPLAY_REFRESH"                0 "Refresh Behavior"
+   "GUIEXT_DISPLAY_EFFECTIVE"              0 "Effective Settings"
+   "GUIEXT_EXCLUSIVE_UNAVAILABLE"           0 "Exclusive Fullscreen is unavailable until display restoration is verified."
    "GUIEXT_EN_HIDPI"                      0 "Enable HiDPI"
    "GUIEXT_EN_TEXTURE_FILTERING"          0 "Enable Texture Filtering"
    "GUIEXT_ASPECT_OPTIONS"                0 "Aspect Options"
