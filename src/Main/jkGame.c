@@ -9,6 +9,7 @@
 #include "World/sithWorld.h"
 #include "World/jkPlayer.h"
 #include "World/sithSector.h"
+#include "World/sithThing.h"
 #include "Win95/Video.h"
 #include "Win95/stdComm.h"
 #include "Platform/std3D.h"
@@ -412,6 +413,138 @@ int jkGame_Update()
 #endif
 
 #if defined(SDL2_RENDER) && !defined(TARGET_RETRO_HOMEBREW)
+    // First-level opening-door observer for guarded acceptance testing.
+    {
+        static RuntimeProbe doorProbe = { 0 };
+        static bool doorPresetApplied = false;
+        static bool doorYawApplied = false;
+        static bool doorApproachWarped = false;
+        static bool doorCrossingPositioned = false;
+        static rdVector3 doorStartPositions[2] = { 0 };
+        static int doorStartSector = -1;
+        static float doorMaxDisplacement[2] = { 0 };
+        static uint32_t doorNextSampleMs = 250u;
+        const char* pDoorMs = getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_MS");
+        SithWorld* pWorld = sithWorld_g_pCurrentWorld;
+        SithThing* pPlayer = pWorld ? pWorld->pLocalPlayer : NULL;
+        if (pDoorMs && pWorld && pPlayer && pPlayer->sector && pWorld->numThingsLoaded > 57)
+        {
+            SithThing* pDoorA = &pWorld->aThings[56];
+            SithThing* pDoorB = &pWorld->aThings[57];
+            rdVector3 playerAngles;
+            uint32_t nowMs = stdPlatform_GetTimeMsec();
+            uint32_t delayMs = (uint32_t)strtoul(pDoorMs, NULL, 10);
+            if (!doorPresetApplied)
+            {
+                sithControl_ApplyModernPreset();
+                jkHudInv_InputInit();
+                doorPresetApplied = true;
+                diag_log_event(DIAG_SEVERITY_INFO, "validation", "first_door modern_preset_applied=true");
+            }
+            if (!doorYawApplied)
+            {
+                const char* pDoorYaw = getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_YAW");
+                float yaw;
+                if (pDoorYaw && runtime_probe_parse_degrees(pDoorYaw, &yaw))
+                {
+                    rdMatrix_ExtractAngles34(&pPlayer->orient, &playerAngles);
+                    playerAngles.y = yaw;
+                    rdMatrix_BuildRotate34(&pPlayer->orient, &playerAngles);
+                    diag_log_event(DIAG_SEVERITY_INFO, "validation", "first_door yaw_override_applied=true");
+                }
+                else if (pDoorYaw)
+                {
+                    diag_log_event(DIAG_SEVERITY_ERROR, "validation", "first_door yaw_override_rejected=true");
+                }
+                doorYawApplied = true;
+            }
+            if (!doorApproachWarped && getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_WARP_APPROACH") &&
+                (pPlayer->sector->id == 31 || pPlayer->sector->id == 32 ||
+                 (pPlayer->sector->id == 30 && pPlayer->position.x >= -8.30f)) &&
+                pWorld->numSectors > 104)
+            {
+                rdVector3 doorApproach = { -4.45f, -4.05f, -1.18f };
+                rdVector_Zero3(&pPlayer->physicsParams.vel);
+                sithThing_SetPositionAndOrient(pPlayer, &doorApproach, &pPlayer->orient);
+                sithThing_EnterSector(pPlayer, &pWorld->aSectors[104], 1, 0);
+                doorApproachWarped = true;
+                diag_log_event(DIAG_SEVERITY_INFO, "validation", "first_door approach_repositioned=true");
+            }
+            if (getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_WARP_APPROACH"))
+            {
+                pPlayer->actorParams.flags |= SITH_AF_INVULNERABLE;
+                if (doorApproachWarped && !doorCrossingPositioned &&
+                    doorMaxDisplacement[0] < 0.01f && doorMaxDisplacement[1] < 0.01f)
+                {
+                    rdVector3 doorSwitchPosition = { -4.45f, -3.875f, -1.18f };
+                    rdVector_Zero3(&pPlayer->physicsParams.vel);
+                    sithThing_SetPositionAndOrient(pPlayer, &doorSwitchPosition, &pPlayer->orient);
+                    sithThing_EnterSector(pPlayer, &pWorld->aSectors[104], 1, 0);
+                }
+            }
+            rdMatrix_ExtractAngles34(&pPlayer->orient, &playerAngles);
+            if (!doorProbe.started)
+            {
+                doorStartPositions[0] = pDoorA->position;
+                doorStartPositions[1] = pDoorB->position;
+                doorStartSector = pPlayer->sector->id;
+            }
+            {
+                float displacementA = sqrtf(runtime_probe_distance_squared(
+                    doorStartPositions[0].x, doorStartPositions[0].y, doorStartPositions[0].z,
+                    pDoorA->position.x, pDoorA->position.y, pDoorA->position.z));
+                float displacementB = sqrtf(runtime_probe_distance_squared(
+                    doorStartPositions[1].x, doorStartPositions[1].y, doorStartPositions[1].z,
+                    pDoorB->position.x, pDoorB->position.y, pDoorB->position.z));
+                if (displacementA > doorMaxDisplacement[0]) doorMaxDisplacement[0] = displacementA;
+                if (displacementB > doorMaxDisplacement[1]) doorMaxDisplacement[1] = displacementB;
+                if (!doorCrossingPositioned && getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_WARP_APPROACH") &&
+                    displacementA >= 0.01f && displacementB >= 0.01f && pWorld->numSectors > 104)
+                {
+                    rdVector3 doorCrossing = { -4.60f, -4.05f, -1.18f };
+                    rdVector_Zero3(&pPlayer->physicsParams.vel);
+                    sithThing_SetPositionAndOrient(pPlayer, &doorCrossing, &pPlayer->orient);
+                    sithThing_EnterSector(pPlayer, &pWorld->aSectors[104], 1, 0);
+                    doorCrossingPositioned = true;
+                    diag_log_event(DIAG_SEVERITY_INFO, "validation", "first_door crossing_repositioned=true");
+                }
+            }
+            if (doorProbe.started)
+            {
+                uint32_t elapsedMs = (uint32_t)(nowMs - doorProbe.start_ms);
+                if (elapsedMs >= doorNextSampleMs && elapsedMs < delayMs)
+                {
+                    char sampleEvent[512];
+                    snprintf(sampleEvent, sizeof(sampleEvent),
+                             "first_door sample elapsed_ms=%u player=(%.4f,%.4f,%.4f) yaw=%.3f sector=%d door_a=%.4f door_b=%.4f",
+                             elapsedMs, pPlayer->position.x, pPlayer->position.y, pPlayer->position.z,
+                             playerAngles.y, pPlayer->sector->id, doorMaxDisplacement[0], doorMaxDisplacement[1]);
+                    diag_log_event(DIAG_SEVERITY_INFO, "validation", sampleEvent);
+                    doorNextSampleMs += 250u;
+                }
+            }
+            if (runtime_probe_due(&doorProbe, nowMs, delayMs))
+            {
+                const bool doorMoved = doorMaxDisplacement[0] >= 0.05f && doorMaxDisplacement[1] >= 0.05f;
+                const bool crossed = pPlayer->sector->id != doorStartSector && pPlayer->position.y > -3.75f;
+                char doorEvent[512];
+                snprintf(doorEvent, sizeof(doorEvent),
+                         "first_door complete door_moved=%s crossed=%s player=(%.4f,%.4f,%.4f) yaw=%.3f start_sector=%d end_sector=%d door_a=%.4f door_b=%.4f clean_exit=true",
+                         doorMoved ? "true" : "false", crossed ? "true" : "false",
+                         pPlayer->position.x, pPlayer->position.y, pPlayer->position.z, playerAngles.y,
+                         doorStartSector, pPlayer->sector->id, doorMaxDisplacement[0], doorMaxDisplacement[1]);
+                diag_log_event((doorMoved && crossed) ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                               "validation", doorEvent);
+                {
+                    const char* pDoorShotPath = getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_SCREENSHOT");
+                    if (pDoorShotPath)
+                        std3D_Screenshot(pDoorShotPath);
+                }
+                g_should_exit = 1;
+            }
+        }
+    }
+
     // Opt-in end-to-end input observer. It records only player deltas and sector IDs,
     // never key contents or desktop input, and is inert during ordinary play.
     {

@@ -32,5 +32,19 @@ int main(void)
     assert(fabsf(runtime_probe_angle_delta_degrees(-170.0f, 170.0f) + 20.0f) < 0.0001f);
     assert(runtime_probe_turned(179.0f, -179.0f, 1.5f));
     assert(!runtime_probe_turned(45.0f, 45.9f, 1.0f));
+
+    {
+        float degrees = 0.0f;
+        assert(runtime_probe_parse_degrees("-90", &degrees));
+        assert(fabsf(degrees + 90.0f) < 0.0001f);
+        assert(runtime_probe_parse_degrees("180.0", &degrees));
+        assert(fabsf(degrees - 180.0f) < 0.0001f);
+        assert(!runtime_probe_parse_degrees(NULL, &degrees));
+        assert(!runtime_probe_parse_degrees("", &degrees));
+        assert(!runtime_probe_parse_degrees("90 degrees", &degrees));
+        assert(!runtime_probe_parse_degrees("181", &degrees));
+        assert(!runtime_probe_parse_degrees("nan", &degrees));
+        assert(!runtime_probe_parse_degrees("0", NULL));
+    }
     return 0;
 }

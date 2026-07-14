@@ -1,6 +1,8 @@
 #include "General/RuntimeProbe.h"
 
+#include <errno.h>
 #include <math.h>
+#include <stdlib.h>
 
 bool runtime_probe_due(RuntimeProbe* probe, uint32_t now_ms, uint32_t delay_ms)
 {
@@ -56,4 +58,19 @@ bool runtime_probe_turned(float start_degrees, float end_degrees, float minimum_
     if (minimum_degrees < 0.0f)
         minimum_degrees = -minimum_degrees;
     return fabsf(runtime_probe_angle_delta_degrees(start_degrees, end_degrees)) >= minimum_degrees;
+}
+
+bool runtime_probe_parse_degrees(const char* text, float* out_degrees)
+{
+    char* end = NULL;
+    float value;
+    if (!text || !text[0] || !out_degrees)
+        return false;
+    errno = 0;
+    value = strtof(text, &end);
+    if (errno == ERANGE || end == text || !end || end[0] != '\0' ||
+        !isfinite(value) || value < -180.0f || value > 180.0f)
+        return false;
+    *out_degrees = value;
+    return true;
 }

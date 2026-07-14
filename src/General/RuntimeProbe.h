@@ -19,5 +19,6 @@ bool runtime_probe_moved(float start_x, float start_y, float start_z,
                          float end_x, float end_y, float end_z, float minimum_distance);
 float runtime_probe_angle_delta_degrees(float start_degrees, float end_degrees);
 bool runtime_probe_turned(float start_degrees, float end_degrees, float minimum_degrees);
+bool runtime_probe_parse_degrees(const char* text, float* out_degrees);
 
 #endif
