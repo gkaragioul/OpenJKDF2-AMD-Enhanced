@@ -39,6 +39,16 @@ static char* read_file(const char* path)
     return text;
 }
 
+static void write_file(const char* path, const char* text)
+{
+    FILE* stream = fopen(path, "wb");
+    CHECK(stream != NULL);
+    if (stream) {
+        fputs(text, stream);
+        fclose(stream);
+    }
+}
+
 int main(void)
 {
     const char* output_dir = "test-output-diagnostic-log";
@@ -47,6 +57,7 @@ int main(void)
     char* text;
 
     make_dir(output_dir);
+    write_file("test-output-diagnostic-log/run-state.json", "{\"schema\":1,\"status\":\"unclean\"}\n");
     CHECK(diag_redact_path(
         "C:\\Users\\alice\\Games\\JK\\episode\\JK1.gob",
         config.data_dir,
@@ -55,6 +66,7 @@ int main(void)
     CHECK(strcmp(redacted, "<data-dir>\\episode\\JK1.gob") == 0);
 
     CHECK(diag_log_start(&config));
+    CHECK(diag_log_previous_run_unclean());
     text = read_file("test-output-diagnostic-log/run-state.json");
     CHECK(text != NULL && strstr(text, "\"status\":\"unclean\"") != NULL);
     free(text);
@@ -81,6 +93,10 @@ int main(void)
     text = read_file("test-output-diagnostic-log/run-state.json");
     CHECK(text != NULL && strstr(text, "\"status\":\"clean\"") != NULL);
     free(text);
+
+    CHECK(diag_log_start(&config));
+    CHECK(!diag_log_previous_run_unclean());
+    CHECK(diag_log_finish(true));
 
     return failures == 0 ? 0 : 1;
 }

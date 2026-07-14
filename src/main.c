@@ -699,6 +699,9 @@ int main(int argc, char** argv)
         diagnostics_started = diag_log_start(&diagnostic_config);
         if (diagnostics_started) {
             diag_log_event(DIAG_SEVERITY_INFO, "startup", "process_started");
+            if (diag_log_previous_run_unclean()) {
+                diag_log_event(DIAG_SEVERITY_WARNING, "startup", "previous_run_unclean recovery_available=true");
+            }
             if (startup_options.safe_mode) {
                 diag_log_event(DIAG_SEVERITY_INFO, "startup", "safe_mode_enabled");
             }

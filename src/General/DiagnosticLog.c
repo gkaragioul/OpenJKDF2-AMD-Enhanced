@@ -20,6 +20,7 @@ typedef struct DiagLogState
     char directory[512];
     char data_dir[512];
     bool active;
+    bool previous_run_unclean;
 } DiagLogState;
 
 static DiagLogState diag_state;
@@ -95,6 +96,21 @@ static bool diag_write_run_state(const char* status)
     return rename(temporary, path) == 0;
 }
 
+static bool diag_read_previous_run_unclean(const char* directory)
+{
+    char path[640];
+    char contents[128];
+    size_t count;
+    FILE* stream;
+    if (!diag_path_join(path, sizeof(path), directory, "run-state.json")) return false;
+    stream = fopen(path, "rb");
+    if (!stream) return false;
+    count = fread(contents, 1, sizeof(contents) - 1, stream);
+    fclose(stream);
+    contents[count] = '\0';
+    return strstr(contents, "\"status\":\"unclean\"") != NULL;
+}
+
 bool diag_log_start(const DiagLogConfig* config)
 {
     char text_path[640];
@@ -102,6 +118,7 @@ bool diag_log_start(const DiagLogConfig* config)
     if (!config || !config->diagnostics_dir || !config->diagnostics_dir[0] || diag_state.active) return false;
     if (strlen(config->diagnostics_dir) >= sizeof(diag_state.directory)) return false;
     strcpy(diag_state.directory, config->diagnostics_dir);
+    diag_state.previous_run_unclean = diag_read_previous_run_unclean(diag_state.directory);
     if (config->data_dir) {
         if (strlen(config->data_dir) >= sizeof(diag_state.data_dir)) return false;
         strcpy(diag_state.data_dir, config->data_dir);
@@ -123,6 +140,11 @@ bool diag_log_start(const DiagLogConfig* config)
         return false;
     }
     return true;
+}
+
+bool diag_log_previous_run_unclean(void)
+{
+    return diag_state.active && diag_state.previous_run_unclean;
 }
 
 bool diag_log_event(DiagSeverity severity, const char* subsystem, const char* event)
