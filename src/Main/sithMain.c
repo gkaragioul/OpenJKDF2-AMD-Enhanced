@@ -137,6 +137,82 @@ static void sithMain_RunSaveLoadValidation(void)
             break;
     }
 }
+
+static void sithMain_RunDeathReloadValidation(void)
+{
+    static DeathReloadProbe probe = { 0 };
+    static rdVector3 checkpointPosition = { 0 };
+    static flex_t checkpointHealth = 0.0f;
+    static bool checkpointRequested = false;
+    const char* enabled = getenv("OPENJKDF2_VALIDATE_DEATH_RELOAD");
+    SithThing* player = sithPlayer_g_pLocalPlayerThing;
+    SaveLoadProbeAction action;
+    bool dead;
+    bool stateMatches;
+
+    if (!enabled || !enabled[0] || !player || sithNet_isMulti)
+        return;
+
+    if (!checkpointRequested)
+    {
+        if (sithGamesave_state != SITH_GS_NONE || !sithGamesave_autosave_fname[0])
+            return;
+        checkpointHealth = save_load_probe_snapshot_health(player->actorParams.maxHealth);
+        player->actorParams.health = checkpointHealth;
+        checkpointPosition = player->position;
+        if (!sithGamesave_Save(sithGamesave_autosave_fname, 1, 0, NULL))
+        {
+            diag_log_event(DIAG_SEVERITY_ERROR, "validation", "death_reload checkpoint_request_failed");
+            g_should_exit = 1;
+            return;
+        }
+        checkpointRequested = true;
+        diag_log_event(DIAG_SEVERITY_INFO, "validation", "death_reload checkpoint_requested");
+        return;
+    }
+
+    dead = (player->flags & SITH_TF_DEAD) != 0;
+    stateMatches = player->actorParams.health > checkpointHealth - 0.001f &&
+                   player->actorParams.health < checkpointHealth + 0.001f &&
+                   player->position.x > checkpointPosition.x - 0.01f &&
+                   player->position.x < checkpointPosition.x + 0.01f &&
+                   player->position.y > checkpointPosition.y - 0.01f &&
+                   player->position.y < checkpointPosition.y + 0.01f &&
+                   player->position.z > checkpointPosition.z - 0.01f &&
+                   player->position.z < checkpointPosition.z + 0.01f;
+    action = death_reload_probe_step(&probe, sithTime_g_msecGameTime,
+                                     sithGamesave_state != SITH_GS_NONE, dead,
+                                     stateMatches, 3000u);
+    switch (action)
+    {
+        case SAVE_LOAD_PROBE_KILL:
+        {
+            char damageEvent[160];
+            flex_t applied = sithActor_DamageActor(player, player, player->actorParams.maxHealth + 100.0f, SITH_DAMAGE_FALL);
+            stdString_snprintf(damageEvent, sizeof(damageEvent),
+                               "death_reload lethal_damage_applied amount=%.3f health=%.3f dead=%s actor_flags=%u",
+                               applied, player->actorParams.health,
+                               (player->flags & SITH_TF_DEAD) ? "true" : "false",
+                               (unsigned int)player->actorParams.flags);
+            diag_log_event(DIAG_SEVERITY_INFO, "validation", damageEvent);
+            break;
+        }
+        case SAVE_LOAD_PROBE_RELOAD:
+            sithPlayer_debug_loadauto(player);
+            diag_log_event(DIAG_SEVERITY_INFO, "validation", "death_reload autosave_reload_requested");
+            break;
+        case SAVE_LOAD_PROBE_COMPLETE:
+            diag_log_event(DIAG_SEVERITY_INFO, "validation", "death_reload complete dead_observed=true state_restored=true");
+            g_should_exit = 1;
+            break;
+        case SAVE_LOAD_PROBE_FAILED:
+            diag_log_event(DIAG_SEVERITY_ERROR, "validation", "death_reload failed state_restored=false");
+            g_should_exit = 1;
+            break;
+        default:
+            break;
+    }
+}
 #endif
 
 int sithMain_Startup(HostServices *commonFuncs)
@@ -496,6 +572,7 @@ int sithUpdate()
         sithGamesave_Process();
 #if defined(SDL2_RENDER) && !defined(TARGET_RETRO_HOMEBREW)
         sithMain_RunSaveLoadValidation();
+        sithMain_RunDeathReloadValidation();
 #endif
 
         sithMain_tickEndMs = stdPlatform_GetTimeMsec();

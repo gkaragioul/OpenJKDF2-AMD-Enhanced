@@ -31,3 +31,8 @@ for a same-process save/mutate/restore check or
 variables are intended only for the guarded test script; they use the normal
 game save system, emit phase results without save contents or user paths, and
 are inert during ordinary launches.
+
+`OPENJKDF2_VALIDATE_DEATH_RELOAD=1` similarly enables the guarded death and
+autosave-reload lifecycle probe. It records only phase outcomes and numeric
+gameplay state needed to diagnose suppressed damage; it does not record save
+contents, asset contents, or user paths.
