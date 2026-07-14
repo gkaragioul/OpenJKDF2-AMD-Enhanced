@@ -39,5 +39,6 @@ Invoke-DeveloperCommand $configure
 Invoke-DeveloperCommand ('cmake --build "{0}" --target openjkdf2-64' -f $buildDir)
 
 if ($Test) {
+    Invoke-DeveloperCommand ('cmake --build "{0}" --target openjkdf2-unit-tests' -f $buildDir)
     Invoke-DeveloperCommand ('ctest --test-dir "{0}" -L unit --output-on-failure' -f $buildDir)
 }
