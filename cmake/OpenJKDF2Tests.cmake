@@ -94,6 +94,11 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/General/QualityPreset.c"
     )
     openjkdf2_add_unit_test(
+        test_video_defaults
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_video_defaults.c"
+        "${PROJECT_SOURCE_DIR}/src/General/VideoDefaults.c"
+    )
+    openjkdf2_add_unit_test(
         test_config_recovery
         "${PROJECT_SOURCE_DIR}/src/Tests/test_config_recovery.c"
         "${PROJECT_SOURCE_DIR}/src/General/ConfigRecovery.c"

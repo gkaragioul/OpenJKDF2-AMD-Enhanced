@@ -9,6 +9,7 @@
 #include "Gui/jkGUIRend.h"
 #include "Gui/jkGUI.h"
 #include "Gui/jkGUISetup.h"
+#include "Gui/jkGUIDialog.h"
 #include "World/jkPlayer.h"
 #include "Win95/Window.h"
 #include "Platform/std3D.h"
@@ -17,6 +18,8 @@
 #include "General/QualityPreset.h"
 #include "General/DisplayTransaction.h"
 #include "General/DiagnosticLog.h"
+#include "General/VideoDefaults.h"
+#include "Main/jkStrings.h"
 
 #include "jk.h"
 
@@ -30,6 +33,8 @@ enum jkGuiDecisionButton_t
 
     GUI_ADVANCED = 105,
     GUI_SAFE_60 = 4600,
+    GUI_RESET_VIDEO = 4601,
+    GUI_SAFE_VIDEO = 4602,
 };
 
 static char16_t render_level[256] = {0};
@@ -104,7 +109,7 @@ static jkGuiElement jkGuiDisplay_aElements[32] = {
 
 static jkGuiMenu jkGuiDisplay_menu = { jkGuiDisplay_aElements, 0, 0xFF, 0xE1, 0x0F, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0 };
 
-static jkGuiElement jkGuiDisplay_aElementsAdvanced[22] = { 
+static jkGuiElement jkGuiDisplay_aElementsAdvanced[24] = {
     { ELEMENT_TEXT,        0,            0, NULL,                   3, {0, 410, 640, 20},   1, 0, NULL,                        0, 0, 0, {0}, 0},
     { ELEMENT_TEXT,        0,            6, "GUI_SETUP",            3, {20, 20, 600, 40},   1, 0, NULL,                        0, 0, 0, {0}, 0},
     { ELEMENT_TEXTBUTTON,  GUI_GENERAL,  2, "GUI_GENERAL",          3, {20, 80, 120, 40},   1, 0, "GUI_GENERAL_HINT",          0, 0, 0, {0}, 0},
@@ -120,6 +125,8 @@ static jkGuiElement jkGuiDisplay_aElementsAdvanced[22] = {
     { ELEMENT_CHECKBOX,    0,            0, "GUIEXT_EN_TEXTURE_PRECACHE",   0, {20, 190, 300, 40},  1, 0, "GUIEXT_EN_TEXTURE_PRECACHE_HINT",          0, 0, 0, {0}, 0},
     { ELEMENT_CHECKBOX,    0,            0, "GUIEXT_SHOW_FRAME_STATS",      0, {20, 230, 300, 40},  1, 0, "GUIEXT_SHOW_FRAME_STATS_HINT",             0, 0, 0, {0}, 0},
     { ELEMENT_TEXTBUTTON,  GUI_SAFE_60,  2, "GUIEXT_SAFE_60",               3, {20, 290, 300, 40},  1, 0, "GUIEXT_SAFE_60_HINT",                      0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBUTTON,  GUI_RESET_VIDEO, 2, "GUIEXT_RESET_VIDEO",         3, {20, 335, 300, 35},  1, 0, "GUIEXT_RESET_VIDEO_HINT",                  0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBUTTON,  GUI_SAFE_VIDEO, 2, "GUIEXT_SAFE_VIDEO",           3, {20, 375, 300, 35},  1, 0, "GUIEXT_SAFE_VIDEO_HINT",                   0, 0, 0, {0}, 0},
     { ELEMENT_TEXT,        0,            0, "GUIEXT_QUALITY_PRESET",         2, {350, 145, 130, 20}, 1, 0, NULL, 0, 0, 0, {0}, 0},
     { ELEMENT_SLIDER,      0,            0, (const char*)QUALITY_PRESET_CUSTOM, 0, {350, 170, 250, 24}, 1, 0, "GUIEXT_QUALITY_PRESET_HINT", jkGuiDisplay_QualityDraw, 0, slider_images, {0}, 0},
     { ELEMENT_TEXT,        0,            0, quality_val_text,                 3, {350, 195, 250, 20}, 1, 0, NULL, 0, 0, 0, {0}, 0},
@@ -133,6 +140,71 @@ static jkGuiElement jkGuiDisplay_aElementsAdvanced[22] = {
 };
 
 static jkGuiMenu jkGuiDisplay_menuAdvanced = { jkGuiDisplay_aElementsAdvanced, 0, 0xFF, 0xE1, 0x0F, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0 };
+
+static int jkGuiDisplay_ApplyDisplayChange(DisplayMode mode, int hidpi)
+{
+    DisplaySettings original = {
+        Window_displayMode, 0, Window_screenXSize, Window_screenYSize, 0, Window_isHiDpi
+    };
+    DisplaySettings proposed = original;
+    DisplayTransaction transaction;
+    proposed.mode = mode;
+    proposed.hidpi = hidpi;
+    display_transaction_init(&transaction, original);
+
+    Window_SetDisplayMode(proposed.mode);
+    Window_SetHiDpi(proposed.hidpi);
+    if (!display_transaction_requires_confirmation(original, proposed))
+        return 1;
+
+    display_transaction_begin(&transaction, proposed, SDL_GetTicks(), 15000);
+    Window_RecreateSDL2Window();
+    if (Window_ConfirmDisplaySettings(15000))
+    {
+        display_transaction_confirm(&transaction);
+        diag_log_event(DIAG_SEVERITY_INFO, "display", "display_settings_confirmed");
+        return 1;
+    }
+
+    display_transaction_cancel(&transaction);
+    original = display_transaction_result(&transaction);
+    Window_SetDisplayMode(original.mode);
+    Window_SetHiDpi(original.hidpi);
+    Window_RecreateSDL2Window();
+    diag_log_event(DIAG_SEVERITY_WARNING, "display", "display_settings_reverted");
+    return 0;
+}
+
+static int jkGuiDisplay_ApplyDefaults(VideoDefaults defaults)
+{
+    if (!jkGuiDisplay_ApplyDisplayChange(defaults.display_mode, defaults.hidpi))
+        return 0;
+
+    jkPlayer_fov = defaults.fov;
+    jkPlayer_fovIsVertical = defaults.fov_vertical;
+    jkPlayer_enableOrigAspect = defaults.original_aspect;
+    jkPlayer_fpslimit = defaults.fps_limit;
+    jkPlayer_enableVsync = defaults.vsync;
+    jkPlayer_qualityPreset = defaults.quality_preset;
+    jkPlayer_enableTextureFilter = defaults.texture_filtering;
+    jkPlayer_anisotropy = defaults.anisotropy;
+    jkPlayer_mipmapBias = defaults.mipmap_bias;
+    jkPlayer_enableBloom = defaults.bloom;
+    jkPlayer_enableSSAO = defaults.ssao;
+    jkPlayer_ssaaMultiple = defaults.ssaa_multiple;
+    jkPlayer_gamma = defaults.gamma;
+    jkPlayer_hudScale = defaults.hud_scale;
+    jkPlayer_bEnableTexturePrecache = defaults.texture_precache;
+    jkPlayer_bEnableJkgm = defaults.asset_enhancements;
+
+    std3D_PurgeEntireTextureCache();
+    std3D_UpdateSettings();
+    jkPlayer_WriteConf(jkPlayer_playerShortName);
+    diag_log_event(DIAG_SEVERITY_INFO, "settings",
+                   defaults.display_mode == DISPLAY_MODE_WINDOWED
+                       ? "safe_video_defaults_applied" : "recommended_video_defaults_applied");
+    return 1;
+}
 
 
 void jkGuiDisplay_Startup()
@@ -208,26 +280,26 @@ void jkGuiDisplay_VsyncDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vb
 void jkGuiDisplay_QualityDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
 {
     static const char16_t* names[] = {u"Classic", u"Balanced", u"High", u"Ultra", u"Custom"};
-    int preset = jkGuiDisplay_aElementsAdvanced[14].selectedTextEntry;
+    int preset = jkGuiDisplay_aElementsAdvanced[16].selectedTextEntry;
     if (preset < QUALITY_PRESET_CLASSIC || preset > QUALITY_PRESET_CUSTOM)
         preset = QUALITY_PRESET_CUSTOM;
     jk_snwprintf(quality_val_text, 32, u"%ls", names[preset]);
     if (preset != QUALITY_PRESET_CUSTOM)
     {
         QualityPresetSettings settings = QualityPreset_Get(preset);
-        jkGuiDisplay_aElementsAdvanced[17].selectedTextEntry = QualityPreset_SliderFromAnisotropy(settings.anisotropy);
+        jkGuiDisplay_aElementsAdvanced[19].selectedTextEntry = QualityPreset_SliderFromAnisotropy(settings.anisotropy);
         jk_snwprintf(mipmap_bias_text, 32, u"%.2f", settings.mipmapBias);
     }
     jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
-    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_aElementsAdvanced[15], menu, 1);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_aElementsAdvanced[17], menu, 1);
 }
 
 void jkGuiDisplay_AnisotropyDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
 {
-    int value = QualityPreset_AnisotropyFromSlider(jkGuiDisplay_aElementsAdvanced[17].selectedTextEntry);
+    int value = QualityPreset_AnisotropyFromSlider(jkGuiDisplay_aElementsAdvanced[19].selectedTextEntry);
     jk_snwprintf(anisotropy_val_text, 32, value == 1 ? u"Off" : u"%dx", value);
     jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
-    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_aElementsAdvanced[18], menu, 1);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_aElementsAdvanced[20], menu, 1);
 }
 
 int jkGuiDisplay_ShowAdvanced()
@@ -239,8 +311,8 @@ int jkGuiDisplay_ShowAdvanced()
     jkGuiDisplay_aElementsAdvanced[9].selectedTextEntry = jkPlayer_bEnableJkgm;
     jkGuiDisplay_aElementsAdvanced[10].selectedTextEntry = jkPlayer_bEnableTexturePrecache;
     jkGuiDisplay_aElementsAdvanced[11].selectedTextEntry = jkPlayer_showFrameStats;
-    jkGuiDisplay_aElementsAdvanced[14].selectedTextEntry = QualityPreset_Normalize(jkPlayer_qualityPreset);
-    jkGuiDisplay_aElementsAdvanced[17].selectedTextEntry = QualityPreset_SliderFromAnisotropy(jkPlayer_anisotropy);
+    jkGuiDisplay_aElementsAdvanced[16].selectedTextEntry = QualityPreset_Normalize(jkPlayer_qualityPreset);
+    jkGuiDisplay_aElementsAdvanced[19].selectedTextEntry = QualityPreset_SliderFromAnisotropy(jkPlayer_anisotropy);
     jk_snwprintf(mipmap_bias_text, 32, u"%.2f", jkPlayer_mipmapBias);
     
     jkGuiRend_MenuSetReturnKeyShortcutElement(&jkGuiDisplay_menuAdvanced, &jkGuiDisplay_aElementsAdvanced[7]);
@@ -261,9 +333,24 @@ int jkGuiDisplay_ShowAdvanced()
             return 1;
         }
 
+        if (v0 == GUI_RESET_VIDEO || v0 == GUI_SAFE_VIDEO)
+        {
+            const char* title = v0 == GUI_RESET_VIDEO ? "GUIEXT_RESET_VIDEO_TITLE" : "GUIEXT_SAFE_VIDEO_TITLE";
+            const char* question = v0 == GUI_RESET_VIDEO ? "GUIEXT_RESET_VIDEO_Q" : "GUIEXT_SAFE_VIDEO_Q";
+            if (jkGuiDialog_YesNoDialog(jkStrings_GetUniStringWithFallback(title),
+                                        jkStrings_GetUniStringWithFallback(question)))
+            {
+                VideoDefaults defaults = v0 == GUI_RESET_VIDEO
+                    ? video_defaults_recommended() : video_defaults_safe();
+                if (jkGuiDisplay_ApplyDefaults(defaults))
+                    return 1;
+            }
+            continue;
+        }
+
         if ( v0 == 1 )
         {
-            int preset = jkGuiDisplay_aElementsAdvanced[14].selectedTextEntry;
+            int preset = jkGuiDisplay_aElementsAdvanced[16].selectedTextEntry;
             jkPlayer_bEnableJkgm = jkGuiDisplay_aElementsAdvanced[9].selectedTextEntry;
             jkPlayer_bEnableTexturePrecache = jkGuiDisplay_aElementsAdvanced[10].selectedTextEntry;
             jkPlayer_showFrameStats = jkGuiDisplay_aElementsAdvanced[11].selectedTextEntry;
@@ -279,7 +366,7 @@ int jkGuiDisplay_ShowAdvanced()
             }
             else
             {
-                jkPlayer_anisotropy = QualityPreset_AnisotropyFromSlider(jkGuiDisplay_aElementsAdvanced[17].selectedTextEntry);
+                jkPlayer_anisotropy = QualityPreset_AnisotropyFromSlider(jkGuiDisplay_aElementsAdvanced[19].selectedTextEntry);
                 char biasText[32];
                 stdString_WcharToChar(biasText, mipmap_bias_text, sizeof(biasText));
                 if (_sscanf(biasText, "%f", &parsedBias) == 1)
@@ -339,44 +426,15 @@ continue_menu:
     }
     else if ( v0 != -1 )
     {
-        DisplaySettings originalDisplay = {
-            Window_displayMode, 0, Window_screenXSize, Window_screenYSize, 0, Window_isHiDpi
-        };
-        DisplaySettings proposedDisplay = originalDisplay;
-        DisplayTransaction displayTransaction;
-        proposedDisplay.mode = jkGuiDisplay_aElements[13].selectedTextEntry
-            ? (originalDisplay.mode == DISPLAY_MODE_WINDOWED ? DISPLAY_MODE_BORDERLESS : originalDisplay.mode)
+        DisplayMode proposedMode = jkGuiDisplay_aElements[13].selectedTextEntry
+            ? (Window_displayMode == DISPLAY_MODE_WINDOWED ? DISPLAY_MODE_BORDERLESS : Window_displayMode)
             : DISPLAY_MODE_WINDOWED;
-        proposedDisplay.hidpi = jkGuiDisplay_aElements[14].selectedTextEntry;
-        display_transaction_init(&displayTransaction, originalDisplay);
 
         jkPlayer_fov = FOV_MIN + jkGuiDisplay_aElements[10].selectedTextEntry;
         jkPlayer_fovIsVertical = jkGuiDisplay_aElements[12].selectedTextEntry;
-        Window_SetDisplayMode(proposedDisplay.mode);
-        Window_SetHiDpi(proposedDisplay.hidpi);
-
-        if (display_transaction_requires_confirmation(originalDisplay, proposedDisplay))
-        {
-            display_transaction_begin(&displayTransaction, proposedDisplay, SDL_GetTicks(), 15000);
-            Window_RecreateSDL2Window();
-            if (Window_ConfirmDisplaySettings(15000))
-            {
-                display_transaction_confirm(&displayTransaction);
-                diag_log_event(DIAG_SEVERITY_INFO, "display", "display_settings_confirmed");
-            }
-            else
-            {
-                DisplaySettings restore;
-                display_transaction_cancel(&displayTransaction);
-                restore = display_transaction_result(&displayTransaction);
-                Window_SetDisplayMode(restore.mode);
-                Window_SetHiDpi(restore.hidpi);
-                Window_RecreateSDL2Window();
-                jkGuiDisplay_aElements[13].selectedTextEntry = Window_isFullscreen;
-                jkGuiDisplay_aElements[14].selectedTextEntry = Window_isHiDpi;
-                diag_log_event(DIAG_SEVERITY_WARNING, "display", "display_settings_reverted");
-            }
-        }
+        jkGuiDisplay_ApplyDisplayChange(proposedMode, jkGuiDisplay_aElements[14].selectedTextEntry);
+        jkGuiDisplay_aElements[13].selectedTextEntry = Window_isFullscreen;
+        jkGuiDisplay_aElements[14].selectedTextEntry = Window_isHiDpi;
         jkPlayer_enableTextureFilter = jkGuiDisplay_aElements[15].selectedTextEntry;
         jkPlayer_enableOrigAspect = jkGuiDisplay_aElements[16].selectedTextEntry;
         jkPlayer_fpslimit = FrameRate_ValueFromSlider(jkGuiDisplay_aElements[18].selectedTextEntry);
