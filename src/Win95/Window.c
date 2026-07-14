@@ -791,6 +791,12 @@ void Window_SdlUpdate()
             bIsGamepad = 1;
         }
 
+        if (event.type >= SDL_EVENT_WINDOW_FIRST && event.type <= SDL_EVENT_WINDOW_LAST)
+        {
+            Window_HandleWindowEvent(&event);
+            continue;
+        }
+
         switch (event.type)
         {
             case SDL_EVENT_JOYSTICK_ADDED: {
@@ -808,9 +814,6 @@ void Window_SdlUpdate()
                 {
                     Window_msg_main_handler(g_hWnd, WM_CHAR, event.text.text[i], 0);
                 }
-                break;
-            case SDL_EVENT_WINDOW_FIRST ... SDL_EVENT_WINDOW_LAST:
-                Window_HandleWindowEvent(&event);
                 break;
             case SDL_EVENT_KEY_DOWN:
                 //stdPlatform_Printf("scancode %d\n", event.key.scancode);

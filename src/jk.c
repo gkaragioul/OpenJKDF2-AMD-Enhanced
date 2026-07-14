@@ -768,7 +768,11 @@ char* _strtok(char * a, const char * b)
     // strtok state with libc corrupts the in-progress parse. A private save pointer
     // makes our tokenization immune to any library strtok() use.
     static char* _strtok_saveptr = NULL;
+#if defined(_MSC_VER)
+    return strtok_s(a, b, &_strtok_saveptr);
+#else
     return strtok_r(a, b, &_strtok_saveptr);
+#endif
 }
 
 char* _strncat(char* a, const char* b, size_t c)
