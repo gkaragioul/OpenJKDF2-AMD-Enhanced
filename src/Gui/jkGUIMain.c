@@ -152,6 +152,17 @@ void jkGuiMain_Show()
         jkGui_SetModeGame();
         return;
     }
+    if (getenv("OPENJKDF2_VALIDATE_DISPLAY_REVERT"))
+    {
+        const int restored = jkGuiDisplay_ValidateTimedRevert();
+        diag_log_event(restored ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                       "validation",
+                       restored ? "display_confirmation_validation result=pass"
+                                : "display_confirmation_validation result=fail");
+        g_should_exit = 1;
+        jkGui_SetModeGame();
+        return;
+    }
     if (getenv("OPENJKDF2_VALIDATE_DISPLAY_PAGE"))
     {
         char event[96];

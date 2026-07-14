@@ -467,6 +467,36 @@ static int jkGuiDisplay_ApplyDisplayChange(DisplaySettings proposed)
     return 0;
 }
 
+int jkGuiDisplay_ValidateTimedRevert(void)
+{
+    const DisplaySettings original = Window_GetDisplaySettings();
+    DisplaySettings proposed = original;
+    DisplaySettings restored;
+    char event[192];
+    int applyResult;
+
+    /* Exercise only desktop-safe modes. Exclusive remains gated behind the
+       independently verified restoration guard and is never selected here. */
+    proposed.mode = original.mode == DISPLAY_MODE_WINDOWED
+        ? DISPLAY_MODE_BORDERLESS : DISPLAY_MODE_WINDOWED;
+    snprintf(event, sizeof(event),
+             "display_confirmation_validation started=true original=%s proposed=%s timeout_ms=15000",
+             display_mode_name(original.mode), display_mode_name(proposed.mode));
+    diag_log_event(DIAG_SEVERITY_INFO, "validation", event);
+
+    applyResult = jkGuiDisplay_ApplyDisplayChange(proposed);
+    restored = Window_GetDisplaySettings();
+    snprintf(event, sizeof(event),
+             "display_confirmation_validation complete=true confirmed=%s restored=%s mode=%s",
+             applyResult ? "true" : "false",
+             display_settings_equal(original, restored) ? "true" : "false",
+             display_mode_name(restored.mode));
+    diag_log_event(!applyResult && display_settings_equal(original, restored)
+                       ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                   "validation", event);
+    return !applyResult && display_settings_equal(original, restored);
+}
+
 static int jkGuiDisplay_ApplyDefaults(VideoDefaults defaults)
 {
     DisplaySettings proposed = Window_GetDisplaySettings();

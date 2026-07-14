@@ -23,6 +23,7 @@ void jkGuiDisplay_Startup();
 void jkGuiDisplay_Shutdown();
 int jkGuiDisplay_Show();
 void jkGuiDisplay_ShowDiagnostics();
+int jkGuiDisplay_ValidateTimedRevert();
 void jkGuiDisplay_sub_4149C0();
 #endif
 

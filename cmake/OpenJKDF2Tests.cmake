@@ -71,6 +71,13 @@ if(BUILD_TESTING)
     )
     set_tests_properties(control_preset_mapping_contract PROPERTIES LABELS "unit")
 
+    add_test(
+        NAME display_confirmation_runtime_contract
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-display-confirmation-runtime.ps1"
+    )
+    set_tests_properties(display_confirmation_runtime_contract PROPERTIES LABELS "unit")
+
     openjkdf2_add_unit_test(
         test_diagnostic_log
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_log.c"
