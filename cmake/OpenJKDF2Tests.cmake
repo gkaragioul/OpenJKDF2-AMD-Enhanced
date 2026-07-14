@@ -202,6 +202,12 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/General/TimingDomainsObserver.c"
     )
     openjkdf2_add_unit_test(
+        test_timing_domains_scenario
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_timing_domains_scenario.c"
+        "${PROJECT_SOURCE_DIR}/src/General/TimingDomainsScenario.c"
+        "${PROJECT_SOURCE_DIR}/src/General/TimingDomainsObserver.c"
+    )
+    openjkdf2_add_unit_test(
         test_save_load_probe
         "${PROJECT_SOURCE_DIR}/src/Tests/test_save_load_probe.c"
         "${PROJECT_SOURCE_DIR}/src/General/SaveLoadProbe.c"
