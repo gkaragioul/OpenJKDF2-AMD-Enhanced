@@ -39,7 +39,7 @@ static int32_t jkGuiMouse_dword_53032C = -1;
 #ifndef SDL2_RENDER
 #define NUM_MOUSE_ENTRIES (7)
 #else
-#define NUM_MOUSE_ENTRIES (7+1)
+#define NUM_MOUSE_ENTRIES (7+3)
 #endif
 
 static jkGuiMouseEntry jkGuiMouse_aEntries[NUM_MOUSE_ENTRIES+1] =
@@ -53,8 +53,8 @@ static jkGuiMouseEntry jkGuiMouse_aEntries[NUM_MOUSE_ENTRIES+1] =
   { KEY_MOUSE_B4, "KEY_MOUSE_B4",  0, 0, NULL, 0, 0  },
 #ifdef SDL2_RENDER
   { KEY_MOUSE_B5, "KEY_MOUSE_B5",  0, 0, NULL, 0, 0  },
-  //{ KEY_MOUSE_B6, "KEY_MOUSE_B6",  0, 0, NULL, 0, 0  },
-  //{ KEY_MOUSE_B7, "KEY_MOUSE_B7",  0, 0, NULL, 0, 0  },
+  { KEY_MOUSE_B6, "KEY_MOUSE_WHEEL_UP",  0, 0, NULL, 0, 0  },
+  { KEY_MOUSE_B7, "KEY_MOUSE_WHEEL_DOWN",  0, 0, NULL, 0, 0  },
   //{ KEY_MOUSE_B8, "KEY_MOUSE_B8",  0, 0, NULL, 0, 0  },
 #endif
   { 0,   NULL,            0, 0, NULL, 0, 0  },

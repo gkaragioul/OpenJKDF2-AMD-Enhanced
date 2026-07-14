@@ -998,6 +998,8 @@ void stdControl_ReadControls()
 
 void stdControl_ReadMouse()
 {
+    int wheelY;
+
     if (!stdControl_bReadMouse)
         return;
     if (jkQuakeConsole_bOpen) return; // Hijack input to console
@@ -1016,7 +1018,8 @@ void stdControl_ReadMouse()
     stdControl_aAxes[AXIS_MOUSE_Y].dwXoffs = (2 * stdControl_aAxes[AXIS_MOUSE_Y].uMaxVal + 1) / 2 - stdControl_aAxes[AXIS_MOUSE_Y].uMaxVal;
     stdControl_aAxes[AXIS_MOUSE_Y].fRangeConversion = 1.0 / (flex_d_t)(stdControl_aAxes[AXIS_MOUSE_Y].uMaxVal - stdControl_aAxes[AXIS_MOUSE_Y].dwXoffs);
 
-    stdControl_aAxisStates[AXIS_MOUSE_Z] = Window_mouseWheelY; // TODO
+    wheelY = Window_mouseWheelY;
+    stdControl_aAxisStates[AXIS_MOUSE_Z] = wheelY; // Retained for Classic/custom axis bindings.
     stdControl_aAxisStates[AXIS_MOUSE_X] = Window_lastXRel; // TODO
     stdControl_aAxisStates[AXIS_MOUSE_Y] = Window_lastYRel; // TODO
 
@@ -1055,6 +1058,8 @@ void stdControl_ReadMouse()
     stdControl_UpdateKeyState(KEY_MOUSE_B3, !!(buttons & SDL_BUTTON_MMASK), stdControl_curReadTime);
     stdControl_UpdateKeyState(KEY_MOUSE_B4, !!(buttons & SDL_BUTTON_X1MASK), stdControl_curReadTime);
     stdControl_UpdateKeyState(KEY_MOUSE_B5, !!(buttons & SDL_BUTTON_X2MASK), stdControl_curReadTime);
+    stdControl_UpdateKeyState(KEY_MOUSE_B6, wheelY > 0, stdControl_curReadTime);
+    stdControl_UpdateKeyState(KEY_MOUSE_B7, wheelY < 0, stdControl_curReadTime);
 }
 
 void stdControl_ShowSystemKeyboard() {

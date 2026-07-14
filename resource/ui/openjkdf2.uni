@@ -1,4 +1,4 @@
-MSGS 102          # <--- DON'T FORGET TO UPDATE THIS COUNT
+MSGS 108          # <--- DON'T FORGET TO UPDATE THIS COUNT
 
 #  "<key>"     <unused number>   "<string>"
 
@@ -80,6 +80,15 @@ MSGS 102          # <--- DON'T FORGET TO UPDATE THIS COUNT
 #******************************
 #  General
 #******************************
+   "GUIEXT_CONTROLS_MODERN"                  0 "Apply Modern Controls"
+   "GUIEXT_CONTROLS_MODERN_HINT"             0 "WASD, Space jump, E use, Ctrl/C crouch, and modern mouse bindings."
+   "GUIEXT_CONTROLS_CLASSIC"                 0 "Apply Classic Controls"
+   "GUIEXT_CONTROLS_CLASSIC_HINT"            0 "Restore the original OpenJKDF2 keyboard and mouse bindings."
+   "GUIEXT_CONTROLS_APPLY_TITLE"             0 "Apply Control Preset"
+   "GUIEXT_CONTROLS_APPLY_Q"                 0 "Replace your current keyboard and mouse bindings?"
+   "KEY_MOUSE_WHEEL_UP"                      0 "Mouse Wheel Up"
+   "KEY_MOUSE_WHEEL_DOWN"                    0 "Mouse Wheel Down"
+
    "GUIEXT_DISABLE_MISSION_CONFIRMATION"        0 "Disable mission start confirmation"
    "GUIEXT_DISABLE_MISSION_CONFIRMATION_HINT"   0 "Enter the mission as soon as the level is loaded?"
 

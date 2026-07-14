@@ -68,6 +68,11 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/Tests/test_fixed_step.c"
         "${PROJECT_SOURCE_DIR}/src/General/FixedStep.c"
     )
+    openjkdf2_add_unit_test(
+        test_control_preset
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_control_preset.c"
+        "${PROJECT_SOURCE_DIR}/src/General/ControlPreset.c"
+    )
 
     if(TARGET_USE_SDL2 AND TARGET_USE_OPENGL AND NOT TARGET_ANDROID AND NOT TARGET_WASM)
         add_executable(

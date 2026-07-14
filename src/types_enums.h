@@ -210,7 +210,7 @@ typedef enum
 
 #if defined(SDL2_RENDER) || defined(TARGET_RETRO_HOMEBREW)
 #define JK_NUM_MOUSE_BUTTONS     (4)
-#define JK_NUM_EXT_MOUSE_BUTTONS (1)
+#define JK_NUM_EXT_MOUSE_BUTTONS (3)
 #define JK_NUM_JOY_BUTTONS       (8)
 #define JK_NUM_EXT_JOY_BUTTONS   (24)
 #define JK_NUM_HAT_BUTTONS       (4)

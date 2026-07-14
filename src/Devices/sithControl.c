@@ -1907,6 +1907,34 @@ void sithControl_DefaultInit()
 #endif // TARGET_RETRO_HOMEBREW
 }
 
+void sithControl_ApplyClassicPreset()
+{
+    sithControl_DefaultInit();
+}
+
+void sithControl_ApplyModernPreset()
+{
+    sithControl_DefaultInit();
+
+    /* Replace only conflicting Classic bindings; retain number keys, inventory,
+       Force powers, map, chat, screenshots, and joystick defaults. */
+    sithControl_UnbindControl(INPUT_MAPPING_FLAG_DXKEY, DIK_SPACE);
+    sithControl_UnbindControl(INPUT_MAPPING_FLAG_DXKEY, DIK_E);
+    sithControl_UnbindControl(INPUT_MAPPING_FLAG_DXKEY, DIK_LCONTROL);
+    sithControl_UnbindControl(INPUT_MAPPING_FLAG_DXKEY, DIK_RCONTROL);
+    sithControl_UnbindControl(INPUT_MAPPING_FLAG_DXKEY, KEY_MOUSE_B2);
+    sithControl_UnbindControl(INPUT_MAPPING_FLAG_DXKEY, KEY_MOUSE_B3);
+    sithControl_UnbindControl(INPUT_MAPPING_FLAG_AXIS, AXIS_MOUSE_Z);
+
+    sithControl_BindControl(INPUT_FUNC_JUMP, DIK_SPACE, 0);
+    sithControl_BindControl(INPUT_FUNC_DUCK, DIK_LCONTROL, 0);
+    sithControl_BindControl(INPUT_FUNC_DUCK, DIK_RCONTROL, 0);
+    sithControl_BindControl(INPUT_FUNC_ACTIVATE, DIK_E, 0);
+    sithControl_DefaultHelper(INPUT_FUNC_FIRE2, KEY_MOUSE_B2, INPUT_MAPPING_FLAG_DXKEY);
+    sithControl_DefaultHelper(INPUT_FUNC_PREVWEAPON, KEY_MOUSE_B6, INPUT_MAPPING_FLAG_DXKEY);
+    sithControl_DefaultHelper(INPUT_FUNC_NEXTWEAPON, KEY_MOUSE_B7, INPUT_MAPPING_FLAG_DXKEY);
+}
+
 void sithControl_RegisterKeyFunction(int functionId)
 {
     SITH_ASSERTREL((functionId >= 0) && (functionId < INPUT_FUNC_MAX)); // Added: port from OpenJones3D
