@@ -226,6 +226,9 @@ static int jkGuiDisplay_ApplyDefaults(VideoDefaults defaults)
     jkPlayer_fov = defaults.fov;
     jkPlayer_fovIsVertical = defaults.fov_vertical;
     jkPlayer_enableOrigAspect = defaults.original_aspect;
+    jkPlayer_preserveMenuAspect = defaults.preserve_menu_aspect;
+    jkPlayer_preserveHudAspect = defaults.preserve_hud_aspect;
+    jkPlayer_preserveVideoAspect = defaults.preserve_video_aspect;
     jkPlayer_fpslimit = defaults.fps_limit;
     jkPlayer_enableVsync = defaults.vsync;
     jkPlayer_qualityPreset = defaults.quality_preset;

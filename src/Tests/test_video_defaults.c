@@ -22,6 +22,10 @@ int main(void)
     CHECK(recommended.gamma == 1.0);
     CHECK(recommended.fov == 90);
     CHECK(recommended.hud_scale == 2.0);
+    CHECK(recommended.original_aspect == 0);
+    CHECK(recommended.preserve_menu_aspect == 1);
+    CHECK(recommended.preserve_hud_aspect == 0);
+    CHECK(recommended.preserve_video_aspect == 1);
 
     CHECK(safe.display_mode == DISPLAY_MODE_WINDOWED);
     CHECK(safe.hidpi == 0);
@@ -33,6 +37,10 @@ int main(void)
     CHECK(safe.bloom == 0);
     CHECK(safe.ssao == 0);
     CHECK(safe.ssaa_multiple == 1.0);
+    CHECK(safe.original_aspect == 0);
+    CHECK(safe.preserve_menu_aspect == 1);
+    CHECK(safe.preserve_hud_aspect == 0);
+    CHECK(safe.preserve_video_aspect == 1);
 
     return failures ? 1 : 0;
 }

@@ -55,6 +55,9 @@ int jkPlayer_fov = 90;
 int jkPlayer_fovIsVertical = 1;
 int jkPlayer_enableTextureFilter = 0;
 int jkPlayer_enableOrigAspect = 0;
+int jkPlayer_preserveMenuAspect = 1;
+int jkPlayer_preserveHudAspect = 0;
+int jkPlayer_preserveVideoAspect = 1;
 int jkPlayer_enableBloom = 0;
 int jkPlayer_enableSSAO = 0;
 int jkPlayer_fpslimit = 0;
@@ -188,6 +191,9 @@ void jkPlayer_StartupVars()
     sithCvar_RegisterBool("r_fovIsVertical",            1,                          &jkPlayer_fovIsVertical,            CVARFLAG_LOCAL);
     sithCvar_RegisterBool("r_enableTextureFilter",      0,                          &jkPlayer_enableTextureFilter,      CVARFLAG_LOCAL);
     sithCvar_RegisterBool("r_enableOrigAspect",         0,                          &jkPlayer_enableOrigAspect,         CVARFLAG_LOCAL);
+    sithCvar_RegisterBool("r_preserveMenuAspect",       1,                          &jkPlayer_preserveMenuAspect,       CVARFLAG_LOCAL);
+    sithCvar_RegisterBool("r_preserveHudAspect",        0,                          &jkPlayer_preserveHudAspect,        CVARFLAG_LOCAL);
+    sithCvar_RegisterBool("r_preserveVideoAspect",      1,                          &jkPlayer_preserveVideoAspect,      CVARFLAG_LOCAL);
     sithCvar_RegisterBool("r_enableBloom",              0,                          &jkPlayer_enableBloom,              CVARFLAG_LOCAL);
     sithCvar_RegisterBool("r_enableSSAO",               0,                          &jkPlayer_enableSSAO,               CVARFLAG_LOCAL);
     sithCvar_RegisterInt("r_fpslimit",                  0,                          &jkPlayer_fpslimit,                 CVARFLAG_LOCAL);
@@ -244,6 +250,9 @@ void jkPlayer_ResetVars()
     jkPlayer_fovIsVertical = 1;
     jkPlayer_enableTextureFilter = 0;
     jkPlayer_enableOrigAspect = 0;
+    jkPlayer_preserveMenuAspect = 1;
+    jkPlayer_preserveHudAspect = 0;
+    jkPlayer_preserveVideoAspect = 1;
     jkPlayer_enableBloom = 0;
     jkPlayer_enableSSAO = 0;
     jkPlayer_fpslimit = 0;
@@ -599,6 +608,9 @@ void jkPlayer_WriteConf(char16_t *name)
         stdJSON_SaveBool(ext_fpath, "windowfullscreen", Window_isFullscreen);
         stdJSON_SaveBool(ext_fpath, "texturefiltering", jkPlayer_enableTextureFilter);
         stdJSON_SaveBool(ext_fpath, "originalaspect", jkPlayer_enableOrigAspect);
+        stdJSON_SaveBool(ext_fpath, "preservemenuaspect", jkPlayer_preserveMenuAspect);
+        stdJSON_SaveBool(ext_fpath, "preservehudaspect", jkPlayer_preserveHudAspect);
+        stdJSON_SaveBool(ext_fpath, "preservevideoaspect", jkPlayer_preserveVideoAspect);
         stdJSON_SaveInt(ext_fpath, "fpslimit", jkPlayer_fpslimit);
         stdJSON_SaveInt(ext_fpath, "enablevsync", jkPlayer_enableVsync);
         stdJSON_SaveBool(ext_fpath, "rawmouseinput", jkPlayer_rawMouseInput);
@@ -805,6 +817,9 @@ int jkPlayer_ReadConf(char16_t *name)
         Window_isFullscreen_tmp = stdJSON_GetBool(ext_fpath, "windowfullscreen", Window_isFullscreen);
         jkPlayer_enableTextureFilter = stdJSON_GetBool(ext_fpath, "texturefiltering", jkPlayer_enableTextureFilter);
         jkPlayer_enableOrigAspect = stdJSON_GetBool(ext_fpath, "originalaspect", jkPlayer_enableOrigAspect);
+        jkPlayer_preserveMenuAspect = stdJSON_GetBool(ext_fpath, "preservemenuaspect", jkPlayer_preserveMenuAspect);
+        jkPlayer_preserveHudAspect = stdJSON_GetBool(ext_fpath, "preservehudaspect", jkPlayer_preserveHudAspect);
+        jkPlayer_preserveVideoAspect = stdJSON_GetBool(ext_fpath, "preservevideoaspect", jkPlayer_preserveVideoAspect);
         jkPlayer_fpslimit = stdJSON_GetInt(ext_fpath, "fpslimit", jkPlayer_fpslimit);
         jkPlayer_enableVsync = PresentationMode_NormalizeVsync(
             stdJSON_GetInt(ext_fpath, "enablevsync", jkPlayer_enableVsync));

@@ -13,6 +13,9 @@ typedef struct VideoDefaults
     int fov;
     int fov_vertical;
     int original_aspect;
+    int preserve_menu_aspect;
+    int preserve_hud_aspect;
+    int preserve_video_aspect;
     int fps_limit;
     PresentationVsyncMode vsync;
     QualityPreset quality_preset;
