@@ -23,6 +23,7 @@ int main(void)
         FrameTelemetry_Record(1050000001ULL + (uint64_t)i * 16666667ULL);
     snapshot = FrameTelemetry_GetSnapshot();
     assert(snapshot.sampleCount == FRAME_TELEMETRY_SAMPLE_COUNT);
+    assert(snapshot.totalRecordedSamples == FRAME_TELEMETRY_SAMPLE_COUNT + 12);
 
     FrameTelemetry_FormatGraph(&snapshot, 16.666667, graph, sizeof(graph));
     assert(strlen(graph) == FRAME_TELEMETRY_SAMPLE_COUNT);
@@ -57,6 +58,7 @@ int main(void)
     for (i = 1; i <= 30; ++i)
         FrameTelemetry_Record(1000000000ULL + (uint64_t)i * 25000000ULL);
     snapshot = FrameTelemetry_GetSnapshot();
+    assert(snapshot.totalRecordedSamples == 30);
     assert(FrameTelemetry_IsUnstable(&snapshot, 16.666667));
     return 0;
 }

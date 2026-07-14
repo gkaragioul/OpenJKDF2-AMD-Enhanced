@@ -12,6 +12,7 @@ typedef struct FrameTelemetrySnapshot
     double frameMilliseconds;
     double samples[FRAME_TELEMETRY_SAMPLE_COUNT];
     unsigned int sampleCount;
+    uint64_t totalRecordedSamples;
 } FrameTelemetrySnapshot;
 
 typedef struct FrameTelemetryStatistics

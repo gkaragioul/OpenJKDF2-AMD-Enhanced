@@ -31,6 +31,7 @@
 #include "General/FrameRate.h"
 #include "General/ControlPreset.h"
 #include "General/PresentationMode.h"
+#include "General/QualityPreset.h"
 #include "General/RuntimeProbe.h"
 
 #include "stdPlatform.h"
@@ -621,6 +622,73 @@ int jkGame_Update()
 #else
                 abort();
 #endif
+            }
+        }
+    }
+
+    // Opt-in production enhancement observer. It applies the complete Ultra
+    // preset to the live renderer, captures sustained frame telemetry, and
+    // exits cleanly after the requested observation interval.
+    {
+        static RuntimeProbe enhancementProbe = { 0 };
+        static bool enhancementApplied = false;
+        static bool enhancementCaptureRequested = false;
+        const char* pEnhancementMs = getenv("OPENJKDF2_VALIDATE_ENHANCEMENTS_MS");
+        SithWorld* pWorld = sithWorld_g_pCurrentWorld;
+        SithThing* pPlayer = pWorld ? pWorld->pLocalPlayer : NULL;
+        if (pEnhancementMs && pPlayer && pPlayer->sector)
+        {
+            const uint32_t nowMs = stdPlatform_GetTimeMsec();
+            const uint32_t delayMs = (uint32_t)strtoul(pEnhancementMs, NULL, 10);
+            if (!enhancementApplied)
+            {
+                QualityPresetSettings settings = QualityPreset_Get(QUALITY_PRESET_ULTRA);
+                jkPlayer_enableTextureFilter = settings.textureFiltering;
+                jkPlayer_anisotropy = settings.anisotropy;
+                jkPlayer_mipmapBias = settings.mipmapBias;
+                jkPlayer_enableBloom = settings.bloom;
+                jkPlayer_enableSSAO = settings.ssao;
+                jkPlayer_ssaaMultiple = settings.ssaaMultiple;
+                jkPlayer_bEnableTexturePrecache = settings.texturePrecache;
+                jkPlayer_bEnableJkgm = settings.assetEnhancements;
+                jkPlayer_enableVsync = PRESENTATION_VSYNC_OFF;
+                jkPlayer_fpslimit = 60;
+                FrameTelemetry_Reset();
+                diag_log_event(DIAG_SEVERITY_INFO, "validation",
+                               "enhancements applied preset=Ultra filtering=true anisotropy=16 mipmap_bias=0.5 bloom=true ssao=true ssaa=1.5 precache=true replacements=true");
+                enhancementApplied = true;
+            }
+            if (!enhancementCaptureRequested &&
+                runtime_probe_due(&enhancementProbe, nowMs, delayMs))
+            {
+                const char* pShotPath = getenv("OPENJKDF2_VALIDATE_ENHANCEMENTS_SCREENSHOT");
+                if (pShotPath)
+                    std3D_RequestWindowScreenshot(pShotPath);
+                else
+                {
+                    diag_log_event(DIAG_SEVERITY_ERROR, "validation",
+                                   "enhancements screenshot_path_missing=true");
+                    g_should_exit = 1;
+                }
+                enhancementCaptureRequested = true;
+            }
+            if (enhancementCaptureRequested && std3D_IsWindowScreenshotComplete())
+            {
+                FrameTelemetrySnapshot snapshot = FrameTelemetry_GetSnapshot();
+                FrameTelemetryStatistics statistics = { 0 };
+                const int haveStatistics = FrameTelemetry_CalculateStatistics(&snapshot, &statistics);
+                char completeEvent[512];
+                snprintf(completeEvent, sizeof(completeEvent),
+                         "enhancements complete preset=Ultra total_frames=%llu samples=%u median_ms=%.4f p95_ms=%.4f p99_ms=%.4f worst_ms=%.4f clean_exit=true",
+                         (unsigned long long)snapshot.totalRecordedSamples,
+                         haveStatistics ? statistics.sampleCount : 0u,
+                         haveStatistics ? statistics.medianMilliseconds : 0.0,
+                         haveStatistics ? statistics.p95Milliseconds : 0.0,
+                         haveStatistics ? statistics.p99Milliseconds : 0.0,
+                         haveStatistics ? statistics.worstMilliseconds : 0.0);
+                diag_log_event(haveStatistics ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                               "validation", completeEvent);
+                g_should_exit = 1;
             }
         }
     }

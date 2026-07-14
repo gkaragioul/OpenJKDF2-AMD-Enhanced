@@ -6,6 +6,7 @@ static uint64_t FrameTelemetry_previousTimestamp;
 static double FrameTelemetry_samples[FRAME_TELEMETRY_SAMPLE_COUNT];
 static unsigned int FrameTelemetry_nextSample;
 static unsigned int FrameTelemetry_sampleCount;
+static uint64_t FrameTelemetry_totalRecordedSamples;
 static double FrameTelemetry_smoothedMilliseconds;
 
 void FrameTelemetry_Reset(void)
@@ -13,6 +14,7 @@ void FrameTelemetry_Reset(void)
     FrameTelemetry_previousTimestamp = 0;
     FrameTelemetry_nextSample = 0;
     FrameTelemetry_sampleCount = 0;
+    FrameTelemetry_totalRecordedSamples = 0;
     FrameTelemetry_smoothedMilliseconds = 0.0;
     memset(FrameTelemetry_samples, 0, sizeof(FrameTelemetry_samples));
 }
@@ -40,6 +42,7 @@ void FrameTelemetry_Record(uint64_t presentationTimestampNs)
     FrameTelemetry_nextSample = (FrameTelemetry_nextSample + 1) % FRAME_TELEMETRY_SAMPLE_COUNT;
     if (FrameTelemetry_sampleCount < FRAME_TELEMETRY_SAMPLE_COUNT)
         ++FrameTelemetry_sampleCount;
+    ++FrameTelemetry_totalRecordedSamples;
 
     if (FrameTelemetry_smoothedMilliseconds == 0.0)
         FrameTelemetry_smoothedMilliseconds = milliseconds;
@@ -55,6 +58,7 @@ FrameTelemetrySnapshot FrameTelemetry_GetSnapshot(void)
 
     memset(&snapshot, 0, sizeof(snapshot));
     snapshot.sampleCount = FrameTelemetry_sampleCount;
+    snapshot.totalRecordedSamples = FrameTelemetry_totalRecordedSamples;
     snapshot.frameMilliseconds = FrameTelemetry_smoothedMilliseconds;
     if (FrameTelemetry_smoothedMilliseconds > 0.0)
         snapshot.framesPerSecond = 1000.0 / FrameTelemetry_smoothedMilliseconds;

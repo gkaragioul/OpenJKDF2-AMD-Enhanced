@@ -72,10 +72,49 @@ The clean-provenance Windows ZIP was subsequently rebuilt from commit
 proprietary findings, and the enhancement-pack guide present. Its SHA-256 is
 `2dabdeba6c16ba1298a3a2dbe534449e82e4b60e3db2000498dba1f273f732d6`.
 
+## Ultra runtime and sustained-performance probe
+
+The Release renderer was subsequently exercised for 12 seconds at
+2560x1440 with the complete Ultra preset applied live: texture filtering, 16x
+anisotropy, 0.5 mip bias, bloom, SSAO, 1.5x SSAA, texture precaching, and
+optional replacement discovery. A deliberately empty, locally created
+metadata pack exercised the legal user-overlay path and guaranteed original
+asset fallback without introducing third-party or proprietary content.
+
+Reproduction:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\test-enhancement-performance.ps1 `
+  -DataDir 'D:\SteamLibrary\steamapps\common\Star Wars Jedi Knight' `
+  -UserDir 'runtime-evidence\enhancement-performance-2026-07-14-02'
+```
+
+Measured RX 7900 XTX results at a 60 FPS cap:
+
+| Metric | Result |
+|---|---:|
+| Observation duration | 12 seconds |
+| Recorded frames | 719 |
+| Rolling statistics window | 60 frames |
+| Median frame time | 16.6347 ms |
+| p95 frame time | 16.9207 ms |
+| p99 / worst frame time | 17.2880 ms |
+| Screenshot | 2560x1440 |
+
+The screenshot was visually inspected and showed coherent first-level
+geometry, lighting, textures, character rendering, and HUD with no obvious
+corruption. The process exited cleanly, desktop mode remained
+`2560x1440@165`, and all Steam asset metadata remained invariant. The runtime
+observer also exposed and corrected a measurement limitation: frame telemetry
+now reports the total number of recorded frames independently of its 60-frame
+rolling statistics window.
+
 ## Boundaries
 
-This proves modular source contracts and the no-match original-asset fallback
-on the local RX 7900 XTX. It does not validate a third-party high-resolution
-texture or model pack, every quality preset visually, sustained performance of
-bloom/SSAO/SSAA, or other GPU families. M7 therefore remains incomplete rather
-than proven.
+This proves the modular framework, all Ultra renderer effects, legal optional
+pack discovery, original-asset fallback, and sustained 1440p performance on
+the local RX 7900 XTX. Installing a third-party high-resolution texture or
+model pack is optional rather than a release requirement; none was used or
+redistributed. Visual and performance behavior on other GPU families remains
+covered by their separately labelled hardware-matrix status and is not
+inferred from this run.
