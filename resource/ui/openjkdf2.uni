@@ -1,4 +1,4 @@
-MSGS 139          # <--- DON'T FORGET TO UPDATE THIS COUNT
+MSGS 140          # <--- DON'T FORGET TO UPDATE THIS COUNT
 
 #  "<key>"     <unused number>   "<string>"
 
@@ -104,6 +104,7 @@ MSGS 139          # <--- DON'T FORGET TO UPDATE THIS COUNT
    "GUIEXT_SAFE_60_HINT"                     0 "Set the frame cap to 60 FPS and enable VSync."
    "GUIEXT_QUALITY_PRESET"                   0 "Quality Preset"
    "GUIEXT_QUALITY_PRESET_HINT"              0 "Apply modular renderer settings while retaining original assets as fallback."
+   "GUIEXT_APPLY"                            0 "Apply"
    "GUIEXT_RESET_VIDEO"                      0 "Reset Video Settings"
    "GUIEXT_RESET_VIDEO_HINT"                 0 "Restore recommended borderless, timing, and renderer defaults."
    "GUIEXT_RESET_VIDEO_TITLE"                0 "Reset Video Settings"
