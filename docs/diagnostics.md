@@ -24,3 +24,10 @@ not translated to the legacy mod-oriented `-path` option. User-owned files use
 `UserData` directory beside the executable when `--portable` is explicit.
 Relative reads prefer writable overrides before base assets; writes outside
 the configured writable root are rejected by the overlay resolver.
+
+The release-validation harness can opt into `OPENJKDF2_VALIDATE_SAVE_LOAD=1`
+for a same-process save/mutate/restore check or
+`OPENJKDF2_VALIDATE_RESTORE_ONLY=1` for a fresh-process restore check. These
+variables are intended only for the guarded test script; they use the normal
+game save system, emit phase results without save contents or user paths, and
+are inert during ordinary launches.

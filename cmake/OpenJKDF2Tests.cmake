@@ -116,6 +116,11 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/General/RuntimeProbe.c"
     )
     openjkdf2_add_unit_test(
+        test_save_load_probe
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_save_load_probe.c"
+        "${PROJECT_SOURCE_DIR}/src/General/SaveLoadProbe.c"
+    )
+    openjkdf2_add_unit_test(
         test_quality_preset
         "${PROJECT_SOURCE_DIR}/src/Tests/test_quality_preset.c"
         "${PROJECT_SOURCE_DIR}/src/General/QualityPreset.c"

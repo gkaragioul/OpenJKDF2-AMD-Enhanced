@@ -10,6 +10,8 @@
 #include "General/stdString.h"
 #include "General/stdFnames.h"
 #include "General/FixedStep.h"
+#include "General/DiagnosticLog.h"
+#include "General/SaveLoadProbe.h"
 #include "Win95/stdComm.h"
 #include "Devices/sithConsole.h"
 #include "Win95/Window.h"
@@ -44,6 +46,98 @@
 
 // Added: FoV fixes
 flex_t sithMain_lastAspect = 1.0;
+
+#if defined(SDL2_RENDER) && !defined(TARGET_RETRO_HOMEBREW)
+static void sithMain_RunSaveLoadValidation(void)
+{
+    static SaveLoadProbe probe = { 0 };
+    static RestoreProbe restoreProbe = { 0 };
+    static flex_t savedHealth = 0.0f;
+    const char* enabled = getenv("OPENJKDF2_VALIDATE_SAVE_LOAD");
+    const char* restoreOnly = getenv("OPENJKDF2_VALIDATE_RESTORE_ONLY");
+    const char* filename = "_JKVALIDATE_SAVE_LOAD.jks";
+    SaveLoadProbeAction action;
+    flex_t currentHealth;
+
+    if ((!enabled || !enabled[0]) && (!restoreOnly || !restoreOnly[0]))
+        return;
+    if (!sithPlayer_g_pLocalPlayerThing || sithNet_isMulti)
+        return;
+
+    currentHealth = sithPlayer_g_pLocalPlayerThing->actorParams.health;
+    if (restoreOnly && restoreOnly[0])
+    {
+        flex_t expectedHealth = save_load_probe_snapshot_health(sithPlayer_g_pLocalPlayerThing->actorParams.maxHealth);
+        bool stateMatches = currentHealth > expectedHealth - 0.001f && currentHealth < expectedHealth + 0.001f;
+        action = restore_probe_step(&restoreProbe, sithGamesave_state != SITH_GS_NONE, stateMatches);
+        if (action == SAVE_LOAD_PROBE_RESTORE)
+        {
+            if (sithGamesave_Restore((char*)filename, 0, 0))
+                diag_log_event(DIAG_SEVERITY_INFO, "validation", "save_load restore_requested fresh_process=true");
+            else
+            {
+                diag_log_event(DIAG_SEVERITY_ERROR, "validation", "save_load restore_request_failed fresh_process=true");
+                g_should_exit = 1;
+            }
+        }
+        else if (action == SAVE_LOAD_PROBE_COMPLETE)
+        {
+            diag_log_event(DIAG_SEVERITY_INFO, "validation", "save_load complete fresh_process=true state_restored=true");
+            g_should_exit = 1;
+        }
+        else if (action == SAVE_LOAD_PROBE_FAILED)
+        {
+            diag_log_event(DIAG_SEVERITY_ERROR, "validation", "save_load failed fresh_process=true state_restored=false");
+            g_should_exit = 1;
+        }
+        return;
+    }
+
+    action = save_load_probe_step(&probe, sithGamesave_state != SITH_GS_NONE,
+                                  currentHealth > savedHealth - 0.001f && currentHealth < savedHealth + 0.001f);
+    switch (action)
+    {
+        case SAVE_LOAD_PROBE_SAVE:
+            savedHealth = save_load_probe_snapshot_health(sithPlayer_g_pLocalPlayerThing->actorParams.maxHealth);
+            sithPlayer_g_pLocalPlayerThing->actorParams.health = savedHealth;
+            if (!sithGamesave_Save((char*)filename, 1, 0, NULL))
+            {
+                diag_log_event(DIAG_SEVERITY_ERROR, "validation", "save_load save_request_failed");
+                g_should_exit = 1;
+            }
+            else
+            {
+                diag_log_event(DIAG_SEVERITY_INFO, "validation", "save_load save_requested");
+            }
+            break;
+        case SAVE_LOAD_PROBE_PERTURB:
+            sithPlayer_g_pLocalPlayerThing->actorParams.health = savedHealth > 2.0f ? savedHealth * 0.5f : savedHealth + 1.0f;
+            diag_log_event(DIAG_SEVERITY_INFO, "validation", "save_load state_perturbed");
+            break;
+        case SAVE_LOAD_PROBE_RESTORE:
+            if (!sithGamesave_Restore((char*)filename, 0, 0))
+            {
+                diag_log_event(DIAG_SEVERITY_ERROR, "validation", "save_load restore_request_failed");
+                g_should_exit = 1;
+            }
+            else
+            {
+                diag_log_event(DIAG_SEVERITY_INFO, "validation", "save_load restore_requested");
+            }
+            break;
+        case SAVE_LOAD_PROBE_COMPLETE:
+            diag_log_event(DIAG_SEVERITY_INFO, "validation", "save_load complete same_process=true state_restored=true");
+            g_should_exit = 1;
+            break;
+        case SAVE_LOAD_PROBE_FAILED:
+            diag_log_event(DIAG_SEVERITY_ERROR, "validation", "save_load failed same_process=true state_restored=false");
+            g_should_exit = 1;
+            break;
+        default:
+            break;
+    }
+}
+#endif
 
 int sithMain_Startup(HostServices *commonFuncs)
 {
@@ -400,6 +494,9 @@ int sithUpdate()
         sithConsole_Flush();
         sithMulti_Update(sithTime_g_frameTime);
         sithGamesave_Process();
+#if defined(SDL2_RENDER) && !defined(TARGET_RETRO_HOMEBREW)
+        sithMain_RunSaveLoadValidation();
+#endif
 
         sithMain_tickEndMs = stdPlatform_GetTimeMsec();
 

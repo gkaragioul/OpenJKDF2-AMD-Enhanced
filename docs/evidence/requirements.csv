@@ -27,7 +27,7 @@ M9-RDNA2,RDNA2 compatibility,human hardware test,unverified-hardware,,No represe
 M9-RDNA3,RDNA3 compatibility,human hardware test,weak,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,Five-second first-level hardware-rendered capture on one RX 7900 XTX; broader gameplay pending
 M9-NVIDIA,NVIDIA regression coverage,CI or hardware test,unverified-hardware,,Pending
 M9-INTEL,Intel regression coverage,CI or hardware test,unverified-hardware,,Pending
-M9-GAMEPLAY,First level first door save load death transition and cutscene validation,gameplay evidence,incomplete,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,First level launched and captured; first door and gameplay lifecycle tests pending
+M9-GAMEPLAY,First level first door save load death transition and cutscene validation,gameplay evidence,incomplete,docs/evidence/save-load-lifecycle-2026-07-14.md,First level save/load and fresh-process restart passed; first door death/reload transition and cutscene coverage remain pending
 M10-PACKAGE,Legal Windows x64 package without proprietary assets,package audit,missing,,Pending
 M10-DISCOVERY,Steam and GOG discovery plus asset validation,clean machine test,incomplete,docs/evidence/data-overlay-verification-2026-07-14.md,Explicit Steam data directory with spaces verified read-only; automatic discovery browse flow GOG and validation UI pending
 M10-UNINSTALL,Safe uninstall preserving game data saves and settings,clean machine test,missing,,Pending
@@ -38,6 +38,6 @@ AC-DISPLAY,Display state invariant across launch play Alt+Tab crash and exit,bef
 AC-120FPS,Paced 120 Hz rendering without simulation acceleration,frame capture and gameplay timing tests,missing,,Pending
 AC-FIRST-DOOR,Previously failing first-door path no longer crashes,gameplay crash logs,missing,,Pending
 AC-INPUT,Responsive modern mouse and controls,input evidence,missing,,Pending
-AC-SAVES,Save load death reload restart preserve progress,gameplay evidence,incomplete,docs/evidence/data-overlay-verification-2026-07-14.md,Automatic first-level save was written under the user root; load death reload and restart remain pending
+AC-SAVES,Save load death reload restart preserve progress,gameplay evidence,incomplete,docs/evidence/save-load-lifecycle-2026-07-14.md,Production save/load and fresh-process restart restored distinctive state; death/reload remains pending
 AC-LEGAL,Package contains no proprietary Jedi Knight assets,package manifest audit,missing,,Pending
 AC-CLEAN,Clean machine install configure play save uninstall,clean machine recording,missing,,Pending
