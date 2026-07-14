@@ -7,6 +7,8 @@ data. A diagnostics directory contains:
 - `openjkdf2.jsonl`: one JSON object per event for tooling.
 - `run-state.json`: `unclean` from startup until an orderly shutdown changes it
   to `clean`.
+- `OpenJKDF2-crash.RPT`: a DrMinGW native crash report when an unhandled Windows
+  exception occurs. The handler writes here instead of beside the executable.
 
 Every structured event has a schema version, UTC timestamp, severity,
 subsystem, event, and fields object. Event text is JSON-escaped and occurrences

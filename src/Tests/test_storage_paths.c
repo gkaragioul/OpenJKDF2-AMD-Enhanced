@@ -9,6 +9,7 @@ static int failures;
 int main(void)
 {
     char output[1024];
+    char small[16];
     const char* argv[] = {
         "openjkdf2.exe", "--data-dir", "D:\\Steam Library\\Jedi Knight",
         "-autostart", "-sp", "--user-dir", "C:\\Users\\Test User\\OpenJKDF2",
@@ -40,5 +41,16 @@ int main(void)
         CHECK(storage_paths_build_legacy_command(3, legacy, output, sizeof(output)));
         CHECK(strcmp(output, "-path MyMod") == 0);
     }
+    CHECK(storage_paths_build_crash_report_path("diagnostics", output, sizeof(output)));
+#ifdef _WIN32
+    CHECK(strcmp(output, "diagnostics\\OpenJKDF2-crash.RPT") == 0);
+#else
+    CHECK(strcmp(output, "diagnostics/OpenJKDF2-crash.RPT") == 0);
+#endif
+    CHECK(storage_paths_build_crash_report_path("diagnostics/", output, sizeof(output)));
+    CHECK(strstr(output, "//OpenJKDF2-crash.RPT") == NULL);
+    CHECK(strstr(output, "\\\\OpenJKDF2-crash.RPT") == NULL);
+    CHECK(!storage_paths_build_crash_report_path(NULL, output, sizeof(output)));
+    CHECK(!storage_paths_build_crash_report_path("diagnostics", small, sizeof(small)));
     return failures ? 1 : 0;
 }

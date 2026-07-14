@@ -659,27 +659,6 @@ int main(int argc, char** argv)
         freopen_s(&fp, "CONOUT$", "w", stdout);
     }
 
-    int can_has_crashdumps = 1;
-
-    OSVERSIONINFOEX info;
-    ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
-    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-    GetVersionEx((LPOSVERSIONINFO)&info);//info requires typecasting
-
-    // Apparently Windows 7 has a security update kb4507456
-    // which is required for api-ms-win-downlevel-kernel32-l2-1-0.dll.
-    // So only try and load drmingw on Win8+ for now.
-    //if (info.dwMajorVersion >= 6 && info.dwMinorVersion > 1) {
-    //    can_has_crashdumps = 1;
-    //}
-
-    if (can_has_crashdumps) {
-        HMODULE hLib = LoadLibrary("exchndl.dll");
-        if (hLib) {
-            void (*pfnExcHndlInit)(void) = GetProcAddress(hLib, "ExcHndlInit");
-            pfnExcHndlInit();
-        }
-    }
 #endif // WIN64_STANDALONE
 
 #if !defined(ARCH_WASM) && !defined(TARGET_ANDROID) && !defined(TARGET_TWL)
@@ -770,6 +749,27 @@ int main(int argc, char** argv)
             if (startup_options.safe_mode) {
                 diag_log_event(DIAG_SEVERITY_INFO, "startup", "safe_mode_enabled");
             }
+#ifdef WIN64_STANDALONE
+            {
+                char crash_report_path[STARTUP_PATH_CAPACITY];
+                HMODULE crash_library = LoadLibraryA("exchndl.dll");
+                void (APIENTRY *initialize_crash_handler)(void) = crash_library
+                    ? (void (APIENTRY *)(void))GetProcAddress(crash_library, "ExcHndlInit") : NULL;
+                BOOL (APIENTRY *set_crash_report_path)(const char*) = crash_library
+                    ? (BOOL (APIENTRY *)(const char*))GetProcAddress(crash_library, "ExcHndlSetLogFileNameA") : NULL;
+                if (initialize_crash_handler && set_crash_report_path &&
+                    storage_paths_build_crash_report_path(diagnostic_config.diagnostics_dir,
+                                                          crash_report_path, sizeof(crash_report_path))) {
+                    initialize_crash_handler();
+                    if (set_crash_report_path(crash_report_path))
+                        diag_log_event(DIAG_SEVERITY_INFO, "crash_report", "handler=drmingw location=diagnostics");
+                    else
+                        diag_log_event(DIAG_SEVERITY_WARNING, "crash_report", "handler=drmingw report_path_failed=true");
+                } else {
+                    diag_log_event(DIAG_SEVERITY_WARNING, "crash_report", "handler=unavailable");
+                }
+            }
+#endif
         }
     }
     Window_SetSafeMode(startup_options.safe_mode ? 1 : 0);

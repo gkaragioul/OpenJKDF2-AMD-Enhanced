@@ -5,7 +5,7 @@ M1-UPSTREAM-RUN,Run unmodified upstream against legitimate game data,runtime rep
 M1-DIAGNOSTICS,Machine-readable privacy-safe diagnostics,unit tests and JSON parse,proven,src/Tests/test_diagnostic_log.c,No usernames hostnames serials or raw command lines
 M2-LOGGING,Structured renderer shader and startup logging,source and tests,proven,src/General/DiagnosticLog.c,Texture swap input and frame timing coverage remains incomplete
 M2-SHADER,Graceful named shader compile and link failures,unit and build tests,proven,src/Platform/GL/ShaderCompile.c,No modal compiler-error path remains
-M2-CRASH-DUMP,Crash dump generation and user-facing log location,runtime crash test,incomplete,,Existing DrMinGW loading is not yet integrated into evidence workflow
+M2-CRASH-DUMP,Crash dump generation and user-facing log location,runtime crash test,incomplete,docs/evidence/crash-handler-integration-2026-07-14.md,DrMinGW initializes and targets per-user diagnostics in real gameplay; deliberate crash report creation and validation remain pending
 M2-SMOKE,Asset-free renderer smoke mode,hardware smoke log,proven,docs/evidence/foundation-verification.md,Hidden 64x64 generated-resource test
 M2-TESTS,Settings timing resolution save and fallback tests,CTest results,incomplete,build-evidence/baseline.json,Foundation diagnostics tests exist; remaining domains pending
 M2-SAFE,Startup safe mode,unit test and source,proven,src/Tests/test_startup_options.c,Forces windowed and conservative parser defaults

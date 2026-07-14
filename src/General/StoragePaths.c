@@ -81,3 +81,13 @@ bool storage_paths_build_legacy_command(int argc, const char* const* argv,
     }
     return true;
 }
+
+bool storage_paths_build_crash_report_path(const char* diagnostics_root,
+                                           char* output, size_t output_size)
+{
+    size_t root_length;
+    if (!diagnostics_root || !diagnostics_root[0] || !output || !output_size)
+        return false;
+    root_length = strlen(diagnostics_root);
+    return storage_join(diagnostics_root, root_length, "OpenJKDF2-crash.RPT", output, output_size);
+}
