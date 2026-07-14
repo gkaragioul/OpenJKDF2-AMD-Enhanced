@@ -77,6 +77,14 @@ int Window_needsRecreate = 0;
 int Window_bShouldPopSteamKeyboard = 0;
 static int Window_bSafeMode = 0;
 static int Window_bRestorationGuardReady = 0;
+static PresentationVsyncMode Window_appliedVsync = PRESENTATION_VSYNC_OFF;
+static int Window_contextFallbackTier = 0;
+static char Window_rendererVendor[256] = "";
+static char Window_rendererGpu[256] = "";
+static char Window_rendererDriver[256] = "";
+static char Window_rendererApi[256] = "";
+static char Window_rendererFrameCap[32] = "";
+static char Window_rendererVsync[64] = "";
 
 void Window_SetSafeMode(int enabled)
 {
@@ -457,18 +465,76 @@ static PresentationVsyncMode Window_ApplyVsyncMode(int requestedMode)
     char event[128];
 
     if (SDL_GL_SetSwapInterval((int)mode))
+    {
+        Window_appliedVsync = mode;
         return mode;
+    }
 
     if (mode == PRESENTATION_VSYNC_ADAPTIVE && SDL_GL_SetSwapInterval(PRESENTATION_VSYNC_ON))
     {
         diag_log_event(DIAG_SEVERITY_WARNING, "presentation", "vsync=adaptive unsupported fallback=on");
-        return PRESENTATION_VSYNC_ON;
+        Window_appliedVsync = PRESENTATION_VSYNC_ON;
+        return Window_appliedVsync;
     }
 
     SDL_GL_SetSwapInterval(PRESENTATION_VSYNC_OFF);
+    Window_appliedVsync = PRESENTATION_VSYNC_OFF;
     snprintf(event, sizeof(event), "vsync=%s apply_failed fallback=off", PresentationMode_VsyncName(mode));
     diag_log_event(DIAG_SEVERITY_WARNING, "presentation", event);
-    return PRESENTATION_VSYNC_OFF;
+    return Window_appliedVsync;
+}
+
+static void Window_CopyRendererString(char* output, size_t outputSize, GLenum name)
+{
+    const GLubyte* value = glGetString(name);
+    snprintf(output, outputSize, "%s", value ? (const char*)value : "Not collected");
+}
+
+static int Window_CurrentRefreshRate(void)
+{
+    const SDL_DisplayMode* mode = NULL;
+    SDL_DisplayID display = displayWindow ? SDL_GetDisplayForWindow(displayWindow) : SDL_GetPrimaryDisplay();
+    if (display)
+        mode = SDL_GetCurrentDisplayMode(display);
+    if (!mode && display)
+        mode = SDL_GetDesktopDisplayMode(display);
+    return mode ? (int)(mode->refresh_rate + 0.5f) : 0;
+}
+
+void Window_GetRendererDiagnostics(RendererDiagnostics* diagnostics)
+{
+    const char* fallback = "Primary core profile";
+    if (!diagnostics)
+        return;
+    if (Window_contextFallbackTier == 1)
+        fallback = "OpenGL 3.3 core fallback";
+    else if (Window_contextFallbackTier == 2)
+        fallback = "OpenGL 3.2 core fallback";
+
+    if (jkPlayer_fpslimit == FRAME_RATE_DESKTOP_REFRESH)
+        snprintf(Window_rendererFrameCap, sizeof(Window_rendererFrameCap), "Desktop Refresh");
+    else if (jkPlayer_fpslimit == FRAME_RATE_UNLIMITED)
+        snprintf(Window_rendererFrameCap, sizeof(Window_rendererFrameCap), "Unlimited");
+    else
+        snprintf(Window_rendererFrameCap, sizeof(Window_rendererFrameCap), "%d FPS", jkPlayer_fpslimit);
+
+    if (jkPlayer_enableVsync == PRESENTATION_VSYNC_ADAPTIVE && Window_appliedVsync == PRESENTATION_VSYNC_ON)
+        snprintf(Window_rendererVsync, sizeof(Window_rendererVsync), "On (adaptive unsupported)");
+    else
+        snprintf(Window_rendererVsync, sizeof(Window_rendererVsync), "%s", PresentationMode_VsyncName(Window_appliedVsync));
+
+    diagnostics->backend = "OpenGL Core";
+    diagnostics->gpu = Window_rendererGpu;
+    diagnostics->vendor = Window_rendererVendor;
+    diagnostics->driver = Window_rendererDriver;
+    diagnostics->api = Window_rendererApi;
+    diagnostics->fallback = fallback;
+    diagnostics->vsync = Window_rendererVsync;
+    diagnostics->display_mode = display_mode_name(Window_displayMode);
+    diagnostics->width = Window_xSize;
+    diagnostics->height = Window_ySize;
+    diagnostics->refresh_hz = Window_CurrentRefreshRate();
+    diagnostics->frame_cap = Window_rendererFrameCap;
 }
 
 int Window_lastSampleMs = 0;
@@ -1536,6 +1602,7 @@ void Window_RecreateSDL2Window()
     }
     SDL_RaiseWindow(displayWindow);
 
+    Window_contextFallbackTier = 0;
     glWindowContext = SDL_GL_CreateContext(displayWindow);
     
     // Retry with 3.30 instead
@@ -1546,6 +1613,8 @@ void Window_RecreateSDL2Window()
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
         glWindowContext = SDL_GL_CreateContext(displayWindow);
+        if (glWindowContext)
+            Window_contextFallbackTier = 1;
     }
 
     // Retry with 3.20 and this thing instead
@@ -1557,6 +1626,8 @@ void Window_RecreateSDL2Window()
         SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
         glWindowContext = SDL_GL_CreateContext(displayWindow);
+        if (glWindowContext)
+            Window_contextFallbackTier = 2;
     }
     
     if (glWindowContext == NULL)
@@ -1568,6 +1639,16 @@ void Window_RecreateSDL2Window()
     }
 
     SDL_GL_MakeCurrent(displayWindow, glWindowContext);
+    Window_CopyRendererString(Window_rendererVendor, sizeof(Window_rendererVendor), GL_VENDOR);
+    Window_CopyRendererString(Window_rendererGpu, sizeof(Window_rendererGpu), GL_RENDERER);
+    Window_CopyRendererString(Window_rendererDriver, sizeof(Window_rendererDriver), GL_VERSION);
+    {
+        char glVersion[128];
+        char glslVersion[128];
+        Window_CopyRendererString(glVersion, sizeof(glVersion), GL_VERSION);
+        Window_CopyRendererString(glslVersion, sizeof(glslVersion), GL_SHADING_LANGUAGE_VERSION);
+        snprintf(Window_rendererApi, sizeof(Window_rendererApi), "OpenGL %s / GLSL %s", glVersion, glslVersion);
+    }
     Window_ApplyVsyncMode(jkPlayer_enableVsync);
 #ifndef TARGET_ANDROID
     SDL_StartTextInput(displayWindow);

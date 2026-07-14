@@ -44,6 +44,11 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/General/DiagnosticReport.c"
     )
     openjkdf2_add_unit_test(
+        test_renderer_diagnostics
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_renderer_diagnostics.c"
+        "${PROJECT_SOURCE_DIR}/src/General/RendererDiagnostics.c"
+    )
+    openjkdf2_add_unit_test(
         test_display_mode
         "${PROJECT_SOURCE_DIR}/src/Tests/test_display_mode.c"
         "${PROJECT_SOURCE_DIR}/src/General/DisplayMode.c"

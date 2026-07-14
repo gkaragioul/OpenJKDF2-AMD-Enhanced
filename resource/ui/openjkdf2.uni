@@ -1,4 +1,4 @@
-MSGS 132          # <--- DON'T FORGET TO UPDATE THIS COUNT
+MSGS 135          # <--- DON'T FORGET TO UPDATE THIS COUNT
 
 #  "<key>"     <unused number>   "<string>"
 
@@ -108,6 +108,9 @@ MSGS 132          # <--- DON'T FORGET TO UPDATE THIS COUNT
    "GUIEXT_SAFE_VIDEO_HINT"                  0 "Use windowed 60 FPS and disable optional renderer features."
    "GUIEXT_SAFE_VIDEO_TITLE"                 0 "Apply Safe Video Mode"
    "GUIEXT_SAFE_VIDEO_Q"                     0 "Apply conservative windowed video settings? Controls and gameplay settings are not changed."
+   "GUIEXT_DIAGNOSTICS"                      0 "Renderer Diagnostics"
+   "GUIEXT_DIAGNOSTICS_HINT"                 0 "Show the active GPU, API, fallback, display, VSync, and frame-cap state."
+   "GUIEXT_DIAGNOSTICS_TITLE"                0 "Renderer Diagnostics"
    "GUIEXT_ANISOTROPY"                       0 "Anisotropic Filtering"
    "GUIEXT_ANISOTROPY_HINT"                  0 "Improve oblique texture clarity when supported by the active renderer."
    "GUIEXT_MIPMAP_BIAS"                      0 "Mipmap Distance"

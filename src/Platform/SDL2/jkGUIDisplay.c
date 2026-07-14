@@ -19,6 +19,7 @@
 #include "General/DisplayTransaction.h"
 #include "General/DiagnosticLog.h"
 #include "General/VideoDefaults.h"
+#include "General/RendererDiagnostics.h"
 #include "Main/jkStrings.h"
 
 #include "jk.h"
@@ -35,6 +36,7 @@ enum jkGuiDecisionButton_t
     GUI_SAFE_60 = 4600,
     GUI_RESET_VIDEO = 4601,
     GUI_SAFE_VIDEO = 4602,
+    GUI_DIAGNOSTICS = 4603,
 };
 
 static char16_t render_level[256] = {0};
@@ -47,6 +49,7 @@ static char16_t slider_val_text_3[32] = {0};
 static char16_t quality_val_text[32] = {0};
 static char16_t anisotropy_val_text[32] = {0};
 static char16_t mipmap_bias_text[32] = {0};
+static char16_t diagnostics_lines[9][256] = {{0}};
 
 static int slider_images[2] = {JKGUI_BM_SLIDER_BACK, JKGUI_BM_SLIDER_THUMB};
 
@@ -109,7 +112,7 @@ static jkGuiElement jkGuiDisplay_aElements[32] = {
 
 static jkGuiMenu jkGuiDisplay_menu = { jkGuiDisplay_aElements, 0, 0xFF, 0xE1, 0x0F, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0 };
 
-static jkGuiElement jkGuiDisplay_aElementsAdvanced[24] = {
+static jkGuiElement jkGuiDisplay_aElementsAdvanced[25] = {
     { ELEMENT_TEXT,        0,            0, NULL,                   3, {0, 410, 640, 20},   1, 0, NULL,                        0, 0, 0, {0}, 0},
     { ELEMENT_TEXT,        0,            6, "GUI_SETUP",            3, {20, 20, 600, 40},   1, 0, NULL,                        0, 0, 0, {0}, 0},
     { ELEMENT_TEXTBUTTON,  GUI_GENERAL,  2, "GUI_GENERAL",          3, {20, 80, 120, 40},   1, 0, "GUI_GENERAL_HINT",          0, 0, 0, {0}, 0},
@@ -135,11 +138,51 @@ static jkGuiElement jkGuiDisplay_aElementsAdvanced[24] = {
     { ELEMENT_TEXT,        0,            0, anisotropy_val_text,              3, {350, 275, 250, 20}, 1, 0, NULL, 0, 0, 0, {0}, 0},
     { ELEMENT_TEXT,        0,            0, "GUIEXT_MIPMAP_BIAS",            2, {350, 310, 130, 20}, 1, 0, "GUIEXT_MIPMAP_BIAS_HINT", 0, 0, 0, {0}, 0},
     { ELEMENT_TEXTBOX,     0,            0, mipmap_bias_text,                16, {490, 307, 100, 24}, 1, 0, "GUIEXT_MIPMAP_BIAS_HINT", 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBUTTON,  GUI_DIAGNOSTICS, 2, "GUIEXT_DIAGNOSTICS",          3, {350, 355, 250, 40}, 1, 0, "GUIEXT_DIAGNOSTICS_HINT", 0, 0, 0, {0}, 0},
     
     { ELEMENT_END,         0,            0, NULL,                   0, {0},                 0, 0, NULL,                        0, 0, 0, {0}, 0},
 };
 
 static jkGuiMenu jkGuiDisplay_menuAdvanced = { jkGuiDisplay_aElementsAdvanced, 0, 0xFF, 0xE1, 0x0F, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0 };
+
+static jkGuiElement jkGuiDisplay_diagnosticsElements[12] = {
+    { ELEMENT_TEXT,       0, 6, "GUIEXT_DIAGNOSTICS_TITLE", 3, {20, 20, 600, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, diagnostics_lines[0], 2, {40, 90, 560, 28}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, diagnostics_lines[1], 2, {40, 122, 560, 28}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, diagnostics_lines[2], 2, {40, 154, 560, 28}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, diagnostics_lines[3], 2, {40, 186, 560, 28}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, diagnostics_lines[4], 2, {40, 218, 560, 28}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, diagnostics_lines[5], 2, {40, 250, 560, 28}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, diagnostics_lines[6], 2, {40, 282, 560, 28}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, diagnostics_lines[7], 2, {40, 314, 560, 28}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, diagnostics_lines[8], 2, {40, 346, 560, 28}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBUTTON, 1, 2, "GUI_OK", 3, {440, 430, 200, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_END,        0, 0, NULL, 0, {0}, 0, 0, NULL, 0, 0, 0, {0}, 0},
+};
+static jkGuiMenu jkGuiDisplay_diagnosticsMenu = { jkGuiDisplay_diagnosticsElements, 0, 0xFF, 0xE1, 0x0F, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0 };
+
+static void jkGuiDisplay_ShowDiagnostics(void)
+{
+    RendererDiagnostics diagnostics;
+    char formatted[2048];
+    char* line;
+    int lineIndex = 0;
+    Window_GetRendererDiagnostics(&diagnostics);
+    if (!renderer_diagnostics_format(&diagnostics, formatted, sizeof(formatted)))
+        snprintf(formatted, sizeof(formatted), "Diagnostics unavailable");
+    memset(diagnostics_lines, 0, sizeof(diagnostics_lines));
+    line = strtok(formatted, "\n");
+    while (line && lineIndex < 9)
+    {
+        stdString_CharToWchar(diagnostics_lines[lineIndex], line, 255);
+        line = strtok(NULL, "\n");
+        ++lineIndex;
+    }
+    jkGuiRend_MenuSetReturnKeyShortcutElement(&jkGuiDisplay_diagnosticsMenu, &jkGuiDisplay_diagnosticsElements[10]);
+    jkGuiRend_MenuSetEscapeKeyShortcutElement(&jkGuiDisplay_diagnosticsMenu, &jkGuiDisplay_diagnosticsElements[10]);
+    jkGuiSetup_sub_412EF0(&jkGuiDisplay_diagnosticsMenu, 0);
+    jkGuiRend_DisplayAndReturnClicked(&jkGuiDisplay_diagnosticsMenu);
+}
 
 static int jkGuiDisplay_ApplyDisplayChange(DisplayMode mode, int hidpi)
 {
@@ -212,6 +255,7 @@ void jkGuiDisplay_Startup()
     flex32_t ftmp;
     jkGui_InitMenu(&jkGuiDisplay_menu, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
     jkGui_InitMenu(&jkGuiDisplay_menuAdvanced, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
+    jkGui_InitMenu(&jkGuiDisplay_diagnosticsMenu, jkGui_stdBitmaps[JKGUI_BM_BK_SETUP]);
     jkGuiDisplay_aElements[25].wstr = render_level;
 
     jkGuiDisplay_aElements[27].wstr = gamma_level;
@@ -345,6 +389,12 @@ int jkGuiDisplay_ShowAdvanced()
                 if (jkGuiDisplay_ApplyDefaults(defaults))
                     return 1;
             }
+            continue;
+        }
+
+        if (v0 == GUI_DIAGNOSTICS)
+        {
+            jkGuiDisplay_ShowDiagnostics();
             continue;
         }
 

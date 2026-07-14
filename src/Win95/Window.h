@@ -4,6 +4,7 @@
 #include "types.h"
 #include "globals.h"
 #include "General/DisplayMode.h"
+#include "General/RendererDiagnostics.h"
 
 #define Window_Main_ADDR (0x0050E750)
 #define Window_MessageLoop_ADDR (0x0050E9C0)
@@ -45,6 +46,7 @@ void Window_SetHiDpi(int val);
 void Window_SetFullscreen(int val);
 void Window_SetDisplayMode(DisplayMode mode);
 int Window_ConfirmDisplaySettings(unsigned int timeoutMs);
+void Window_GetRendererDiagnostics(RendererDiagnostics* diagnostics);
 
 
 extern int Window_screenXSize;
