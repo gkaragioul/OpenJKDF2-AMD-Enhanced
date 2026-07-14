@@ -40,6 +40,11 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/General/StartupOptions.c"
     )
     openjkdf2_add_unit_test(
+        test_path_overlay
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_path_overlay.c"
+        "${PROJECT_SOURCE_DIR}/src/General/PathOverlay.c"
+    )
+    openjkdf2_add_unit_test(
         test_shader_stage
         "${PROJECT_SOURCE_DIR}/src/Tests/test_shader_stage.c"
         "${PROJECT_SOURCE_DIR}/src/Platform/GL/ShaderCompile.c"

@@ -48,7 +48,10 @@ StartupOptions startup_options_parse(int argc, const char* const* argv)
             options.frame_limit = 60;
         } else if (strcmp(argument, "--renderer-smoke-test") == 0) {
             options.renderer_smoke_test = true;
+        } else if (strcmp(argument, "--portable") == 0) {
+            options.portable = true;
         } else if (strcmp(argument, "--diagnostics-dir") == 0 || strcmp(argument, "--data-dir") == 0 ||
+                   strcmp(argument, "--user-dir") == 0 ||
                    startup_equal_ignore_case(argument, "-path") || startup_equal_ignore_case(argument, "/path")) {
             char* destination;
             const char* option_name;
@@ -57,7 +60,9 @@ StartupOptions startup_options_parse(int argc, const char* const* argv)
                 return options;
             }
             option_name = argument;
-            destination = strcmp(argument, "--diagnostics-dir") == 0 ? options.diagnostics_dir : options.data_dir;
+            if (strcmp(argument, "--diagnostics-dir") == 0) destination = options.diagnostics_dir;
+            else if (strcmp(argument, "--user-dir") == 0) destination = options.user_dir;
+            else destination = options.data_dir;
             if (!startup_copy_value(destination, STARTUP_PATH_CAPACITY, argv[++index], option_name, options.error)) {
                 return options;
             }

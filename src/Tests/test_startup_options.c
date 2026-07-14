@@ -12,6 +12,22 @@ static void test_defaults(void)
     StartupOptions options = startup_options_parse(1, argv);
     CHECK(!options.safe_mode);
     CHECK(!options.renderer_smoke_test);
+    CHECK(!options.portable);
+    CHECK(options.user_dir[0] == '\0');
+    CHECK(options.error[0] == '\0');
+}
+
+static void test_storage_options_preserve_paths_with_spaces(void)
+{
+    const char* argv[] = {
+        "openjkdf2", "--data-dir", "D:\\Steam Library\\Jedi Knight",
+        "--user-dir", "C:\\Users\\Test User\\Saved Games\\OpenJKDF2",
+        "--portable"
+    };
+    StartupOptions options = startup_options_parse(6, argv);
+    CHECK(strcmp(options.data_dir, "D:\\Steam Library\\Jedi Knight") == 0);
+    CHECK(strcmp(options.user_dir, "C:\\Users\\Test User\\Saved Games\\OpenJKDF2") == 0);
+    CHECK(options.portable);
     CHECK(options.error[0] == '\0');
 }
 
@@ -51,6 +67,7 @@ int main(void)
 {
     test_defaults();
     test_safe_mode();
+    test_storage_options_preserve_paths_with_spaces();
     test_paths_and_last_wins();
     test_errors_and_passthrough();
     return failures ? 1 : 0;
