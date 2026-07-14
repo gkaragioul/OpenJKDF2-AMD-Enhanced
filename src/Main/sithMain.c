@@ -9,6 +9,7 @@
 #include "General/sithStrTable.h"
 #include "General/stdString.h"
 #include "General/stdFnames.h"
+#include "General/FixedStep.h"
 #include "Win95/stdComm.h"
 #include "Devices/sithConsole.h"
 #include "Win95/Window.h"
@@ -40,10 +41,6 @@
 #include "Devices/sithComm.h"
 #include "stdPlatform.h"
 #include "jk.h"
-
-#ifdef FIXED_TIMESTEP_PHYS
-#include <math.h>
-#endif
 
 // Added: FoV fixes
 flex_t sithMain_lastAspect = 1.0;
@@ -266,20 +263,17 @@ int sithUpdate()
 #ifdef FIXED_TIMESTEP_PHYS
         if (NEEDS_STEPPED_PHYS) {
             // Run all physics at a fixed timestep
-            flex_d_t rolloverCombine = sithTime_g_frameTimeFlex + sithTime_physicsRolloverFrames;
-
-            flex_d_t framesToApply = rolloverCombine * TARGET_PHYSTICK_FPS; // get number of 50FPS steps passed
-            uint32_t wholeFramesToApply = (uint32_t)(float)round((float)framesToApply);
-            sithTime_physicsRolloverFrames = rolloverCombine - (((flex_d_t)wholeFramesToApply) * DELTA_PHYSTICK_FPS);
-
-            //printf("%f %f\n", framesToApply, rolloverCombine);
+            double physicsAccumulator = (double)sithTime_physicsRolloverFrames;
+            uint32_t wholeFramesToApply = FixedStep_Consume(
+                sithTime_g_frameTimeFlex, DELTA_PHYSTICK_FPS, 75, &physicsAccumulator);
+            sithTime_physicsRolloverFrames = (flex_d_t)physicsAccumulator;
 
             flex_t tmp = sithTime_g_frameTimeFlex;
             uint32_t tmp2 = sithTime_g_frameTime;
             sithTime_g_frameTimeFlex = DELTA_PHYSTICK_FPS;
             sithTime_g_frameTime = (int)(DELTA_PHYSTICK_FPS * 1000.0);
 
-            for (int i = (int)framesToApply; i > 0; i--)
+            for (uint32_t i = 0; i < wholeFramesToApply; i++)
             {
                 sithSurface_Tick(sithTime_g_frameTimeFlex);
                 sithThing_Update(sithTime_g_frameTimeFlex, sithTime_g_frameTime);
@@ -311,11 +305,10 @@ int sithUpdate()
 #ifdef FIXED_TIMESTEP_PHYS
         if (NEEDS_STEPPED_PHYS) {
             // Run all physics at a fixed timestep
-            flex_d_t rolloverCombine = sithTime_g_frameTimeFlex + sithTime_physicsRolloverFrames;
-
-            flex_d_t framesToApply = rolloverCombine * TARGET_PHYSTICK_FPS; // get number of 50FPS steps passed
-            uint32_t wholeFramesToApply = (uint32_t)(float)round((float)framesToApply);
-            sithTime_physicsRolloverFrames = rolloverCombine - (((flex_d_t)wholeFramesToApply) * DELTA_PHYSTICK_FPS);
+            double physicsAccumulator = (double)sithTime_physicsRolloverFrames;
+            uint32_t wholeFramesToApply = FixedStep_Consume(
+                sithTime_g_frameTimeFlex, DELTA_PHYSTICK_FPS, 75, &physicsAccumulator);
+            sithTime_physicsRolloverFrames = (flex_d_t)physicsAccumulator;
 
             // TODO figure this out
             sithControl_ReadControls();
@@ -337,8 +330,6 @@ int sithUpdate()
             sithTime_g_fps = 1.0 / sithTime_g_frameTimeFlex;
             //stdControl_updateKHz = 1.0 / (DELTA_PHYSTICK_FPS * 1000.0);
             //stdControl_updateHz = sithTime_g_fps;        
-
-            //printf("%f %u %f %f\n",framesToApply, wholeFramesToApply, rolloverCombine, sithTime_physicsRolloverFrames);
 
             for (int i = 0; i < wholeFramesToApply; i++)
             {
