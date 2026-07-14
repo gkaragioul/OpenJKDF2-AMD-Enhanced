@@ -14,6 +14,7 @@
 #include "Platform/std3D.h"
 #include "General/FrameRate.h"
 #include "General/PresentationMode.h"
+#include "General/QualityPreset.h"
 
 #include "jk.h"
 
@@ -36,12 +37,17 @@ static char16_t hud_level[256] = {0};
 static char16_t slider_val_text[5] = {0};
 static char16_t slider_val_text_2[32] = {0};
 static char16_t slider_val_text_3[32] = {0};
+static char16_t quality_val_text[32] = {0};
+static char16_t anisotropy_val_text[32] = {0};
+static char16_t mipmap_bias_text[32] = {0};
 
 static int slider_images[2] = {JKGUI_BM_SLIDER_BACK, JKGUI_BM_SLIDER_THUMB};
 
 void jkGuiDisplay_FovDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
 void jkGuiDisplay_FramelimitDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
 void jkGuiDisplay_VsyncDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
+void jkGuiDisplay_QualityDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
+void jkGuiDisplay_AnisotropyDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
 
 static jkGuiElement jkGuiDisplay_aElements[32] = {
     { ELEMENT_TEXT,        0,            0, NULL,                   3, {0, 410, 640, 20},   1, 0, NULL,                        0, 0, 0, {0}, 0},
@@ -112,6 +118,14 @@ static jkGuiElement jkGuiDisplay_aElementsAdvanced[22] = {
     { ELEMENT_CHECKBOX,    0,            0, "GUIEXT_EN_TEXTURE_PRECACHE",   0, {20, 190, 300, 40},  1, 0, "GUIEXT_EN_TEXTURE_PRECACHE_HINT",          0, 0, 0, {0}, 0},
     { ELEMENT_CHECKBOX,    0,            0, "GUIEXT_SHOW_FRAME_STATS",      0, {20, 230, 300, 40},  1, 0, "GUIEXT_SHOW_FRAME_STATS_HINT",             0, 0, 0, {0}, 0},
     { ELEMENT_TEXTBUTTON,  GUI_SAFE_60,  2, "GUIEXT_SAFE_60",               3, {20, 290, 300, 40},  1, 0, "GUIEXT_SAFE_60_HINT",                      0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,        0,            0, "GUIEXT_QUALITY_PRESET",         2, {350, 145, 130, 20}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_SLIDER,      0,            0, (const char*)QUALITY_PRESET_CUSTOM, 0, {350, 170, 250, 24}, 1, 0, "GUIEXT_QUALITY_PRESET_HINT", jkGuiDisplay_QualityDraw, 0, slider_images, {0}, 0},
+    { ELEMENT_TEXT,        0,            0, quality_val_text,                 3, {350, 195, 250, 20}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,        0,            0, "GUIEXT_ANISOTROPY",             2, {350, 225, 130, 20}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_SLIDER,      0,            0, (const char*)4,                   0, {350, 250, 250, 24}, 1, 0, "GUIEXT_ANISOTROPY_HINT", jkGuiDisplay_AnisotropyDraw, 0, slider_images, {0}, 0},
+    { ELEMENT_TEXT,        0,            0, anisotropy_val_text,              3, {350, 275, 250, 20}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXT,        0,            0, "GUIEXT_MIPMAP_BIAS",            2, {350, 310, 130, 20}, 1, 0, "GUIEXT_MIPMAP_BIAS_HINT", 0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBOX,     0,            0, mipmap_bias_text,                16, {490, 307, 100, 24}, 1, 0, "GUIEXT_MIPMAP_BIAS_HINT", 0, 0, 0, {0}, 0},
     
     { ELEMENT_END,         0,            0, NULL,                   0, {0},                 0, 0, NULL,                        0, 0, 0, {0}, 0},
 };
@@ -189,14 +203,43 @@ void jkGuiDisplay_VsyncDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vb
     jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_aElements[20], menu, 1);
 }
 
+void jkGuiDisplay_QualityDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
+{
+    static const char16_t* names[] = {u"Classic", u"Balanced", u"High", u"Ultra", u"Custom"};
+    int preset = jkGuiDisplay_aElementsAdvanced[14].selectedTextEntry;
+    if (preset < QUALITY_PRESET_CLASSIC || preset > QUALITY_PRESET_CUSTOM)
+        preset = QUALITY_PRESET_CUSTOM;
+    jk_snwprintf(quality_val_text, 32, u"%ls", names[preset]);
+    if (preset != QUALITY_PRESET_CUSTOM)
+    {
+        QualityPresetSettings settings = QualityPreset_Get(preset);
+        jkGuiDisplay_aElementsAdvanced[17].selectedTextEntry = QualityPreset_SliderFromAnisotropy(settings.anisotropy);
+        jk_snwprintf(mipmap_bias_text, 32, u"%.2f", settings.mipmapBias);
+    }
+    jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_aElementsAdvanced[15], menu, 1);
+}
+
+void jkGuiDisplay_AnisotropyDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
+{
+    int value = QualityPreset_AnisotropyFromSlider(jkGuiDisplay_aElementsAdvanced[17].selectedTextEntry);
+    jk_snwprintf(anisotropy_val_text, 32, value == 1 ? u"Off" : u"%dx", value);
+    jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiDisplay_aElementsAdvanced[18], menu, 1);
+}
+
 int jkGuiDisplay_ShowAdvanced()
 {
     int v0; // esi
+    flex32_t parsedBias;
 
     jkGui_sub_412E20(&jkGuiDisplay_menuAdvanced, 100, 104, 100);
     jkGuiDisplay_aElementsAdvanced[9].selectedTextEntry = jkPlayer_bEnableJkgm;
     jkGuiDisplay_aElementsAdvanced[10].selectedTextEntry = jkPlayer_bEnableTexturePrecache;
     jkGuiDisplay_aElementsAdvanced[11].selectedTextEntry = jkPlayer_showFrameStats;
+    jkGuiDisplay_aElementsAdvanced[14].selectedTextEntry = QualityPreset_Normalize(jkPlayer_qualityPreset);
+    jkGuiDisplay_aElementsAdvanced[17].selectedTextEntry = QualityPreset_SliderFromAnisotropy(jkPlayer_anisotropy);
+    jk_snwprintf(mipmap_bias_text, 32, u"%.2f", jkPlayer_mipmapBias);
     
     jkGuiRend_MenuSetReturnKeyShortcutElement(&jkGuiDisplay_menuAdvanced, &jkGuiDisplay_aElementsAdvanced[7]);
     jkGuiRend_MenuSetEscapeKeyShortcutElement(&jkGuiDisplay_menuAdvanced, &jkGuiDisplay_aElementsAdvanced[8]);
@@ -218,11 +261,36 @@ int jkGuiDisplay_ShowAdvanced()
 
         if ( v0 == 1 )
         {
+            int preset = jkGuiDisplay_aElementsAdvanced[14].selectedTextEntry;
             jkPlayer_bEnableJkgm = jkGuiDisplay_aElementsAdvanced[9].selectedTextEntry;
             jkPlayer_bEnableTexturePrecache = jkGuiDisplay_aElementsAdvanced[10].selectedTextEntry;
             jkPlayer_showFrameStats = jkGuiDisplay_aElementsAdvanced[11].selectedTextEntry;
+            jkPlayer_qualityPreset = QualityPreset_Normalize(preset);
+            if (jkPlayer_qualityPreset != QUALITY_PRESET_CUSTOM)
+            {
+                QualityPresetSettings settings = QualityPreset_Get(jkPlayer_qualityPreset);
+                jkPlayer_enableTextureFilter = settings.textureFiltering;
+                jkPlayer_enableBloom = settings.bloom;
+                jkPlayer_enableSSAO = settings.ssao;
+                jkPlayer_anisotropy = settings.anisotropy;
+                jkPlayer_mipmapBias = settings.mipmapBias;
+            }
+            else
+            {
+                jkPlayer_anisotropy = QualityPreset_AnisotropyFromSlider(jkGuiDisplay_aElementsAdvanced[17].selectedTextEntry);
+                char biasText[32];
+                stdString_WcharToChar(biasText, mipmap_bias_text, sizeof(biasText));
+                if (_sscanf(biasText, "%f", &parsedBias) == 1)
+                    jkPlayer_mipmapBias = parsedBias;
+            }
+            if (jkPlayer_mipmapBias < 0.25) jkPlayer_mipmapBias = 0.25;
+            if (jkPlayer_mipmapBias > 4.0) jkPlayer_mipmapBias = 4.0;
+            jkGuiDisplay_aElements[15].selectedTextEntry = jkPlayer_enableTextureFilter;
+            jkGuiDisplay_aElements[22].selectedTextEntry = jkPlayer_enableBloom;
+            jkGuiDisplay_aElements[23].selectedTextEntry = jkPlayer_enableSSAO;
 
             std3D_PurgeEntireTextureCache();
+            std3D_UpdateSettings();
 
             jkPlayer_WriteConf(jkPlayer_playerShortName);
         }
@@ -279,6 +347,15 @@ continue_menu:
         jkPlayer_enableVsync = PresentationMode_VsyncFromSlider(jkGuiDisplay_aElements[21].selectedTextEntry);
         jkPlayer_enableBloom = jkGuiDisplay_aElements[22].selectedTextEntry;
         jkPlayer_enableSSAO = jkGuiDisplay_aElements[23].selectedTextEntry;
+        if (!QualityPreset_Matches(jkPlayer_qualityPreset,
+                                   jkPlayer_enableTextureFilter,
+                                   jkPlayer_anisotropy,
+                                   jkPlayer_mipmapBias,
+                                   jkPlayer_enableBloom,
+                                   jkPlayer_enableSSAO))
+        {
+            jkPlayer_qualityPreset = QUALITY_PRESET_CUSTOM;
+        }
 
         char tmp[256];
         stdString_WcharToChar(tmp, render_level, 255);

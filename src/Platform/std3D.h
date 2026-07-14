@@ -127,6 +127,7 @@ void std3D_PurgeTextureEntry(int i);
 void std3D_PurgeBitmapRefs(stdBitmap *pBitmap);
 void std3D_PurgeSurfaceRefs(rdDDrawSurface *texture);
 void std3D_UpdateSettings();
+void std3D_ApplyAnisotropy(void);
 void std3D_Screenshot(const char* pFpath);
 #ifdef RDRASTER_SOFTWARE_RENDERER
 void std3D_ScreenshotWindow(const char* pFpath);

@@ -83,6 +83,11 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/Tests/test_frame_telemetry.c"
         "${PROJECT_SOURCE_DIR}/src/General/FrameTelemetry.c"
     )
+    openjkdf2_add_unit_test(
+        test_quality_preset
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_quality_preset.c"
+        "${PROJECT_SOURCE_DIR}/src/General/QualityPreset.c"
+    )
 
     if(TARGET_USE_SDL2 AND TARGET_USE_OPENGL AND NOT TARGET_ANDROID AND NOT TARGET_WASM)
         add_executable(

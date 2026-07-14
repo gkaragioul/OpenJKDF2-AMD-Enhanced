@@ -10,6 +10,7 @@
 #include "General/stdFileUtil.h"
 #include "General/PresentationMode.h"
 #include "General/ControlPreset.h"
+#include "General/QualityPreset.h"
 #include "Engine/sithAnimClass.h"
 #include "Dss/sithGamesave.h"
 #include "Engine/rdPuppet.h"
@@ -63,6 +64,9 @@ int jkPlayer_mouseAcceleration = 0;
 int jkPlayer_mouseSmoothing = 0;
 int jkPlayer_controlPreset = CONTROL_PRESET_CLASSIC;
 int jkPlayer_showFrameStats = 0;
+int jkPlayer_qualityPreset = QUALITY_PRESET_CLASSIC;
+int jkPlayer_anisotropy = 1;
+flex_t jkPlayer_mipmapBias = 1.0;
 flex_t jkPlayer_ssaaMultiple = 1.0;
 flex_t jkPlayer_gamma = 1.0;
 int jkPlayer_bEnableJkgm = 1;
@@ -193,6 +197,9 @@ void jkPlayer_StartupVars()
     sithCvar_RegisterBool("in_mouseSmoothing",          0,                          &jkPlayer_mouseSmoothing,           CVARFLAG_LOCAL);
     sithCvar_RegisterInt("in_controlPreset",            CONTROL_PRESET_CLASSIC,     &jkPlayer_controlPreset,           CVARFLAG_LOCAL);
     sithCvar_RegisterBool("r_showFrameStats",           0,                          &jkPlayer_showFrameStats,          CVARFLAG_LOCAL);
+    sithCvar_RegisterInt("r_qualityPreset",             QUALITY_PRESET_CLASSIC,     &jkPlayer_qualityPreset,           CVARFLAG_LOCAL);
+    sithCvar_RegisterInt("r_anisotropy",                1,                          &jkPlayer_anisotropy,              CVARFLAG_LOCAL);
+    sithCvar_RegisterFlex("r_mipmapBias",               1.0,                        &jkPlayer_mipmapBias,              CVARFLAG_LOCAL);
     sithCvar_RegisterFlex("r_ssaaMultiple",             1.0,                        &jkPlayer_ssaaMultiple,             CVARFLAG_LOCAL);
     sithCvar_RegisterFlex("r_gamma",                    1.0,                        &jkPlayer_gamma,                    CVARFLAG_LOCAL);
     sithCvar_RegisterBool("r_bEnableJkgm",              1,                          &jkPlayer_bEnableJkgm,              CVARFLAG_LOCAL|CVARFLAG_READONLY);
@@ -246,6 +253,9 @@ void jkPlayer_ResetVars()
     jkPlayer_mouseSmoothing = 0;
     jkPlayer_controlPreset = CONTROL_PRESET_CLASSIC;
     jkPlayer_showFrameStats = 0;
+    jkPlayer_qualityPreset = QUALITY_PRESET_CLASSIC;
+    jkPlayer_anisotropy = 1;
+    jkPlayer_mipmapBias = 1.0;
     jkPlayer_ssaaMultiple = 1.0;
     jkPlayer_gamma = 1.0;
     jkPlayer_bEnableJkgm = 1;
@@ -596,6 +606,9 @@ void jkPlayer_WriteConf(char16_t *name)
         stdJSON_SaveBool(ext_fpath, "mousesmoothing", jkPlayer_mouseSmoothing);
         stdJSON_SaveInt(ext_fpath, "controlpreset", jkPlayer_controlPreset);
         stdJSON_SaveBool(ext_fpath, "showframestats", jkPlayer_showFrameStats);
+        stdJSON_SaveInt(ext_fpath, "qualitypreset", jkPlayer_qualityPreset);
+        stdJSON_SaveInt(ext_fpath, "anisotropy", jkPlayer_anisotropy);
+        stdJSON_SaveFloat(ext_fpath, "mipmapbias", jkPlayer_mipmapBias);
         stdJSON_SaveBool(ext_fpath, "enablebloom", jkPlayer_enableBloom);
         stdJSON_SaveFloat(ext_fpath, "ssaamultiple", jkPlayer_ssaaMultiple);
         stdJSON_SaveInt(ext_fpath, "enablessao", jkPlayer_enableSSAO);
@@ -801,6 +814,13 @@ int jkPlayer_ReadConf(char16_t *name)
         jkPlayer_controlPreset = ControlPreset_Normalize(
             stdJSON_GetInt(ext_fpath, "controlpreset", jkPlayer_controlPreset));
         jkPlayer_showFrameStats = stdJSON_GetBool(ext_fpath, "showframestats", jkPlayer_showFrameStats);
+        jkPlayer_qualityPreset = QualityPreset_Normalize(
+            stdJSON_GetInt(ext_fpath, "qualitypreset", jkPlayer_qualityPreset));
+        jkPlayer_anisotropy = QualityPreset_AnisotropyFromSlider(QualityPreset_SliderFromAnisotropy(
+            stdJSON_GetInt(ext_fpath, "anisotropy", jkPlayer_anisotropy)));
+        jkPlayer_mipmapBias = stdJSON_GetFloat(ext_fpath, "mipmapbias", jkPlayer_mipmapBias);
+        if (jkPlayer_mipmapBias < 0.25) jkPlayer_mipmapBias = 0.25;
+        if (jkPlayer_mipmapBias > 4.0) jkPlayer_mipmapBias = 4.0;
         jkPlayer_enableBloom = stdJSON_GetBool(ext_fpath, "enablebloom", jkPlayer_enableBloom);
         jkPlayer_ssaaMultiple = stdJSON_GetFloat(ext_fpath, "ssaamultiple", jkPlayer_ssaaMultiple);
         jkPlayer_enableSSAO = stdJSON_GetInt(ext_fpath, "enablessao", jkPlayer_enableSSAO);

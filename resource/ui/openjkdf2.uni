@@ -1,4 +1,4 @@
-MSGS 118          # <--- DON'T FORGET TO UPDATE THIS COUNT
+MSGS 124          # <--- DON'T FORGET TO UPDATE THIS COUNT
 
 #  "<key>"     <unused number>   "<string>"
 
@@ -98,6 +98,12 @@ MSGS 118          # <--- DON'T FORGET TO UPDATE THIS COUNT
    "GUIEXT_SHOW_FRAME_STATS_HINT"            0 "Show measured presentation FPS, frame time, and a 60-frame pacing graph."
    "GUIEXT_SAFE_60"                          0 "Return to Safe 60 FPS"
    "GUIEXT_SAFE_60_HINT"                     0 "Set the frame cap to 60 FPS and enable VSync."
+   "GUIEXT_QUALITY_PRESET"                   0 "Quality Preset"
+   "GUIEXT_QUALITY_PRESET_HINT"              0 "Apply modular renderer settings while retaining original assets as fallback."
+   "GUIEXT_ANISOTROPY"                       0 "Anisotropic Filtering"
+   "GUIEXT_ANISOTROPY_HINT"                  0 "Improve oblique texture clarity when supported by the active renderer."
+   "GUIEXT_MIPMAP_BIAS"                      0 "Mipmap Distance"
+   "GUIEXT_MIPMAP_BIAS_HINT"                 0 "0.25 keeps detailed mips longer; 1.0 is the original distance; maximum 4.0."
 
    "GUIEXT_DISABLE_MISSION_CONFIRMATION"        0 "Disable mission start confirmation"
    "GUIEXT_DISABLE_MISSION_CONFIRMATION_HINT"   0 "Enter the mission as soon as the level is loaded?"

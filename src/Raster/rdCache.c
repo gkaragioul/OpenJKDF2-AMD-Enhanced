@@ -7,6 +7,7 @@
 #include "Engine/rdColormap.h"
 #include "General/stdMath.h"
 #include "stdPlatform.h"
+#include "World/jkPlayer.h"
 
 #include <math.h>
 
@@ -502,6 +503,9 @@ int rdCache_SendFaceListToHardware()
             sith_tex_sel = v15->texture_ptr;
 
             flex_t z_min = active_6c->z_min * rdCamera_GetMipmapScalar(); // MOTS added
+#ifdef QOL_IMPROVEMENTS
+            z_min *= jkPlayer_mipmapBias;
+#endif
             
             mipmap_level = 1;
             if (sith_tex_sel->num_mipmaps == 2)

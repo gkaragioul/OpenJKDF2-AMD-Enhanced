@@ -101,6 +101,16 @@ std3DFramebuffer std3D_framebuffers[2];
 std3DFramebuffer *std3D_pFb = NULL;
 
 static bool has_initted = false;
+static float std3D_maxAnisotropy = 1.0f;
+
+void std3D_ApplyAnisotropy(void)
+{
+    float requested = jkPlayer_enableTextureFilter ? (float)jkPlayer_anisotropy : 1.0f;
+    if (requested < 1.0f) requested = 1.0f;
+    if (requested > std3D_maxAnisotropy) requested = std3D_maxAnisotropy;
+    if (GLEW_EXT_texture_filter_anisotropic)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, requested);
+}
 
 static void* last_overlay = NULL;
 
@@ -448,7 +458,18 @@ bool std3D_loadSimpleTexProgram(const char* fpath_base, std3DSimpleTexStage* pOu
 
 int init_resources()
 {
+    char anisotropyEvent[96];
     stdPlatform_Printf("std3D: OpenGL init...\n");
+
+    std3D_maxAnisotropy = 1.0f;
+    if (GLEW_EXT_texture_filter_anisotropic)
+        glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &std3D_maxAnisotropy);
+    if (std3D_maxAnisotropy < 1.0f)
+        std3D_maxAnisotropy = 1.0f;
+    snprintf(anisotropyEvent, sizeof(anisotropyEvent),
+        "texture_filter_anisotropic supported=%d max=%.1f requested=%d",
+        GLEW_EXT_texture_filter_anisotropic ? 1 : 0, std3D_maxAnisotropy, jkPlayer_anisotropy);
+    diag_log_event(DIAG_SEVERITY_INFO, "renderer", anisotropyEvent);
 
     std3D_bReinitHudElements = 1;
 
@@ -3044,6 +3065,7 @@ int std3D_AddToTextureCache(tVBuffer *vbuf, rdDDrawSurface *texture, int is_alph
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
+    std3D_ApplyAnisotropy();
 
     if (vbuf->format.format.is16bit)
     {
@@ -3114,7 +3136,6 @@ int std3D_AddToTextureCache(tVBuffer *vbuf, rdDDrawSurface *texture, int is_alph
                 *(uint32_t*)(image_data + index*4) = val_rgba;
             }
         }
-        
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, image_data);
 
         texture->pDataDepthConverted = image_data;
@@ -3521,6 +3542,7 @@ void std3D_UpdateSettings()
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }
+        std3D_ApplyAnisotropy();
 
         if (tex->emissive_texture_id != 0) {
             glBindTexture(GL_TEXTURE_2D, tex->emissive_texture_id);
@@ -3535,6 +3557,7 @@ void std3D_UpdateSettings()
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             }
+            std3D_ApplyAnisotropy();
         }
 
         if (tex->displacement_texture_id != 0) {
@@ -3550,6 +3573,7 @@ void std3D_UpdateSettings()
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             }
+            std3D_ApplyAnisotropy();
         }
     }
 

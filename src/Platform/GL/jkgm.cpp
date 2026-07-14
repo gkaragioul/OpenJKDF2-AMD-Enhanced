@@ -729,6 +729,7 @@ int jkgm_std3D_AddToTextureCache(tVBuffer *vbuf, rdDDrawSurface *texture, int is
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         }
+        std3D_ApplyAnisotropy();
 
         texture->emissive_texture_id = 0;
         texture->displacement_texture_id = 0;
@@ -805,6 +806,7 @@ int jkgm_std3D_AddToTextureCache(tVBuffer *vbuf, rdDDrawSurface *texture, int is
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             }
+            std3D_ApplyAnisotropy();
 
             const char* path = emissive_tex.c_str();
 
@@ -861,6 +863,7 @@ int jkgm_std3D_AddToTextureCache(tVBuffer *vbuf, rdDDrawSurface *texture, int is
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             }
+            std3D_ApplyAnisotropy();
 
             const char* path = displacement_tex.c_str();
 
