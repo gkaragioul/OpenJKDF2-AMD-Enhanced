@@ -9,7 +9,8 @@ param(
 $ErrorActionPreference = "Stop"
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $assetRoot = (Resolve-Path -LiteralPath $DataDir).Path.TrimEnd("\", "/")
-$exePath = (Resolve-Path -LiteralPath (Join-Path $repoRoot $Executable)).Path
+$exeCandidate = if ([IO.Path]::IsPathRooted($Executable)) { $Executable } else { Join-Path $repoRoot $Executable }
+$exePath = (Resolve-Path -LiteralPath $exeCandidate).Path
 $userRoot = [IO.Path]::GetFullPath($UserDir).TrimEnd("\", "/")
 if (Test-Path -LiteralPath $userRoot) { throw "UserDir must be a fresh path: $userRoot" }
 if ($userRoot.Equals($assetRoot, [StringComparison]::OrdinalIgnoreCase) -or

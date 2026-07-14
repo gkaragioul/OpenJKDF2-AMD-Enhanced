@@ -132,3 +132,4 @@ packaging/dreamcast/disc/*
 /build/
 /renderer-smoke-output/
 /runtime-evidence/
+/dist/
