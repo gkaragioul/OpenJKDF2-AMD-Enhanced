@@ -62,6 +62,7 @@ int jkPlayer_rawMouseInput = 1;
 int jkPlayer_mouseAcceleration = 0;
 int jkPlayer_mouseSmoothing = 0;
 int jkPlayer_controlPreset = CONTROL_PRESET_CLASSIC;
+int jkPlayer_showFrameStats = 0;
 flex_t jkPlayer_ssaaMultiple = 1.0;
 flex_t jkPlayer_gamma = 1.0;
 int jkPlayer_bEnableJkgm = 1;
@@ -191,6 +192,7 @@ void jkPlayer_StartupVars()
     sithCvar_RegisterBool("in_mouseAcceleration",       0,                          &jkPlayer_mouseAcceleration,        CVARFLAG_LOCAL);
     sithCvar_RegisterBool("in_mouseSmoothing",          0,                          &jkPlayer_mouseSmoothing,           CVARFLAG_LOCAL);
     sithCvar_RegisterInt("in_controlPreset",            CONTROL_PRESET_CLASSIC,     &jkPlayer_controlPreset,           CVARFLAG_LOCAL);
+    sithCvar_RegisterBool("r_showFrameStats",           0,                          &jkPlayer_showFrameStats,          CVARFLAG_LOCAL);
     sithCvar_RegisterFlex("r_ssaaMultiple",             1.0,                        &jkPlayer_ssaaMultiple,             CVARFLAG_LOCAL);
     sithCvar_RegisterFlex("r_gamma",                    1.0,                        &jkPlayer_gamma,                    CVARFLAG_LOCAL);
     sithCvar_RegisterBool("r_bEnableJkgm",              1,                          &jkPlayer_bEnableJkgm,              CVARFLAG_LOCAL|CVARFLAG_READONLY);
@@ -243,6 +245,7 @@ void jkPlayer_ResetVars()
     jkPlayer_mouseAcceleration = 0;
     jkPlayer_mouseSmoothing = 0;
     jkPlayer_controlPreset = CONTROL_PRESET_CLASSIC;
+    jkPlayer_showFrameStats = 0;
     jkPlayer_ssaaMultiple = 1.0;
     jkPlayer_gamma = 1.0;
     jkPlayer_bEnableJkgm = 1;
@@ -592,6 +595,7 @@ void jkPlayer_WriteConf(char16_t *name)
         stdJSON_SaveBool(ext_fpath, "mouseacceleration", jkPlayer_mouseAcceleration);
         stdJSON_SaveBool(ext_fpath, "mousesmoothing", jkPlayer_mouseSmoothing);
         stdJSON_SaveInt(ext_fpath, "controlpreset", jkPlayer_controlPreset);
+        stdJSON_SaveBool(ext_fpath, "showframestats", jkPlayer_showFrameStats);
         stdJSON_SaveBool(ext_fpath, "enablebloom", jkPlayer_enableBloom);
         stdJSON_SaveFloat(ext_fpath, "ssaamultiple", jkPlayer_ssaaMultiple);
         stdJSON_SaveInt(ext_fpath, "enablessao", jkPlayer_enableSSAO);
@@ -796,6 +800,7 @@ int jkPlayer_ReadConf(char16_t *name)
         jkPlayer_mouseSmoothing = stdJSON_GetBool(ext_fpath, "mousesmoothing", jkPlayer_mouseSmoothing);
         jkPlayer_controlPreset = ControlPreset_Normalize(
             stdJSON_GetInt(ext_fpath, "controlpreset", jkPlayer_controlPreset));
+        jkPlayer_showFrameStats = stdJSON_GetBool(ext_fpath, "showframestats", jkPlayer_showFrameStats);
         jkPlayer_enableBloom = stdJSON_GetBool(ext_fpath, "enablebloom", jkPlayer_enableBloom);
         jkPlayer_ssaaMultiple = stdJSON_GetFloat(ext_fpath, "ssaamultiple", jkPlayer_ssaaMultiple);
         jkPlayer_enableSSAO = stdJSON_GetInt(ext_fpath, "enablessao", jkPlayer_enableSSAO);

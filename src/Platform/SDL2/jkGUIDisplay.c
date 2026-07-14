@@ -26,6 +26,7 @@ enum jkGuiDecisionButton_t
     GUI_CONTROLS = 104,
 
     GUI_ADVANCED = 105,
+    GUI_SAFE_60 = 4600,
 };
 
 static char16_t render_level[256] = {0};
@@ -109,6 +110,8 @@ static jkGuiElement jkGuiDisplay_aElementsAdvanced[22] = {
     
     { ELEMENT_CHECKBOX,    0,            0, "GUIEXT_EN_JKGFXMOD",            0, {20, 150, 300, 40},  1, 0, "GUIEXT_EN_JKGFXMOD_HINT",          0, 0, 0, {0}, 0},
     { ELEMENT_CHECKBOX,    0,            0, "GUIEXT_EN_TEXTURE_PRECACHE",   0, {20, 190, 300, 40},  1, 0, "GUIEXT_EN_TEXTURE_PRECACHE_HINT",          0, 0, 0, {0}, 0},
+    { ELEMENT_CHECKBOX,    0,            0, "GUIEXT_SHOW_FRAME_STATS",      0, {20, 230, 300, 40},  1, 0, "GUIEXT_SHOW_FRAME_STATS_HINT",             0, 0, 0, {0}, 0},
+    { ELEMENT_TEXTBUTTON,  GUI_SAFE_60,  2, "GUIEXT_SAFE_60",               3, {20, 290, 300, 40},  1, 0, "GUIEXT_SAFE_60_HINT",                      0, 0, 0, {0}, 0},
     
     { ELEMENT_END,         0,            0, NULL,                   0, {0},                 0, 0, NULL,                        0, 0, 0, {0}, 0},
 };
@@ -193,6 +196,7 @@ int jkGuiDisplay_ShowAdvanced()
     jkGui_sub_412E20(&jkGuiDisplay_menuAdvanced, 100, 104, 100);
     jkGuiDisplay_aElementsAdvanced[9].selectedTextEntry = jkPlayer_bEnableJkgm;
     jkGuiDisplay_aElementsAdvanced[10].selectedTextEntry = jkPlayer_bEnableTexturePrecache;
+    jkGuiDisplay_aElementsAdvanced[11].selectedTextEntry = jkPlayer_showFrameStats;
     
     jkGuiRend_MenuSetReturnKeyShortcutElement(&jkGuiDisplay_menuAdvanced, &jkGuiDisplay_aElementsAdvanced[7]);
     jkGuiRend_MenuSetEscapeKeyShortcutElement(&jkGuiDisplay_menuAdvanced, &jkGuiDisplay_aElementsAdvanced[8]);
@@ -202,10 +206,21 @@ int jkGuiDisplay_ShowAdvanced()
     {
         v0 = jkGuiRend_DisplayAndReturnClicked(&jkGuiDisplay_menuAdvanced);
 
-        if ( v0 != -1 )
+        if (v0 == GUI_SAFE_60)
+        {
+            jkPlayer_fpslimit = 60;
+            jkPlayer_enableVsync = PRESENTATION_VSYNC_ON;
+            jkGuiDisplay_aElements[18].selectedTextEntry = FrameRate_SliderFromValue(60);
+            jkGuiDisplay_aElements[21].selectedTextEntry = PresentationMode_SliderFromVsync(PRESENTATION_VSYNC_ON);
+            jkPlayer_WriteConf(jkPlayer_playerShortName);
+            return 1;
+        }
+
+        if ( v0 == 1 )
         {
             jkPlayer_bEnableJkgm = jkGuiDisplay_aElementsAdvanced[9].selectedTextEntry;
             jkPlayer_bEnableTexturePrecache = jkGuiDisplay_aElementsAdvanced[10].selectedTextEntry;
+            jkPlayer_showFrameStats = jkGuiDisplay_aElementsAdvanced[11].selectedTextEntry;
 
             std3D_PurgeEntireTextureCache();
 

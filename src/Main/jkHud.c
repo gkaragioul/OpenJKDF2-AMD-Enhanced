@@ -4,6 +4,8 @@
 #include "Platform/Dreamcast/dcDebug.h" // Added: 4th-port debug overlay (FPS + mem)
 #endif
 
+#include "General/FrameTelemetry.h"
+
 #include "Gameplay/sithInventory.h"
 #include "Win95/Video.h"
 #include "Win95/Windows.h"
@@ -915,6 +917,22 @@ LABEL_116:
 #endif
     }
 
+#if defined(QOL_IMPROVEMENTS) && !defined(SDL2_RENDER)
+    if (jkPlayer_showFrameStats)
+    {
+        FrameTelemetrySnapshot frameStats = FrameTelemetry_GetSnapshot();
+        char frameLine[64];
+        char frameGraph[FRAME_TELEMETRY_SAMPLE_COUNT + 1];
+        double budgetMs = jkPlayer_fpslimit > 0 ? 1000.0 / jkPlayer_fpslimit : 1000.0 / 60.0;
+        stdString_snprintf(frameLine, sizeof(frameLine), "%sFPS %6.1f  %5.2f ms",
+            FrameTelemetry_IsUnstable(&frameStats, budgetMs) ? "UNSTABLE  " : "",
+            frameStats.framesPerSecond, frameStats.frameMilliseconds);
+        FrameTelemetry_FormatGraph(&frameStats, budgetMs, frameGraph, sizeof(frameGraph));
+        stdFont_DrawAscii(Video_pMenuBuffer, jkHud_pMsgFontSft, 8, 8, 999, frameLine, 1);
+        stdFont_DrawAscii(Video_pMenuBuffer, jkHud_pMsgFontSft, 8, 22, 999, frameGraph, 1);
+    }
+#endif
+
 #ifdef SDL2_RENDER
     stdDisplay_VBufferUnlock(Video_pCanvasOverlayMap->pVBuffer);
     stdDisplay_VBufferUnlock(Video_pCanvas->pVBuffer);
@@ -1523,6 +1541,22 @@ LABEL_116:
         }
 #endif
     }
+
+#if defined(QOL_IMPROVEMENTS) && defined(SDL2_RENDER)
+    if (jkPlayer_showFrameStats)
+    {
+        FrameTelemetrySnapshot frameStats = FrameTelemetry_GetSnapshot();
+        char frameLine[64];
+        char frameGraph[FRAME_TELEMETRY_SAMPLE_COUNT + 1];
+        double budgetMs = jkPlayer_fpslimit > 0 ? 1000.0 / jkPlayer_fpslimit : 1000.0 / 60.0;
+        stdString_snprintf(frameLine, sizeof(frameLine), "%sFPS %6.1f  %5.2f ms",
+            FrameTelemetry_IsUnstable(&frameStats, budgetMs) ? "UNSTABLE  " : "",
+            frameStats.framesPerSecond, frameStats.frameMilliseconds);
+        FrameTelemetry_FormatGraph(&frameStats, budgetMs, frameGraph, sizeof(frameGraph));
+        stdFont_DrawAsciiGPU(jkHud_pMsgFontSft, HUD_SCALED(8), HUD_SCALED(8), 999, frameLine, 1, jkPlayer_hudScale);
+        stdFont_DrawAsciiGPU(jkHud_pMsgFontSft, HUD_SCALED(8), HUD_SCALED(22), 999, frameGraph, 1, jkPlayer_hudScale);
+    }
+#endif
 
 #ifdef SDL2_RENDER
     stdDisplay_VBufferUnlock(Video_pCanvasOverlayMap->pVBuffer);

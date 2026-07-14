@@ -18,6 +18,7 @@
 #include "General/DisplayMode.h"
 #include "General/ResolutionLayout.h"
 #include "General/FrameRate.h"
+#include "General/FrameTelemetry.h"
 #include "General/PresentationMode.h"
 
 #include "jk.h"
@@ -1560,6 +1561,7 @@ void Window_Main_Loop()
     targetRate = FrameRate_ResolveTarget(jkPlayer_fpslimit, desktopRefreshRate);
     periodNs = FrameRate_PeriodNanoseconds(targetRate);
     nowNs = SDL_GetTicksNS();
+    FrameTelemetry_Record(nowNs);
 
     if (jkPlayer_fpslimit != previousConfiguredRate)
         frameDeadlineNs = 0;

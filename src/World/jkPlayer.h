@@ -145,6 +145,7 @@ extern int jkPlayer_rawMouseInput;
 extern int jkPlayer_mouseAcceleration;
 extern int jkPlayer_mouseSmoothing;
 extern int jkPlayer_controlPreset;
+extern int jkPlayer_showFrameStats;
 extern flex_t jkPlayer_ssaaMultiple;
 extern int jkPlayer_enableSSAO;
 extern flex_t jkPlayer_gamma;

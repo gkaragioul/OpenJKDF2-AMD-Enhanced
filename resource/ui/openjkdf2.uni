@@ -1,4 +1,4 @@
-MSGS 114          # <--- DON'T FORGET TO UPDATE THIS COUNT
+MSGS 118          # <--- DON'T FORGET TO UPDATE THIS COUNT
 
 #  "<key>"     <unused number>   "<string>"
 
@@ -94,6 +94,10 @@ MSGS 114          # <--- DON'T FORGET TO UPDATE THIS COUNT
    "GUIEXT_MOUSE_ACCEL_HINT"                 0 "Allow Windows system scaling for relative mouse movement."
    "GUIEXT_MOUSE_SMOOTHING"                  0 "Mouse Smoothing"
    "GUIEXT_MOUSE_SMOOTHING_HINT"             0 "Blend the current mouse delta with the previous sample. Off is lowest latency."
+   "GUIEXT_SHOW_FRAME_STATS"                 0 "Frame Pacing Overlay"
+   "GUIEXT_SHOW_FRAME_STATS_HINT"            0 "Show measured presentation FPS, frame time, and a 60-frame pacing graph."
+   "GUIEXT_SAFE_60"                          0 "Return to Safe 60 FPS"
+   "GUIEXT_SAFE_60_HINT"                     0 "Set the frame cap to 60 FPS and enable VSync."
 
    "GUIEXT_DISABLE_MISSION_CONFIRMATION"        0 "Disable mission start confirmation"
    "GUIEXT_DISABLE_MISSION_CONFIRMATION_HINT"   0 "Enter the mission as soon as the level is loaded?"
