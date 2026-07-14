@@ -1,7 +1,7 @@
 id,requirement,evidence_type,status,evidence_path,notes
 M1-REPO,Preserve authoritative upstream history and attribution,git history,proven,.git,Upstream commit and focused fork commits retained
 M1-BUILD,Reproducible Windows x64 Debug and Release builds,build logs and hashes,proven,build-evidence/baseline.json,Both configurations built with MSVC and Ninja
-M1-UPSTREAM-RUN,Run unmodified upstream against legitimate game data,runtime reproduction,missing,,Not run because display restoration safeguard is not yet complete
+M1-UPSTREAM-RUN,Run unmodified upstream against legitimate game data,runtime reproduction,proven,docs/evidence/upstream-baseline-2026-07-14.md,"Official unmodified v0.9.9 Windows artifact reproduced the AMD atio6axx.dll crash against legitimate Steam data in a window; display state and Steam metadata remained invariant"
 M1-DIAGNOSTICS,Machine-readable privacy-safe diagnostics,unit tests and JSON parse,proven,src/Tests/test_diagnostic_log.c,No usernames hostnames serials or raw command lines
 M2-LOGGING,Structured renderer shader and startup logging,source and tests,proven,docs/evidence/renderer-telemetry-2026-07-14.md,"Runtime logs cover initialization, shader stages, framebuffer status, sampled texture uploads and all failures, swap state, display/focus, input capture, and frame pacing"
 M2-SHADER,Graceful named shader compile and link failures,unit and build tests,proven,src/Platform/GL/ShaderCompile.c,No modal compiler-error path remains

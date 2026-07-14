@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "captured_utc": "2026-07-14T17:53:33.2845787Z",
+  "upstream": {
+    "release": "v0.9.9",
+    "release_commit": "814b684c0d06bbfc6e1121941fc8a9e88e3aede7",
+    "release_page": "https://github.com/shinyquagsire23/OpenJKDF2/releases/tag/v0.9.9",
+    "archive": "win64-debug.zip",
+    "archive_sha256": "842d2ece45f52cd533df341107a4b415d7cd35c2ccff44100664195bc95e8c28",
+    "executable_sha256": "90b8d957c5e3bb4f3bd9961e86f34b7769620e2c67955e099d3e340f2df007ba"
+  },
+  "launch": {
+    "arguments": "-autostart -sp -episode JK1 -map 01narshadda.jkl",
+    "window_mode": "windowed",
+    "window_created": true,
+    "window_width": 993,
+    "window_height": 519,
+    "observed_seconds": 18.666,
+    "exit_mode": "natural_crash",
+    "exit_code_signed": -1073741571,
+    "exit_code_hex": "0xC00000FD"
+  },
+  "failure": {
+    "windows_event_provider": "Application Error",
+    "windows_event_id": 1000,
+    "faulting_application_version": "0.9.9.0",
+    "faulting_module": "atio6axx.dll",
+    "faulting_module_version": "32.0.31021.5001",
+    "exception": "stack_overflow",
+    "exception_code": "0xC00000FD"
+  },
+  "machine": {
+    "gpu": "AMD Radeon RX 7900 XTX",
+    "driver_version": "32.0.31021.5001",
+    "display_before": "2560x1440@165",
+    "display_after": "2560x1440@165",
+    "display_invariant": true
+  },
+  "assets": {
+    "source": "licensed Steam installation",
+    "private_runtime_copy_used": true,
+    "tracked_or_redistributed": false,
+    "metadata_sha256_before": "d67c6f84ece52b6aa6f48f0cde2dae715a50c320775223e62f7e34b416b85744",
+    "metadata_sha256_after": "d67c6f84ece52b6aa6f48f0cde2dae715a50c320775223e62f7e34b416b85744",
+    "metadata_invariant": true
+  },
+  "privacy": {
+    "username": "not_collected",
+    "hostname": "not_collected",
+    "serial_numbers": "not_collected",
+    "absolute_paths": "not_recorded"
+  }
+}
