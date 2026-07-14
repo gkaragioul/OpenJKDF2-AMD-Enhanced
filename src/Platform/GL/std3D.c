@@ -1025,6 +1025,53 @@ void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, 
     std3D_DrawMenuSubrectScaled(x, y, w, h, dstX, dstY, scale, scale);
 }
 
+static void std3D_CaptureAspectProbe(void)
+{
+    static int captured = 0;
+    static int eligibleFrames = 0;
+    const char* domain = getenv("OPENJKDF2_ASPECT_CAPTURE");
+    const char* path;
+    int contentWidth = 640;
+    int contentHeight = 480;
+    int preserveAspect = 0;
+    int eligible = 0;
+    ResolutionLayoutRect destination;
+    char event[256];
+
+    if (captured || !domain || !domain[0]) return;
+    if (!strcmp(domain, "video") && jkCutscene_isRendering)
+    {
+        eligible = 1;
+        preserveAspect = jkPlayer_preserveVideoAspect;
+        jkCutscene_GetVideoDimensions(&contentWidth, &contentHeight);
+        if (contentWidth <= 0) contentWidth = 640;
+        if (contentHeight <= 0) contentHeight = Main_bMotsCompat ? 350 : 300;
+    }
+    else if (!strcmp(domain, "menu") && !jkGame_isDDraw && !jkCutscene_isRendering)
+    {
+        eligible = 1;
+        preserveAspect = jkPlayer_preserveMenuAspect;
+    }
+    else if (!strcmp(domain, "hud") && jkGame_isDDraw && !jkCutscene_isRendering)
+    {
+        eligible = 1;
+        preserveAspect = jkPlayer_preserveHudAspect;
+    }
+    if (!eligible || ++eligibleFrames < (!strcmp(domain, "video") ? 300 : 30)) return;
+
+    destination = AspectPolicy_Destination(
+        Window_xSize, Window_ySize, contentWidth, contentHeight, preserveAspect);
+    path = getenv("OPENJKDF2_ASPECT_CAPTURE_PATH");
+    std3D_ScreenshotWindow(path && path[0] ? path : "aspect-capture.png");
+    snprintf(event, sizeof(event),
+             "aspect_capture domain=%s output=%dx%d content=%dx%d preserve=%d rect=%.0f,%.0f,%.0f,%.0f clean_exit=true",
+             domain, Window_xSize, Window_ySize, contentWidth, contentHeight, preserveAspect,
+             destination.x, destination.y, destination.width, destination.height);
+    diag_log_event(DIAG_SEVERITY_INFO, "validation", event);
+    captured = 1;
+    g_should_exit = 1;
+}
+
 void std3D_DrawMenuSubrect2(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, flex_t dstY, flex_t scale)
 {
     //double tex_w = (double)Window_xSize;
@@ -1554,6 +1601,7 @@ void std3D_DrawMenu()
 
     std3D_DrawMapOverlay();
     std3D_DrawUIRenderList();
+    std3D_CaptureAspectProbe();
 
     last_flags = 0;
 }
@@ -3595,10 +3643,9 @@ void std3D_Screenshot(const char* pFpath)
 #endif
 }
 
-#ifdef RDRASTER_SOFTWARE_RENDERER
 // Capture the presented WINDOW framebuffer (what the user actually sees, including the software
 // world present + HUD overlay), unlike std3D_Screenshot which reads the pre-composite scene FBO.
-// Used for headless verification of the software-renderer full-window present.
+// Capture the composed window framebuffer for guarded runtime verification.
 void std3D_ScreenshotWindow(const char* pFpath)
 {
 #ifdef TARGET_CAN_JKGM
@@ -3614,7 +3661,6 @@ void std3D_ScreenshotWindow(const char* pFpath)
     free(data);
 #endif
 }
-#endif
 
 int std3D_HasAlpha()
 {

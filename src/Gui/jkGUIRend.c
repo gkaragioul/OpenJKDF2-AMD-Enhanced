@@ -345,7 +345,15 @@ int32_t jkGuiRend_DisplayAndReturnClicked(jkGuiMenu *menu)
         {
             jkGuiRend_thing_four = 0;
             if ( g_should_exit )
+            {
+                const char* aspectCaptureDomain = getenv("OPENJKDF2_ASPECT_CAPTURE");
+                if (aspectCaptureDomain && !strcmp(aspectCaptureDomain, "menu"))
+                {
+                    menu->lastClicked = -1;
+                    break;
+                }
                 jk_exit(msgret);
+            }
             if ( menu->idkFunc && !menu->lastClicked )
                 menu->idkFunc(menu);
         }
