@@ -21,12 +21,16 @@
 #include "Main/jkQuakeConsole.h"
 #include "Engine/rdColormap.h"
 #include "Engine/sithCamera.h"
+#include "Devices/sithControl.h"
+#include "Primitives/rdMatrix.h"
 #include "General/stdString.h"
 #include "General/DiagnosticLog.h"
 #include "General/RuntimeProbe.h"
 
 #include "stdPlatform.h"
 #include "jk.h"
+
+#include <math.h>
 
 #if defined(TARGET_TWL)
 #include <nds.h>
@@ -408,6 +412,62 @@ int jkGame_Update()
 #endif
 
 #if defined(SDL2_RENDER) && !defined(TARGET_RETRO_HOMEBREW)
+    // Opt-in end-to-end input observer. It records only player deltas and sector IDs,
+    // never key contents or desktop input, and is inert during ordinary play.
+    {
+        static RuntimeProbe inputProbe = { 0 };
+        static bool inputPresetApplied = false;
+        static rdVector3 inputStartPosition = { 0 };
+        static float inputStartYaw = 0.0f;
+        static int inputStartSector = -1;
+        const char* pInputMs = getenv("OPENJKDF2_VALIDATE_INPUT_MS");
+        SithThing* pPlayer = sithWorld_g_pCurrentWorld ? sithWorld_g_pCurrentWorld->pLocalPlayer : NULL;
+        if (pInputMs && pPlayer && pPlayer->sector)
+        {
+            if (!inputPresetApplied)
+            {
+                sithControl_ApplyModernPreset();
+                jkHudInv_InputInit();
+                inputPresetApplied = true;
+                diag_log_event(DIAG_SEVERITY_INFO, "validation", "input modern_preset_applied=true");
+            }
+            rdVector3 inputAngles;
+            uint32_t nowMs = stdPlatform_GetTimeMsec();
+            uint32_t delayMs = (uint32_t)strtoul(pInputMs, NULL, 10);
+            rdMatrix_ExtractAngles34(&pPlayer->orient, &inputAngles);
+            if (!inputProbe.started)
+            {
+                inputStartPosition = pPlayer->position;
+                inputStartYaw = inputAngles.y;
+                inputStartSector = pPlayer->sector->id;
+            }
+            if (runtime_probe_due(&inputProbe, nowMs, delayMs))
+            {
+                const float distanceSquared = runtime_probe_distance_squared(
+                    inputStartPosition.x, inputStartPosition.y, inputStartPosition.z,
+                    pPlayer->position.x, pPlayer->position.y, pPlayer->position.z);
+                const float yawDelta = runtime_probe_angle_delta_degrees(inputStartYaw, inputAngles.y);
+                const bool moved = runtime_probe_moved(
+                    inputStartPosition.x, inputStartPosition.y, inputStartPosition.z,
+                    pPlayer->position.x, pPlayer->position.y, pPlayer->position.z, 0.05f);
+                const bool turned = runtime_probe_turned(inputStartYaw, inputAngles.y, 1.0f);
+                char inputEvent[512];
+                snprintf(inputEvent, sizeof(inputEvent),
+                         "input complete moved=%s turned=%s distance=%.4f yaw_delta=%.3f start_sector=%d end_sector=%d clean_exit=true",
+                         moved ? "true" : "false", turned ? "true" : "false", sqrtf(distanceSquared),
+                         yawDelta, inputStartSector, pPlayer->sector->id);
+                diag_log_event((moved && turned) ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                               "validation", inputEvent);
+                {
+                    const char* pInputShotPath = getenv("OPENJKDF2_VALIDATE_INPUT_SCREENSHOT");
+                    if (pInputShotPath)
+                        std3D_Screenshot(pInputShotPath);
+                }
+                g_should_exit = 1;
+            }
+        }
+    }
+
     // Automated validation hook. Disabled unless OPENJKDF2_AUTOSHOT_MS is set.
     // Capture once, then use the ordinary shutdown path so diagnostics close cleanly.
     {
