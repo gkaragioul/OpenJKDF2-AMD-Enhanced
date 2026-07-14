@@ -22,6 +22,8 @@
 #include "Engine/rdColormap.h"
 #include "Engine/sithCamera.h"
 #include "General/stdString.h"
+#include "General/DiagnosticLog.h"
+#include "General/RuntimeProbe.h"
 
 #include "stdPlatform.h"
 #include "jk.h"
@@ -405,24 +407,26 @@ int jkGame_Update()
     rdFinishFrame();
 #endif
 
-#ifdef RDRASTER_SOFTWARE_RENDERER
-    // Added: headless capture for software-renderer bring-up. If OPENJKDF2_AUTOSHOT_MS is
-    // set, screenshot the presented frame once after that many ms, then exit.
+#if defined(SDL2_RENDER) && !defined(TARGET_RETRO_HOMEBREW)
+    // Automated validation hook. Disabled unless OPENJKDF2_AUTOSHOT_MS is set.
+    // Capture once, then use the ordinary shutdown path so diagnostics close cleanly.
     {
+        static RuntimeProbe runtimeProbe = { 0 };
         const char* pShotMs = getenv("OPENJKDF2_AUTOSHOT_MS");
         if (pShotMs)
         {
-            static uint32_t rdsw_shotStartMs = 0;
             uint32_t nowMs = stdPlatform_GetTimeMsec();
-            if (!rdsw_shotStartMs)
-                rdsw_shotStartMs = nowMs;
-            if (nowMs - rdsw_shotStartMs > (uint32_t)atoi(pShotMs))
+            uint32_t delayMs = (uint32_t)strtoul(pShotMs, NULL, 10);
+            if (runtime_probe_due(&runtimeProbe, nowMs, delayMs))
             {
                 const char* pShotPath = getenv("OPENJKDF2_AUTOSHOT_PATH");
-                // Capture the presented window (world present + HUD), not the pre-composite scene FBO.
+#ifdef RDRASTER_SOFTWARE_RENDERER
                 std3D_ScreenshotWindow(pShotPath ? pShotPath : "sw_autoshot.png");
-                stdPlatform_Printf("OPENJKDF2_AUTOSHOT: captured window screenshot, exiting\n");
-                exit(0);
+#else
+                std3D_Screenshot(pShotPath ? pShotPath : "gameplay_autoshot.png");
+#endif
+                diag_log_event(DIAG_SEVERITY_INFO, "validation", "gameplay_screenshot_requested clean_exit=true");
+                g_should_exit = 1;
             }
         }
     }

@@ -67,6 +67,7 @@
 #include "General/stdJSON.h"
 #include "General/ConfigRecovery.h"
 #include "General/DiagnosticLog.h"
+#include "General/RuntimeProbe.h"
 #include "Dss/jkDSS.h"
 #include "Main/InstallHelper.h"
 #include "sithCvar.h"
@@ -153,6 +154,8 @@ int Main_StartupDedicated(int bFullyDedicated)
     char aTmpPlayerShortName[32];
     const char* defaultEpisode = Main_bMotsCompat ? "" : "JK1MP";
     const char* defaultMap = Main_bMotsCompat ? "" : "m2.jkl";
+
+    jkGuiTitle_bSkipLoadingWait = runtime_probe_should_skip_loading_wait(Main_bAutostart != 0);
 
     jkSmack_stopTick = 1;
     jkSmack_nextGuiState = JK_GAMEMODE_TITLE;

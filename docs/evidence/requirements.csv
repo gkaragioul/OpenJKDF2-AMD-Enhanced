@@ -10,9 +10,9 @@ M2-SMOKE,Asset-free renderer smoke mode,hardware smoke log,proven,docs/evidence/
 M2-TESTS,Settings timing resolution save and fallback tests,CTest results,incomplete,build-evidence/baseline.json,Foundation diagnostics tests exist; remaining domains pending
 M2-SAFE,Startup safe mode,unit test and source,proven,src/Tests/test_startup_options.c,Forces windowed and conservative parser defaults
 M3-RDNA,Standards-compliant capability-based RDNA renderer fixes,shader audit and hardware matrix,incomplete,,One generated shader path passed on RDNA3 only
-M3-DIAG-PAGE,In-game renderer diagnostics page,gameplay UI test,missing,,Pending
-M4-RESOLUTION,Native 2560x1440 and arbitrary resolution with correct UI,visual and coordinate tests,incomplete,,Desktop resolution observed only
-M4-BORDERLESS,Borderless fullscreen never changes desktop mode,display invariance tests,weak,docs/evidence/foundation-verification.md,Desktop-sized borderless smoke invariant; gameplay and multi-monitor tests pending
+M3-DIAG-PAGE,In-game renderer diagnostics page,gameplay UI test,incomplete,src/Tests/test_renderer_diagnostics.c,Source and unit tests exist; in-game page interaction is not yet visually verified
+M4-RESOLUTION,Native 2560x1440 and arbitrary resolution with correct UI,visual and coordinate tests,incomplete,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,One 2560x1440 gameplay frame verified; arbitrary resolutions and complete UI coverage pending
+M4-BORDERLESS,Borderless fullscreen never changes desktop mode,display invariance tests,weak,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,Five-second gameplay run preserved 2560x1440 at 165 Hz; Alt+Tab and multi-monitor tests pending
 M4-WATCHDOG,Crash-safe display restoration watchdog,forced termination tests,incomplete,docs/evidence/watchdog-verification.md,Parent-exit detection works but host denies display-state application; Exclusive remains gated off
 M4-ASPECT,Configurable gameplay menu HUD and video aspect correction,visual tests,missing,,Pending
 M5-FRAME-UI,Frame-rate slider choices and persistence,unit and UI tests,missing,,Pending
@@ -24,17 +24,17 @@ M7-ENHANCEMENTS,Modular legally distributable visual enhancements,package and vi
 M8-VIDEO-UX,Video menu apply revert last-known-good and reset,UI and failure tests,missing,,Pending
 M9-RDNA1,RDNA1 compatibility,human hardware test,unverified-hardware,,No representative hardware available yet
 M9-RDNA2,RDNA2 compatibility,human hardware test,unverified-hardware,,No representative hardware available yet
-M9-RDNA3,RDNA3 compatibility,human hardware test,weak,docs/evidence/foundation-verification.md,Only hidden generated-resource smoke tested
+M9-RDNA3,RDNA3 compatibility,human hardware test,weak,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,Five-second first-level hardware-rendered capture on one RX 7900 XTX; broader gameplay pending
 M9-NVIDIA,NVIDIA regression coverage,CI or hardware test,unverified-hardware,,Pending
 M9-INTEL,Intel regression coverage,CI or hardware test,unverified-hardware,,Pending
-M9-GAMEPLAY,First level first door save load death transition and cutscene validation,gameplay evidence,missing,,Blocked by unfinished display safeguard not by credentials
+M9-GAMEPLAY,First level first door save load death transition and cutscene validation,gameplay evidence,incomplete,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,First level launched and captured; first door and gameplay lifecycle tests pending
 M10-PACKAGE,Legal Windows x64 package without proprietary assets,package audit,missing,,Pending
 M10-DISCOVERY,Steam and GOG discovery plus asset validation,clean machine test,missing,,Pending
 M10-UNINSTALL,Safe uninstall preserving game data saves and settings,clean machine test,missing,,Pending
 M11-DOCS,Build architecture testing troubleshooting licenses and attribution docs,document audit,incomplete,docs/building-windows.md,Foundation documentation exists
-AC-RX7900,RX 7900 XTX full game hardware rendering without corruption or driver crash,gameplay logs and frame captures,incomplete,,Generated-resource smoke passes but gameplay is untested
-AC-1440P,Correct 2560x1440 borderless gameplay,visual and display tests,missing,,Pending
-AC-DISPLAY,Display state invariant across launch play Alt+Tab crash and exit,before-after system samples,incomplete,docs/evidence/foundation-verification.md,Hidden smoke only
+AC-RX7900,RX 7900 XTX full game hardware rendering without corruption or driver crash,gameplay logs and frame captures,incomplete,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,One five-second gameplay frame has no obvious corruption; first-door and sustained play remain pending
+AC-1440P,Correct 2560x1440 borderless gameplay,visual and display tests,weak,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,One actual gameplay frame and display invariant verified; menus videos and extended play pending
+AC-DISPLAY,Display state invariant across launch play Alt+Tab crash and exit,before-after system samples,incomplete,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,Normal five-second borderless gameplay exit preserved the mode; Alt+Tab crash and forced termination coverage pending
 AC-120FPS,Paced 120 Hz rendering without simulation acceleration,frame capture and gameplay timing tests,missing,,Pending
 AC-FIRST-DOOR,Previously failing first-door path no longer crashes,gameplay crash logs,missing,,Pending
 AC-INPUT,Responsive modern mouse and controls,input evidence,missing,,Pending

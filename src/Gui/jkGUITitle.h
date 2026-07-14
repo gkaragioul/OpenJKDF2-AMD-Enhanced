@@ -24,6 +24,7 @@ MATH_FUNC void jkGuiTitle_WorldLoadCallback(flex_t percentage);
 void jkGuiTitle_ShowLoadingStatic();
 void jkGuiTitle_ShowLoading(char *a1, char16_t *a2);
 void jkGuiTitle_LoadingFinalize();
+extern int jkGuiTitle_bSkipLoadingWait;
 
 //static int (*jkGuiTitle_UnkDraw_)(jkGuiElement *a1, jkGuiMenu *a2, tVBuffer *a3, int a4) = (void*)jkGuiTitle_UnkDraw_ADDR;
 //static int (*jkGuiTitle_LoadBarDraw_)(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int a4) = (void*)jkGuiTitle_LoadBarDraw_ADDR;
