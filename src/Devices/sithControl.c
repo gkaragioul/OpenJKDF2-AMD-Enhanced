@@ -21,6 +21,7 @@
 #include "Main/jkMain.h"
 #include "Dss/sithMulti.h"
 #include "General/stdMath.h"
+#include "General/ControlPreset.h"
 #include "jk.h"
 
 // Added
@@ -1933,6 +1934,55 @@ void sithControl_ApplyModernPreset()
     sithControl_DefaultHelper(INPUT_FUNC_FIRE2, KEY_MOUSE_B2, INPUT_MAPPING_FLAG_DXKEY);
     sithControl_DefaultHelper(INPUT_FUNC_PREVWEAPON, KEY_MOUSE_B6, INPUT_MAPPING_FLAG_DXKEY);
     sithControl_DefaultHelper(INPUT_FUNC_NEXTWEAPON, KEY_MOUSE_B7, INPUT_MAPPING_FLAG_DXKEY);
+}
+
+int sithControl_HasBinding(int functionId, int controlId, int requiredFlags)
+{
+    unsigned int i;
+    if (functionId < 0 || functionId >= INPUT_FUNC_MAX)
+        return 0;
+    for (i = 0; i < sithControl_aInputFuncToKeyinfo[functionId].numEntries; ++i)
+    {
+        const stdControlKeyInfoEntry* entry = &sithControl_aInputFuncToKeyinfo[functionId].aEntries[i];
+        if (entry->dxKeyNum == controlId && (entry->flags & requiredFlags) == requiredFlags)
+            return 1;
+    }
+    return 0;
+}
+
+int sithControl_ValidatePresetBindings(int preset)
+{
+    const int common =
+        sithControl_HasBinding(INPUT_FUNC_FORWARD, DIK_W, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_FORWARD, DIK_S, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_SLIDE, DIK_A, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_SLIDE, DIK_D, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_FAST, DIK_LSHIFT, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_FIRE1, KEY_MOUSE_B1, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_MAP, DIK_TAB, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_SELECT1, DIK_1, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_NEXTINV, DIK_R, INPUT_MAPPING_FLAG_DXKEY);
+    if (!common)
+        return 0;
+    if (ControlPreset_Normalize(preset) == CONTROL_PRESET_CLASSIC)
+    {
+        return sithControl_HasBinding(INPUT_FUNC_JUMP, DIK_X, INPUT_MAPPING_FLAG_DXKEY) &&
+            sithControl_HasBinding(INPUT_FUNC_DUCK, DIK_C, INPUT_MAPPING_FLAG_DXKEY) &&
+            sithControl_HasBinding(INPUT_FUNC_FIRE1, DIK_LCONTROL, INPUT_MAPPING_FLAG_DXKEY) &&
+            sithControl_HasBinding(INPUT_FUNC_ACTIVATE, DIK_SPACE, INPUT_MAPPING_FLAG_DXKEY) &&
+            sithControl_HasBinding(INPUT_FUNC_FIRE2, DIK_Z, INPUT_MAPPING_FLAG_DXKEY) &&
+            sithControl_HasBinding(INPUT_FUNC_JUMP, KEY_MOUSE_B2, INPUT_MAPPING_FLAG_DXKEY) &&
+            sithControl_HasBinding(INPUT_FUNC_FIRE2, KEY_MOUSE_B3, INPUT_MAPPING_FLAG_DXKEY) &&
+            sithControl_HasBinding(INPUT_FUNC_PITCH, AXIS_MOUSE_Z, INPUT_MAPPING_FLAG_AXIS);
+    }
+    return sithControl_HasBinding(INPUT_FUNC_JUMP, DIK_SPACE, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_DUCK, DIK_LCONTROL, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_ACTIVATE, DIK_E, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_FIRE2, KEY_MOUSE_B2, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_PREVWEAPON, KEY_MOUSE_B6, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_NEXTWEAPON, KEY_MOUSE_B7, INPUT_MAPPING_FLAG_DXKEY) &&
+        !sithControl_HasBinding(INPUT_FUNC_ACTIVATE, DIK_SPACE, INPUT_MAPPING_FLAG_DXKEY) &&
+        !sithControl_HasBinding(INPUT_FUNC_FIRE1, DIK_LCONTROL, INPUT_MAPPING_FLAG_DXKEY);
 }
 
 void sithControl_RegisterKeyFunction(int functionId)

@@ -67,6 +67,8 @@ void sithControl_RegisterKeyboardBindings();
 void sithControl_DefaultInit();
 void sithControl_ApplyClassicPreset();
 void sithControl_ApplyModernPreset();
+int sithControl_HasBinding(int functionId, int controlId, int requiredFlags);
+int sithControl_ValidatePresetBindings(int preset);
 MATH_FUNC flex_t sithControl_GetKeyAsAxisNormalized(int axisId);
 MATH_FUNC flex_t sithControl_GetKeyAsAxis(int axisId);
 MATH_FUNC flex_t sithControl_GetAxis(int axisId);

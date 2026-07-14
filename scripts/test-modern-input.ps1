@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory = $true)][string]$DataDir,
     [Parameter(Mandatory = $true)][string]$UserDir,
     [string]$Executable = "build/msvc-release/openjkdf2-64.exe",
+    [ValidateSet("Modern", "Classic")][string]$Preset = "Modern",
     [int]$TimeoutSeconds = 30
 )
 
@@ -44,8 +45,8 @@ function Get-AssetSnapshot([string]$Root) {
 
 $before = Get-AssetSnapshot $assetRoot
 $displayBefore = [OpenJKDF2InputProbe]::Current()
-$env:OPENJKDF2_VALIDATE_INPUT_MS = "14000"
-$env:OPENJKDF2_VALIDATE_INPUT_SCREENSHOT = "diagnostics\modern-input.png"
+$presetSlug = $Preset.ToLowerInvariant()
+$screenshotName = "$presetSlug-input.png"
 $keyUp = 0x0002
 $mouseMove = 0x0001
 $w = 0x57
@@ -56,6 +57,9 @@ try {
     $start.FileName = $exePath
     $start.WorkingDirectory = $repoRoot
     $start.UseShellExecute = $false
+    $start.Environment["OPENJKDF2_VALIDATE_INPUT_MS"] = "14000"
+    $start.Environment["OPENJKDF2_VALIDATE_INPUT_PRESET"] = $Preset
+    $start.Environment["OPENJKDF2_VALIDATE_INPUT_SCREENSHOT"] = "diagnostics\$screenshotName"
     $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot + '" --diagnostics-dir diagnostics -autostart -sp -episode JK1 -map 01narshadda.jkl'
     $process = [Diagnostics.Process]::Start($start)
     $windowDeadline = [DateTime]::UtcNow.AddSeconds(10)
@@ -79,11 +83,9 @@ try {
     Start-Sleep -Milliseconds 1200
     [OpenJKDF2InputProbe]::keybd_event($w, 0, $keyUp, [UIntPtr]::Zero)
     $wDown = $false
-    if (-not $process.WaitForExit($TimeoutSeconds * 1000)) { $process.Kill(); throw "Modern-input probe timed out" }
+    if (-not $process.WaitForExit($TimeoutSeconds * 1000)) { $process.Kill(); throw "$Preset input probe timed out" }
 } finally {
     if ($wDown) { [OpenJKDF2InputProbe]::keybd_event($w, 0, $keyUp, [UIntPtr]::Zero) }
-    Remove-Item Env:OPENJKDF2_VALIDATE_INPUT_MS -ErrorAction SilentlyContinue
-    Remove-Item Env:OPENJKDF2_VALIDATE_INPUT_SCREENSHOT -ErrorAction SilentlyContinue
 }
 $displayAfter = [OpenJKDF2InputProbe]::Current()
 $after = Get-AssetSnapshot $assetRoot
@@ -96,18 +98,20 @@ $result = [ordered]@{
     display_before = $displayBefore; display_after = $displayAfter; display_invariant = $displayBefore -eq $displayAfter
     asset_metadata_invariant = (Compare-Object $before $after).Count -eq 0
     focus_verified = $focusVerified
+    preset = $Preset
+    preset_bindings_valid = [bool](Select-String -LiteralPath $jsonl -Pattern "input preset=$Preset applied=true bindings_valid=true" -Quiet)
     moved = [bool](Select-String -LiteralPath $jsonl -Pattern "input complete moved=true" -Quiet)
     turned = [bool](Select-String -LiteralPath $jsonl -Pattern "input complete moved=true turned=true" -Quiet)
     input_event = if ($event) { $event.Line } else { $null }
-    screenshot_exists = Test-Path -LiteralPath (Join-Path $diagnostics "modern-input.png")
+    screenshot_exists = Test-Path -LiteralPath (Join-Path $diagnostics $screenshotName)
     clean_state = $state.status -eq "clean"
     process_finished = [bool](Select-String -LiteralPath $jsonl -Pattern "process_finished" -Quiet)
 }
-$resultPath = Join-Path $userRoot "modern-input-result.json"
+$resultPath = Join-Path $userRoot "$presetSlug-input-result.json"
 $result | ConvertTo-Json | Set-Content -LiteralPath $resultPath -Encoding utf8
 $result | ConvertTo-Json
 if ($result.startup_result -ne 1 -or -not $result.display_invariant -or -not $result.asset_metadata_invariant -or -not $result.focus_verified -or
-    -not $result.moved -or -not $result.turned -or -not $result.screenshot_exists -or
+    -not $result.preset_bindings_valid -or -not $result.moved -or -not $result.turned -or -not $result.screenshot_exists -or
     -not $result.clean_state -or -not $result.process_finished) {
-    throw "Modern-input verification failed; inspect $resultPath"
+    throw "$Preset input verification failed; inspect $resultPath"
 }

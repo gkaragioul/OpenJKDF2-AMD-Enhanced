@@ -29,6 +29,7 @@
 #include "General/DiagnosticLog.h"
 #include "General/FrameTelemetry.h"
 #include "General/FrameRate.h"
+#include "General/ControlPreset.h"
 #include "General/PresentationMode.h"
 #include "General/RuntimeProbe.h"
 
@@ -713,10 +714,24 @@ int jkGame_Update()
         {
             if (!inputPresetApplied)
             {
-                sithControl_ApplyModernPreset();
+                const char* requestedPreset = getenv("OPENJKDF2_VALIDATE_INPUT_PRESET");
+                const int preset = requestedPreset && !__strcmpi(requestedPreset, "Classic")
+                    ? CONTROL_PRESET_CLASSIC : CONTROL_PRESET_MODERN;
+                int bindingsValid;
+                char presetEvent[160];
+                if (preset == CONTROL_PRESET_CLASSIC)
+                    sithControl_ApplyClassicPreset();
+                else
+                    sithControl_ApplyModernPreset();
                 jkHudInv_InputInit();
                 inputPresetApplied = true;
-                diag_log_event(DIAG_SEVERITY_INFO, "validation", "input modern_preset_applied=true");
+                bindingsValid = sithControl_ValidatePresetBindings(preset);
+                snprintf(presetEvent, sizeof(presetEvent),
+                         "input preset=%s applied=true bindings_valid=%s",
+                         ControlPreset_Name(preset),
+                         bindingsValid ? "true" : "false");
+                diag_log_event(bindingsValid ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                               "validation", presetEvent);
             }
             rdVector3 inputAngles;
             uint32_t nowMs = stdPlatform_GetTimeMsec();
