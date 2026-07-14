@@ -10,3 +10,15 @@
   is available; Borderless is the safe default.
 - Do not copy original GOB files into this package. Keep the Steam/GOG install
   separate and pass it through the launcher.
+
+# Display options
+
+Use **Setup > Display > Display Options** to select Windowed or Borderless,
+the target monitor, and the Windowed size. Borderless always uses the selected
+monitor's current desktop mode and does not request a resolution or refresh-rate
+change. Confirm the timed prompt to keep a change; cancellation or timeout
+restores the complete previous display settings.
+
+Exclusive Fullscreen is intentionally unavailable until the display-restoration
+guard reports ready. Do not bypass this safety gate. If a saved display is no
+longer connected, startup falls back to safe Windowed settings.

@@ -762,15 +762,18 @@ int Window_ApplyDisplaySettings(DisplaySettings requested, DisplaySelectionReaso
 void Window_CommitDisplaySettings(DisplaySettings settings)
 {
     Window_displayMonitor = settings.monitor;
-    Window_windowWidth = settings.width;
-    Window_windowHeight = settings.height;
+    if (settings.mode == DISPLAY_MODE_WINDOWED)
+    {
+        Window_windowWidth = settings.width;
+        Window_windowHeight = settings.height;
+    }
     Window_requestedRefreshHz = settings.refresh_hz;
     wuRegistry_SaveBool("Window_isFullscreen", settings.mode != DISPLAY_MODE_WINDOWED);
     wuRegistry_SaveInt("Window_displayMode", (int)settings.mode);
     wuRegistry_SaveBool("Window_isHiDpi", settings.hidpi);
     wuRegistry_SaveInt("Window_displayMonitor", settings.monitor);
-    wuRegistry_SaveInt("Window_windowWidth", settings.width);
-    wuRegistry_SaveInt("Window_windowHeight", settings.height);
+    wuRegistry_SaveInt("Window_windowWidth", Window_windowWidth);
+    wuRegistry_SaveInt("Window_windowHeight", Window_windowHeight);
     wuRegistry_SaveInt("Window_refreshHz", settings.refresh_hz);
 }
 

@@ -66,6 +66,14 @@ foreach ($key in @('Window_displayMonitor', 'Window_windowWidth',
 if ($windowImpl -notmatch 'Window_bDeferDisplayPersistence') {
     $missing += 'display-persistence:confirmation-only'
 }
+if ($windowImpl -notmatch 'if\s*\(settings\.mode\s*==\s*DISPLAY_MODE_WINDOWED\)') {
+    $missing += 'display-persistence:preserve-windowed-size-in-borderless'
+}
+foreach ($dimension in @('Width', 'Height')) {
+    if ($windowImpl -notmatch ('wuRegistry_SaveInt\("Window_window' + $dimension + '",\s*Window_window' + $dimension + '\)')) {
+        $missing += "display-persistence:committed-window-$($dimension.ToLower())"
+    }
+}
 
 if ($missing.Count) { throw ('Video menu contract missing: ' + ($missing -join ', ')) }
 Write-Host 'Video menu contract passed.'

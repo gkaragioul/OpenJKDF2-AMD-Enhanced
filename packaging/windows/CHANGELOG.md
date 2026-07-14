@@ -8,3 +8,6 @@
 - Added configurable frame caps, pacing telemetry, and 60/120 timing evidence.
 - Added Modern and Classic controls, raw/relative mouse options, and safe storage.
 - Added read-only external game-data overlay, portable mode, packaging, and tests.
+- Added an in-game Display Options submenu with monitor, Windowed/Borderless mode,
+  arbitrary resolution, effective refresh reporting, timed confirmation, and
+  confirmation-only per-user persistence. Exclusive mode remains safety-gated.
