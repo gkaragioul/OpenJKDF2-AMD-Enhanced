@@ -46,5 +46,17 @@ int main(void)
         assert(!runtime_probe_parse_degrees("nan", &degrees));
         assert(!runtime_probe_parse_degrees("0", NULL));
     }
+    {
+        int rate = 0;
+        assert(runtime_probe_parse_rate("60", &rate) && rate == 60);
+        assert(runtime_probe_parse_rate("120", &rate) && rate == 120);
+        assert(runtime_probe_parse_rate("240", &rate) && rate == 240);
+        assert(!runtime_probe_parse_rate(NULL, &rate));
+        assert(!runtime_probe_parse_rate("", &rate));
+        assert(!runtime_probe_parse_rate("120fps", &rate));
+        assert(!runtime_probe_parse_rate("29", &rate));
+        assert(!runtime_probe_parse_rate("1001", &rate));
+        assert(!runtime_probe_parse_rate("60", NULL));
+    }
     return 0;
 }

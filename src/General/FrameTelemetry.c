@@ -106,3 +106,36 @@ int FrameTelemetry_IsUnstable(const FrameTelemetrySnapshot* snapshot, double bud
     }
     return slowSamples * 5 > snapshot->sampleCount;
 }
+
+int FrameTelemetry_CalculateStatistics(const FrameTelemetrySnapshot* snapshot,
+                                       FrameTelemetryStatistics* statistics)
+{
+    double sorted[FRAME_TELEMETRY_SAMPLE_COUNT];
+    unsigned int count;
+    unsigned int i;
+
+    if (!snapshot || !statistics || !snapshot->sampleCount)
+        return 0;
+    count = snapshot->sampleCount;
+    if (count > FRAME_TELEMETRY_SAMPLE_COUNT)
+        count = FRAME_TELEMETRY_SAMPLE_COUNT;
+    for (i = 0; i < count; ++i)
+    {
+        unsigned int position = i;
+        sorted[i] = snapshot->samples[i];
+        while (position > 0 && sorted[position - 1] > sorted[position])
+        {
+            double swap = sorted[position - 1];
+            sorted[position - 1] = sorted[position];
+            sorted[position] = swap;
+            --position;
+        }
+    }
+
+    statistics->sampleCount = count;
+    statistics->medianMilliseconds = sorted[(count - 1u) / 2u];
+    statistics->p95Milliseconds = sorted[((count * 95u + 99u) / 100u) - 1u];
+    statistics->p99Milliseconds = sorted[((count * 99u + 99u) / 100u) - 1u];
+    statistics->worstMilliseconds = sorted[count - 1u];
+    return 1;
+}

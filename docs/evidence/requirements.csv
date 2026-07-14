@@ -16,8 +16,8 @@ M4-BORDERLESS,Borderless fullscreen never changes desktop mode,display invarianc
 M4-WATCHDOG,Crash-safe display restoration watchdog,forced termination tests,incomplete,docs/evidence/watchdog-verification.md,Parent-exit detection works but host denies display-state application; Exclusive remains gated off
 M4-ASPECT,Configurable gameplay menu HUD and video aspect correction,visual tests,missing,,Pending
 M5-FRAME-UI,Frame-rate slider choices and persistence,unit and UI tests,missing,,Pending
-M5-TIMING,Render and simulation cadence preserve gameplay behavior,frame captures and gameplay tests,missing,,Pending
-M5-VSYNC,VSync and low-jitter limiter modes,pacing captures,missing,,Pending
+M5-TIMING,Render and simulation cadence preserve gameplay behavior,frame captures and gameplay tests,incomplete,docs/evidence/timing-invariance-2026-07-14.md,60 and 120 FPS first-door travel remained invariant within 7 ms; other gameplay timing domains remain pending
+M5-VSYNC,VSync and low-jitter limiter modes,pacing captures,incomplete,docs/evidence/timing-invariance-2026-07-14.md,VSync-off 60 and 120 FPS median and p95 pacing verified; On Adaptive and cap-only mode coverage remains pending
 M6-MOUSE,Low-latency raw mouse and safe cursor capture,input tests,incomplete,docs/evidence/modern-input-2026-07-14.md,Relative mouse input changed player yaw in two real-input runs; Alt+Tab capture loops and latency measurement remain pending
 M6-PRESETS,Modern and Classic control presets,input tests,incomplete,docs/evidence/modern-input-2026-07-14.md,Modern W movement and mouse turning passed through the production preset; Classic and remaining bindings pending
 M7-ENHANCEMENTS,Modular legally distributable visual enhancements,package and visual tests,missing,,Pending
@@ -27,7 +27,7 @@ M9-RDNA2,RDNA2 compatibility,human hardware test,unverified-hardware,,No represe
 M9-RDNA3,RDNA3 compatibility,human hardware test,weak,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,Five-second first-level hardware-rendered capture on one RX 7900 XTX; broader gameplay pending
 M9-NVIDIA,NVIDIA regression coverage,CI or hardware test,unverified-hardware,,Pending
 M9-INTEL,Intel regression coverage,CI or hardware test,unverified-hardware,,Pending
-M9-GAMEPLAY,First level first door save load death transition and cutscene validation,gameplay evidence,incomplete,docs/evidence/death-reload-2026-07-14.md,First level save/load death/reload and fresh-process restart passed; first door transition and cutscene coverage remain pending
+M9-GAMEPLAY,First level first door save load death transition and cutscene validation,gameplay evidence,incomplete,docs/evidence/timing-invariance-2026-07-14.md,First-door progression plus save/load death/reload and restart passed; level transition dialogue and cutscene coverage remain pending
 M10-PACKAGE,Legal Windows x64 package without proprietary assets,package audit,missing,,Pending
 M10-DISCOVERY,Steam and GOG discovery plus asset validation,clean machine test,incomplete,docs/evidence/data-overlay-verification-2026-07-14.md,Explicit Steam data directory with spaces verified read-only; automatic discovery browse flow GOG and validation UI pending
 M10-UNINSTALL,Safe uninstall preserving game data saves and settings,clean machine test,missing,,Pending
@@ -35,8 +35,8 @@ M11-DOCS,Build architecture testing troubleshooting licenses and attribution doc
 AC-RX7900,RX 7900 XTX full game hardware rendering without corruption or driver crash,gameplay logs and frame captures,incomplete,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,One five-second gameplay frame has no obvious corruption; first-door and sustained play remain pending
 AC-1440P,Correct 2560x1440 borderless gameplay,visual and display tests,weak,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,One actual gameplay frame and display invariant verified; menus videos and extended play pending
 AC-DISPLAY,Display state invariant across launch play Alt+Tab crash and exit,before-after system samples,incomplete,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,Normal five-second borderless gameplay exit preserved the mode; Alt+Tab crash and forced termination coverage pending
-AC-120FPS,Paced 120 Hz rendering without simulation acceleration,frame capture and gameplay timing tests,missing,,Pending
-AC-FIRST-DOOR,Previously failing first-door path no longer crashes,gameplay crash logs,missing,,Pending
+AC-120FPS,Paced 120 Hz rendering without simulation acceleration,frame capture and gameplay timing tests,incomplete,docs/evidence/timing-invariance-2026-07-14.md,8.3232 ms median 8.5754 ms p95 and first-door travel within 1.48%; remaining simulation domains pending
+AC-FIRST-DOOR,Previously failing first-door path no longer crashes,gameplay crash logs,proven,docs/evidence/timing-invariance-2026-07-14.md,Two 60/120 capped Release runs activated both physical doors crossed into sector 59 and exited cleanly
 AC-INPUT,Responsive modern mouse and controls,input evidence,proven,docs/evidence/modern-input-2026-07-14.md,Two consecutive fresh-profile Release runs measured W movement and roughly 91 to 92 degrees of relative mouse yaw with clean exit and display invariance
 AC-SAVES,Save load death reload restart preserve progress,gameplay evidence,proven,docs/evidence/death-reload-2026-07-14.md,Production save/load death/reload and fresh-process restart restored distinctive health and position on the tested machine
 AC-LEGAL,Package contains no proprietary Jedi Knight assets,package manifest audit,missing,,Pending

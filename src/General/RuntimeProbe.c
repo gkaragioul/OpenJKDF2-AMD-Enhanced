@@ -74,3 +74,17 @@ bool runtime_probe_parse_degrees(const char* text, float* out_degrees)
     *out_degrees = value;
     return true;
 }
+
+bool runtime_probe_parse_rate(const char* text, int* out_rate)
+{
+    char* end = NULL;
+    long value;
+    if (!text || !text[0] || !out_rate)
+        return false;
+    errno = 0;
+    value = strtol(text, &end, 10);
+    if (errno == ERANGE || end == text || !end || end[0] != '\0' || value < 30 || value > 1000)
+        return false;
+    *out_rate = (int)value;
+    return true;
+}

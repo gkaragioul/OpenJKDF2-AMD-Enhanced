@@ -26,6 +26,7 @@
 #include "Primitives/rdMatrix.h"
 #include "General/stdString.h"
 #include "General/DiagnosticLog.h"
+#include "General/FrameTelemetry.h"
 #include "General/RuntimeProbe.h"
 
 #include "stdPlatform.h"
@@ -418,12 +419,15 @@ int jkGame_Update()
         static RuntimeProbe doorProbe = { 0 };
         static bool doorPresetApplied = false;
         static bool doorYawApplied = false;
+        static bool doorFrameCapApplied = false;
         static bool doorApproachWarped = false;
         static bool doorCrossingPositioned = false;
         static rdVector3 doorStartPositions[2] = { 0 };
         static int doorStartSector = -1;
         static float doorMaxDisplacement[2] = { 0 };
         static uint32_t doorNextSampleMs = 250u;
+        static uint32_t doorMovementStartMs = 0u;
+        static uint32_t doorMovementFullMs = 0u;
         const char* pDoorMs = getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_MS");
         SithWorld* pWorld = sithWorld_g_pCurrentWorld;
         SithThing* pPlayer = pWorld ? pWorld->pLocalPlayer : NULL;
@@ -457,6 +461,26 @@ int jkGame_Update()
                     diag_log_event(DIAG_SEVERITY_ERROR, "validation", "first_door yaw_override_rejected=true");
                 }
                 doorYawApplied = true;
+            }
+            if (!doorFrameCapApplied)
+            {
+                const char* pDoorFrameCap = getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_FRAME_CAP");
+                int frameCap;
+                if (pDoorFrameCap && runtime_probe_parse_rate(pDoorFrameCap, &frameCap))
+                {
+                    char frameCapEvent[128];
+                    jkPlayer_fpslimit = frameCap;
+                    jkPlayer_enableVsync = 0;
+                    FrameTelemetry_Reset();
+                    snprintf(frameCapEvent, sizeof(frameCapEvent),
+                             "first_door frame_cap_applied=%d vsync=off", frameCap);
+                    diag_log_event(DIAG_SEVERITY_INFO, "validation", frameCapEvent);
+                }
+                else if (pDoorFrameCap)
+                {
+                    diag_log_event(DIAG_SEVERITY_ERROR, "validation", "first_door frame_cap_rejected=true");
+                }
+                doorFrameCapApplied = true;
             }
             if (!doorApproachWarped && getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_WARP_APPROACH") &&
                 (pPlayer->sector->id == 31 || pPlayer->sector->id == 32 ||
@@ -498,6 +522,10 @@ int jkGame_Update()
                     pDoorB->position.x, pDoorB->position.y, pDoorB->position.z));
                 if (displacementA > doorMaxDisplacement[0]) doorMaxDisplacement[0] = displacementA;
                 if (displacementB > doorMaxDisplacement[1]) doorMaxDisplacement[1] = displacementB;
+                if (!doorMovementStartMs && displacementA >= 0.001f && displacementB >= 0.001f)
+                    doorMovementStartMs = nowMs;
+                if (!doorMovementFullMs && displacementA >= 0.19f && displacementB >= 0.19f)
+                    doorMovementFullMs = nowMs;
                 if (!doorCrossingPositioned && getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_WARP_APPROACH") &&
                     displacementA >= 0.01f && displacementB >= 0.01f && pWorld->numSectors > 104)
                 {
@@ -523,24 +551,41 @@ int jkGame_Update()
                     doorNextSampleMs += 250u;
                 }
             }
-            if (runtime_probe_due(&doorProbe, nowMs, delayMs))
             {
                 const bool doorMoved = doorMaxDisplacement[0] >= 0.05f && doorMaxDisplacement[1] >= 0.05f;
                 const bool crossed = pPlayer->sector->id != doorStartSector && pPlayer->position.y > -3.75f;
-                char doorEvent[512];
-                snprintf(doorEvent, sizeof(doorEvent),
-                         "first_door complete door_moved=%s crossed=%s player=(%.4f,%.4f,%.4f) yaw=%.3f start_sector=%d end_sector=%d door_a=%.4f door_b=%.4f clean_exit=true",
-                         doorMoved ? "true" : "false", crossed ? "true" : "false",
-                         pPlayer->position.x, pPlayer->position.y, pPlayer->position.z, playerAngles.y,
-                         doorStartSector, pPlayer->sector->id, doorMaxDisplacement[0], doorMaxDisplacement[1]);
-                diag_log_event((doorMoved && crossed) ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
-                               "validation", doorEvent);
+                const bool stableCaptureComplete = doorMovementFullMs && crossed &&
+                    (uint32_t)(nowMs - doorMovementFullMs) >= 3000u;
+                const bool observerExpired = runtime_probe_due(&doorProbe, nowMs, delayMs);
+                if (stableCaptureComplete || observerExpired)
                 {
-                    const char* pDoorShotPath = getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_SCREENSHOT");
-                    if (pDoorShotPath)
-                        std3D_Screenshot(pDoorShotPath);
+                    FrameTelemetrySnapshot frameSnapshot = FrameTelemetry_GetSnapshot();
+                    FrameTelemetryStatistics frameStatistics = { 0 };
+                    const int haveFrameStatistics =
+                        FrameTelemetry_CalculateStatistics(&frameSnapshot, &frameStatistics);
+                    const uint32_t doorMovementMs = doorMovementStartMs && doorMovementFullMs ?
+                        (uint32_t)(doorMovementFullMs - doorMovementStartMs) : 0u;
+                    char doorEvent[768];
+                    snprintf(doorEvent, sizeof(doorEvent),
+                             "first_door complete door_moved=%s crossed=%s player=(%.4f,%.4f,%.4f) yaw=%.3f start_sector=%d end_sector=%d door_a=%.4f door_b=%.4f frame_cap=%d door_movement_ms=%u frame_samples=%u frame_median_ms=%.4f frame_p95_ms=%.4f frame_p99_ms=%.4f frame_worst_ms=%.4f clean_exit=true",
+                             doorMoved ? "true" : "false", crossed ? "true" : "false",
+                             pPlayer->position.x, pPlayer->position.y, pPlayer->position.z, playerAngles.y,
+                             doorStartSector, pPlayer->sector->id, doorMaxDisplacement[0], doorMaxDisplacement[1],
+                             jkPlayer_fpslimit, doorMovementMs,
+                             haveFrameStatistics ? frameStatistics.sampleCount : 0u,
+                             haveFrameStatistics ? frameStatistics.medianMilliseconds : 0.0,
+                             haveFrameStatistics ? frameStatistics.p95Milliseconds : 0.0,
+                             haveFrameStatistics ? frameStatistics.p99Milliseconds : 0.0,
+                             haveFrameStatistics ? frameStatistics.worstMilliseconds : 0.0);
+                    diag_log_event((doorMoved && crossed) ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                                   "validation", doorEvent);
+                    {
+                        const char* pDoorShotPath = getenv("OPENJKDF2_VALIDATE_FIRST_DOOR_SCREENSHOT");
+                        if (pDoorShotPath)
+                            std3D_Screenshot(pDoorShotPath);
+                    }
+                    g_should_exit = 1;
                 }
-                g_should_exit = 1;
             }
         }
     }

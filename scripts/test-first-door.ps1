@@ -3,6 +3,7 @@ param(
     [Parameter(Mandatory = $true)][string]$DataDir,
     [Parameter(Mandatory = $true)][string]$UserDir,
     [string]$Executable = "build/msvc-release/openjkdf2-64.exe",
+    [int]$FrameCap = 0,
     [int]$TimeoutSeconds = 180
 )
 
@@ -18,6 +19,7 @@ if ($userRoot.Equals($assetRoot, [StringComparison]::OrdinalIgnoreCase) -or
     throw "UserDir and DataDir must be separate trees"
 }
 if ($assetRoot.Contains('"') -or $userRoot.Contains('"')) { throw "Quoted path characters are unsupported" }
+if ($FrameCap -ne 0 -and ($FrameCap -lt 30 -or $FrameCap -gt 1000)) { throw "FrameCap must be 0 or 30-1000" }
 
 Add-Type -TypeDefinition @'
 using System; using System.Runtime.InteropServices;
@@ -155,6 +157,7 @@ $env:OPENJKDF2_VALIDATE_FIRST_DOOR_MS = "120000"
 $env:OPENJKDF2_VALIDATE_FIRST_DOOR_SCREENSHOT = "diagnostics\first-door.png"
 $env:OPENJKDF2_VALIDATE_FIRST_DOOR_YAW = "-90"
 $env:OPENJKDF2_VALIDATE_FIRST_DOOR_WARP_APPROACH = "1"
+if ($FrameCap) { $env:OPENJKDF2_VALIDATE_FIRST_DOOR_FRAME_CAP = [string]$FrameCap }
 $w = 0x57; $a = 0x41; $s = 0x53; $d = 0x44; $e = 0x45; $space = 0x20
 $wDown = $false; $aDown = $false; $sDown = $false; $dDown = $false; $eDown = $false; $spaceDown = $false; $focusVerified = $false
 $script:doorJsonl = Join-Path $userRoot "diagnostics\openjkdf2.jsonl"
@@ -220,6 +223,7 @@ try {
     Remove-Item Env:OPENJKDF2_VALIDATE_FIRST_DOOR_SCREENSHOT -ErrorAction SilentlyContinue
     Remove-Item Env:OPENJKDF2_VALIDATE_FIRST_DOOR_YAW -ErrorAction SilentlyContinue
     Remove-Item Env:OPENJKDF2_VALIDATE_FIRST_DOOR_WARP_APPROACH -ErrorAction SilentlyContinue
+    Remove-Item Env:OPENJKDF2_VALIDATE_FIRST_DOOR_FRAME_CAP -ErrorAction SilentlyContinue
 }
 $displayAfter = [OpenJKDF2DoorProbe]::Current()
 $after = Get-AssetSnapshot $assetRoot
@@ -227,6 +231,18 @@ $diagnostics = Join-Path $userRoot "diagnostics"
 $jsonl = Join-Path $diagnostics "openjkdf2.jsonl"
 $state = Get-Content -Raw -LiteralPath (Join-Path $diagnostics "run-state.json") | ConvertFrom-Json
 $event = Select-String -LiteralPath $jsonl -Pattern "first_door complete" | Select-Object -Last 1
+$timing = $null
+if ($event -and $event.Line -match 'frame_cap=([0-9]+) door_movement_ms=([0-9]+) frame_samples=([0-9]+) frame_median_ms=([0-9.]+) frame_p95_ms=([0-9.]+) frame_p99_ms=([0-9.]+) frame_worst_ms=([0-9.]+)') {
+    $timing = [ordered]@{
+        frame_cap = [int]$Matches[1]
+        door_movement_ms = [int]$Matches[2]
+        frame_samples = [int]$Matches[3]
+        median_ms = [double]::Parse($Matches[4], [Globalization.CultureInfo]::InvariantCulture)
+        p95_ms = [double]::Parse($Matches[5], [Globalization.CultureInfo]::InvariantCulture)
+        p99_ms = [double]::Parse($Matches[6], [Globalization.CultureInfo]::InvariantCulture)
+        worst_ms = [double]::Parse($Matches[7], [Globalization.CultureInfo]::InvariantCulture)
+    }
+}
 $result = [ordered]@{
     schema = 1; startup_result = $process.ExitCode
     display_before = $displayBefore; display_after = $displayAfter; display_invariant = $displayBefore -eq $displayAfter
@@ -234,6 +250,7 @@ $result = [ordered]@{
     door_moved = [bool](Select-String -LiteralPath $jsonl -Pattern "first_door complete door_moved=true" -Quiet)
     crossed = [bool](Select-String -LiteralPath $jsonl -Pattern "first_door complete door_moved=true crossed=true" -Quiet)
     door_event = if ($event) { $event.Line } else { $null }
+    timing = $timing
     screenshot_exists = Test-Path -LiteralPath (Join-Path $diagnostics "first-door.png")
     clean_state = $state.status -eq "clean"
     process_finished = [bool](Select-String -LiteralPath $jsonl -Pattern "process_finished" -Quiet)
@@ -243,6 +260,7 @@ $result | ConvertTo-Json | Set-Content -LiteralPath $resultPath -Encoding utf8
 $result | ConvertTo-Json
 if ($result.startup_result -ne 1 -or -not $result.display_invariant -or -not $result.asset_metadata_invariant -or
     -not $result.focus_verified -or -not $result.door_moved -or -not $result.crossed -or
+    ($FrameCap -and (-not $result.timing -or $result.timing.frame_cap -ne $FrameCap -or $result.timing.frame_samples -lt 30)) -or
     -not $result.screenshot_exists -or -not $result.clean_state -or -not $result.process_finished) {
     throw "First-door verification failed; inspect $resultPath and the sampled diagnostics"
 }

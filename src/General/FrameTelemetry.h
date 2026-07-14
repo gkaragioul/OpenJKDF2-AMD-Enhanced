@@ -14,11 +14,22 @@ typedef struct FrameTelemetrySnapshot
     unsigned int sampleCount;
 } FrameTelemetrySnapshot;
 
+typedef struct FrameTelemetryStatistics
+{
+    double medianMilliseconds;
+    double p95Milliseconds;
+    double p99Milliseconds;
+    double worstMilliseconds;
+    unsigned int sampleCount;
+} FrameTelemetryStatistics;
+
 void FrameTelemetry_Reset(void);
 void FrameTelemetry_Record(uint64_t presentationTimestampNs);
 FrameTelemetrySnapshot FrameTelemetry_GetSnapshot(void);
 void FrameTelemetry_FormatGraph(const FrameTelemetrySnapshot* snapshot, double budgetMilliseconds,
                                 char* output, size_t outputSize);
 int FrameTelemetry_IsUnstable(const FrameTelemetrySnapshot* snapshot, double budgetMilliseconds);
+int FrameTelemetry_CalculateStatistics(const FrameTelemetrySnapshot* snapshot,
+                                       FrameTelemetryStatistics* statistics);
 
 #endif
