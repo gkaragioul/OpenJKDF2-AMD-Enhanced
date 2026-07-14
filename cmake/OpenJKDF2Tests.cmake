@@ -32,4 +32,10 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/Tests/test_startup_options.c"
         "${PROJECT_SOURCE_DIR}/src/General/StartupOptions.c"
     )
+    openjkdf2_add_unit_test(
+        test_shader_stage
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_shader_stage.c"
+        "${PROJECT_SOURCE_DIR}/src/Platform/GL/ShaderCompile.c"
+    )
+    target_compile_definitions(test_shader_stage PRIVATE OPENJKDF2_SHADER_PURE_TEST)
 endif()

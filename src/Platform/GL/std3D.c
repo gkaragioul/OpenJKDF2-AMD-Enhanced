@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "Platform/GL/shader_utils.h"
+#include "Platform/GL/ShaderCompile.h"
+#include "General/DiagnosticLog.h"
 #include "Platform/GL/jkgm.h"
 
 #include "SDL2_helper.h"
@@ -379,8 +381,7 @@ void std3D_swapFramebuffers()
 
 GLuint std3D_loadProgram(const char* fpath_base)
 {
-    GLuint out;
-    GLint link_ok = GL_FALSE;
+    ShaderCompileResult link_result;
     
     char* tmp_vert = (char*)malloc(strlen(fpath_base) + 32);
     char* tmp_frag = (char*)malloc(strlen(fpath_base) + 32);
@@ -392,24 +393,18 @@ GLuint std3D_loadProgram(const char* fpath_base)
     strcat(tmp_frag, "_f.glsl");
     
     GLuint vs, fs;
-    if ((vs = load_shader_file(tmp_vert, GL_VERTEX_SHADER))   == 0) return 0;
-    if ((fs = load_shader_file(tmp_frag, GL_FRAGMENT_SHADER)) == 0) return 0;
+    if ((vs = load_shader_file(tmp_vert, GL_VERTEX_SHADER)) == 0) {
+        free(tmp_vert); free(tmp_frag); return 0;
+    }
+    if ((fs = load_shader_file(tmp_frag, GL_FRAGMENT_SHADER)) == 0) {
+        glDeleteShader(vs); free(tmp_vert); free(tmp_frag); return 0;
+    }
     
     free(tmp_vert);
     free(tmp_frag);
     
-    out = glCreateProgram();
-    glAttachShader(out, vs);
-    glAttachShader(out, fs);
-    glLinkProgram(out);
-    glGetProgramiv(out, GL_LINK_STATUS, &link_ok);
-    if (!link_ok) 
-    {
-        print_log(out);
-        return 0;
-    }
-    
-    return out;
+    link_result = shader_link_named(fpath_base, vs, fs);
+    return link_result.object;
 }
 
 GLint std3D_tryFindAttribute(GLuint program, const char* attribute_name)
@@ -743,8 +738,8 @@ int std3D_StartScene()
     {
         if (!init_resources()) {
             stdPlatform_Printf("std3D: Failed to init resources, exiting...");
-            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", "Failed to init resources, exiting...", NULL);
-            exit(-1);
+            diag_log_event(DIAG_SEVERITY_ERROR, "renderer", "resource_initialization_failed fallback=compatibility_required");
+            return 0;
         }
     }
     

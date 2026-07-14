@@ -7,6 +7,7 @@
 #ifdef SDL2_RENDER
 
 #include "shader_utils.h"
+#include "Platform/GL/ShaderCompile.h"
 #include "globals.h"
 
 #include "SDL2_helper.h"
@@ -45,8 +46,6 @@ void print_log(GLuint object) {
 	
 	SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_ERROR, "%s\n", log);
 	
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", log, NULL);
-	
 	free(log);
 }
 
@@ -56,100 +55,23 @@ GLuint load_shader_file(const char* filepath, GLenum type)
 
     if (!shader_contents)
     {
-    	char errtmp[256];
-        snprintf(errtmp, 256, "std3D: Failed to load shader file `%s`!\n", filepath);
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", errtmp, NULL);
-        return -1;
+        stdPlatform_Printf("std3D: Failed to load shader file `%s`!\n", filepath);
+        return 0;
     }
     
     stdPlatform_Printf("std3D: Parse shader `%s`\n", filepath);
     
-    GLuint ret = create_shader(shader_contents, type);
+    ShaderStage stage = type == GL_VERTEX_SHADER ? SHADER_STAGE_VERTEX : SHADER_STAGE_FRAGMENT;
+    ShaderCompileResult result = shader_compile_named(filepath, stage, shader_contents);
     free(shader_contents);
-    
-    return ret;
+    return result.object;
 }
 
 /**
  * Compile the shader from file 'filename', with error handling
  */
 GLuint create_shader(const char* shader, GLenum type) {
-	const GLchar* source = (const GLchar*)shader;
-	GLuint res = glCreateShader(type);
-
-	// GLSL version
-	const char* version = "";
-	int profile;
-	SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &profile);
-
-	const char* extensions = "\n";
-	const char* defines = "\n";
-	//if (profile == SDL_GL_CONTEXT_PROFILE_ES)
-	//	version = "#version 100\n";  // OpenGL ES 2.0
-	//else
-    //version = "#version 330 core\n";  // OpenGL 3.3
-#ifdef MACOS
-	version = "#version 330\n";
-	extensions = "#extension GL_ARB_texture_gather : enable\n";
-	defines = "#define CAN_BILINEAR_FILTER\n#define HAS_MIPS\n";
-#else
-    version = "#version 330\n";  // OpenGL ES 2.0
-    extensions = "#extension GL_ARB_texture_gather : enable\n";
-    defines = "#define CAN_BILINEAR_FILTER\n#define HAS_MIPS\n";
-#endif
-
-#if defined(WIN64_STANDALONE)
-    version = "#version 330\n";
-    extensions = "#extension GL_ARB_texture_gather : enable\n";
-    defines = "#define CAN_BILINEAR_FILTER\n#define HAS_MIPS\n";
-#endif
-
-#if defined(ARCH_WASM)
-    version = "#version 300 es\n";
-    extensions = "\n";
-    defines = "#define CAN_BILINEAR_FILTER\n";
-#endif
-
-#if defined(TARGET_ANDROID)
-    version = "#version 300 es\n";
-    extensions = "\n";
-    defines = "#define CAN_BILINEAR_FILTER\n";
-#endif
-
-	// GLES2 precision specifiers
-	const char* precision;
-	precision =
-		"#ifdef GL_ES                        \n"
-		"#  ifdef GL_FRAGMENT_PRECISION_HIGH \n"
-		"     precision highp float;         \n"
-		"#  else                             \n"
-		"     precision mediump float;       \n"
-		"#  endif                            \n"
-		"#else                               \n"
-		// Ignore unsupported precision specifiers
-		"#  define lowp                      \n"
-		"#  define mediump                   \n"
-		"#  define highp                     \n"
-		"#endif                              \n";
-
-	const GLchar* sources[] = {
-		version,
-		extensions,
-		defines,
-		precision,
-		source
-	};
-	glShaderSource(res, 5, sources, NULL);
-	
-	glCompileShader(res);
-	GLint compile_ok = GL_FALSE;
-	glGetShaderiv(res, GL_COMPILE_STATUS, &compile_ok);
-	if (compile_ok == GL_FALSE) {
-		print_log(res);
-		glDeleteShader(res);
-		return 0;
-	}
-	
-	return res;
+	ShaderStage stage = type == GL_VERTEX_SHADER ? SHADER_STAGE_VERTEX : SHADER_STAGE_FRAGMENT;
+	return shader_compile_named("inline", stage, shader).object;
 }
 #endif // LINUX
