@@ -1,0 +1,54 @@
+﻿{
+    "schema":  1,
+    "captured_utc":  "2026-07-14T03:24:26.9136272Z",
+    "source":  {
+                   "commit":  "c4a8a9e20ac368b25b1116218a10c6c783ff0343",
+                   "describe":  "c4a8a9e2",
+                   "branch":  "amd-enhanced/main"
+               },
+    "operating_system":  {
+                             "caption":  "Microsoft Windows 11 Pro",
+                             "version":  "10.0.26200",
+                             "build":  "26200",
+                             "architecture":  "64-bit"
+                         },
+    "processor":  {
+                      "name":  "AMD Ryzen 7 5700X3D 8-Core Processor",
+                      "logical_processors":  16
+                  },
+    "display_adapter":  {
+                            "name":  "AMD Radeon RX 7900 XTX",
+                            "driver_version":  "32.0.31021.5001",
+                            "resolution":  "2560x1440",
+                            "refresh_hz":  165
+                        },
+    "artifacts":  {
+                      "debug_sha256":  "6952d7bf59c70ee2b0f7d065a3c97c9476d60a0fcc33b2ed3842257c2d2eb123",
+                      "release_sha256":  "34768e0400ee1ea3a65969a1bad775a4dabc00cfc1c470b5cf0f30b62d6380b5",
+                      "renderer_smoke_sha256":  "d5f4dfc0d39cff1430c1ac52e1c29251f889ff4283c39f9736394aa7c15155f5"
+                  },
+    "tests":  {
+                  "debug_unit":  "passed",
+                  "release_unit":  "passed",
+                  "renderer_smoke":  "passed"
+              },
+    "renderer_smoke":  {
+                           "schema":  1,
+                           "build_version":  "v0.9.9",
+                           "os":  {
+                                      "name":  "Windows",
+                                      "version":  "not_collected"
+                                  },
+                           "renderer":  "AMD Radeon RX 7900 XTX",
+                           "vendor":  "ATI Technologies Inc.",
+                           "api_version":  "3.3.0 Core Profile Context 26.6.4.260624",
+                           "shading_language_version":  "4.60"
+                       },
+    "privacy":  {
+                    "username":  "not_collected",
+                    "hostname":  "not_collected",
+                    "serial_numbers":  "not_collected",
+                    "absolute_paths":  "not_collected",
+                    "command_line":  "not_collected"
+                }
+}
