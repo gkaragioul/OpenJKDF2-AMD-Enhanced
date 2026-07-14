@@ -23,6 +23,7 @@ int main(void)
     assert_rect(AspectPolicy_Destination(3440, 1440, 640, 480, 1), 760, 0, 1920, 1440);
     assert_rect(AspectPolicy_Destination(1080, 1920, 640, 480, 1), 0, 555, 1080, 810);
     assert_rect(AspectPolicy_Destination(2560, 1440, 640, 360, 1), 0, 0, 2560, 1440);
+    assert_rect(AspectPolicy_Destination(2560, 1440, 640, 300, 1), 0, 120, 2560, 1200);
     assert_rect(AspectPolicy_Destination(3840, 2160, 640, 480, 1), 480, 0, 2880, 2160);
     assert_rect(AspectPolicy_Destination(0, 1440, 640, 480, 1), 0, 0, 0, 0);
     assert_rect(AspectPolicy_Destination(2560, 1440, 0, 480, 1), 0, 0, 0, 0);

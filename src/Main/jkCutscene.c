@@ -57,6 +57,12 @@ static int32_t jkCutscene_currentAudioBufSize = 0;
 static int32_t jkCutscene_currentAudioWritten = 0;
 static int jkCutscene_audioFlip = 0;
 
+void jkCutscene_GetVideoDimensions(int* width, int* height)
+{
+    if (width) *width = (int)jkCutscene_smk_w;
+    if (height) *height = (int)jkCutscene_smk_h;
+}
+
 // TODO actually fill this in with an alternative Smack decoder
 
 static flex64_t last_displayFrame = 0;

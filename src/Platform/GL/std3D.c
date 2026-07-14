@@ -21,6 +21,7 @@
 #include "Platform/GL/ShaderCompile.h"
 #include "General/DiagnosticLog.h"
 #include "General/AspectPolicy.h"
+#include "Main/jkCutscene.h"
 #include "Platform/GL/jkgm.h"
 
 #include "SDL2_helper.h"
@@ -943,7 +944,8 @@ int std3D_RenderListVerticesFinish()
     return 1;
 }
 
-void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, flex_t dstY, flex_t scale)
+static void std3D_DrawMenuSubrectScaled(flex_t x, flex_t y, flex_t w, flex_t h,
+                                        flex_t dstX, flex_t dstY, flex_t scaleX, flex_t scaleY)
 {
     //double tex_w = (double)Window_xSize;
     //double tex_h = (double)Window_ySize;
@@ -953,7 +955,7 @@ void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, 
     float w_dst = w;
     float h_dst = h;
 
-    if (scale == 0.0)
+    if (scaleX == 0.0 && scaleY == 0.0)
     {
         w_dst = (w / tex_w) * (double)Window_xSize;
         h_dst = (h / tex_h) * (double)Window_ySize;
@@ -961,7 +963,8 @@ void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, 
         dstX = (dstX / tex_w) * (double)Window_xSize;
         dstY = (dstY / tex_h) * (double)Window_ySize;
 
-        scale = 1.0;
+        scaleX = 1.0;
+        scaleY = 1.0;
     }
 
     double u1 = (x / tex_w);
@@ -979,7 +982,7 @@ void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, 
     *(uint32_t*)&GL_tmpVertices[GL_tmpVerticesAmt+0].nz = 0;
     
     GL_tmpVertices[GL_tmpVerticesAmt+1].x = dstX;
-    GL_tmpVertices[GL_tmpVerticesAmt+1].y = dstY + (scale * h_dst);
+    GL_tmpVertices[GL_tmpVerticesAmt+1].y = dstY + (scaleY * h_dst);
     GL_tmpVertices[GL_tmpVerticesAmt+1].z = 0.0;
     GL_tmpVertices[GL_tmpVerticesAmt+1].tu = u1;
     GL_tmpVertices[GL_tmpVerticesAmt+1].tv = v2;
@@ -987,8 +990,8 @@ void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, 
     GL_tmpVertices[GL_tmpVerticesAmt+1].color = 0xFFFFFFFF;
     *(uint32_t*)&GL_tmpVertices[GL_tmpVerticesAmt+1].nz = 0;
     
-    GL_tmpVertices[GL_tmpVerticesAmt+2].x = dstX + (scale * w_dst);
-    GL_tmpVertices[GL_tmpVerticesAmt+2].y = dstY + (scale * h_dst);
+    GL_tmpVertices[GL_tmpVerticesAmt+2].x = dstX + (scaleX * w_dst);
+    GL_tmpVertices[GL_tmpVerticesAmt+2].y = dstY + (scaleY * h_dst);
     GL_tmpVertices[GL_tmpVerticesAmt+2].z = 0.0;
     GL_tmpVertices[GL_tmpVerticesAmt+2].tu = u2;
     GL_tmpVertices[GL_tmpVerticesAmt+2].tv = v2;
@@ -996,7 +999,7 @@ void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, 
     GL_tmpVertices[GL_tmpVerticesAmt+2].color = 0xFFFFFFFF;
     *(uint32_t*)&GL_tmpVertices[GL_tmpVerticesAmt+2].nz = 0;
     
-    GL_tmpVertices[GL_tmpVerticesAmt+3].x = dstX + (scale * w_dst);
+    GL_tmpVertices[GL_tmpVerticesAmt+3].x = dstX + (scaleX * w_dst);
     GL_tmpVertices[GL_tmpVerticesAmt+3].y = dstY;
     GL_tmpVertices[GL_tmpVerticesAmt+3].z = 0.0;
     GL_tmpVertices[GL_tmpVerticesAmt+3].tu = u2;
@@ -1015,6 +1018,11 @@ void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, 
     
     GL_tmpVerticesAmt += 4;
     GL_tmpTrisAmt += 2;
+}
+
+void std3D_DrawMenuSubrect(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, flex_t dstY, flex_t scale)
+{
+    std3D_DrawMenuSubrectScaled(x, y, w, h, dstX, dstY, scale, scale);
 }
 
 void std3D_DrawMenuSubrect2(flex_t x, flex_t y, flex_t w, flex_t h, flex_t dstX, flex_t dstY, flex_t scale)
@@ -1244,9 +1252,6 @@ void std3D_DrawMenu()
     
     int bFixHudScale = 0;
 
-    double fake_windowW = (double)Window_xSize;
-    double fake_windowH = (double)Window_ySize;
-
     if (!jkGame_isDDraw && !jkGuiBuildMulti_bRendering && !jkCutscene_isRendering)
     {
         //menu_w = 640.0;
@@ -1265,21 +1270,6 @@ void std3D_DrawMenu()
     }
     else if (jkCutscene_isRendering) {
         bFixHudScale = 1;
-
-        //menu_w = 640.0;
-        //menu_h = 480.0;
-
-        menu_w = Video_menuBuffer.format.width;
-        menu_h = Video_menuBuffer.format.height;
-
-        // For ultrawide screens, limit the width to 16:9
-        if (Window_xSize > Window_ySize && ((double)Window_xSize / (double)Window_ySize) > (Main_bMotsCompat ? (16.0/9.0) : (21.0/9.0))) {
-            fake_windowW = fake_windowH * (16.0/9.0);
-        }
-
-        // Keep 4:3 aspect
-        menu_x = (menu_w - (menu_h * (640.0 / 480.0))) / 2.0;
-
     }
     else if (jkGuiBuildMulti_bRendering)
     {
@@ -1365,68 +1355,47 @@ void std3D_DrawMenu()
     }
     else if (jkCutscene_isRendering)
     {
+        int videoWidth = 0;
+        int videoHeight = 0;
+        int subsY = Main_bMotsCompat ? 400 : 350;
+        int subsH = Main_bMotsCompat ? 80 : 130;
+        float subtitleScale;
+        float subtitleX;
+        float subtitleY;
+        ResolutionLayoutRect videoDestination;
         GL_tmpVerticesAmt = 0;
         GL_tmpTrisAmt = 0;
 
         glBlendFunc(GL_SRC_ALPHA, GL_SRC_ALPHA);
+        jkCutscene_GetVideoDimensions(&videoWidth, &videoHeight);
+        if (videoWidth <= 0) videoWidth = 640;
+        if (videoHeight <= 0) videoHeight = Main_bMotsCompat ? 350 : 300;
+        videoDestination = AspectPolicy_Destination(
+            Window_xSize, Window_ySize, videoWidth, videoHeight, jkPlayer_preserveVideoAspect);
+        std3D_DrawMenuSubrectScaled(
+            0, 50, videoWidth, videoHeight,
+            videoDestination.x, videoDestination.y,
+            videoDestination.width / videoWidth,
+            videoDestination.height / videoHeight);
 
-        int video_height = Main_bMotsCompat ? 350 : 300;
-        int subs_y = 350;
-        int subs_h = 130;
-        if (Main_bMotsCompat) {
-            subs_y = 400;
-            subs_h = 80;
-        }
-
-        float partial_menu_w = (menu_h * (640.0 / 480.0));
-        float upscale = fake_windowW/640.0;
-        float upscale2 = (fake_windowH - (50 + video_height * upscale))/((double)subs_h);
-        float upscale3 = 1.0;//Window_ySize/480.0;
-
-        if (upscale2 < 1.0) {
-            upscale2 = 1.0;
-            if (fake_windowH > 480.0) {
-                upscale2 = 2.0;
-            }
-        }
-        if (upscale2 > upscale) {
-            upscale2 = upscale;
-        }
-
-        float shift_y = ((double)Window_ySize - fake_windowH) / 2.0;
-        float shift_x = ((double)Window_xSize - fake_windowW) / 2.0;
-
-        float sub_width = 640*upscale2;
-        float sub_x = (fake_windowW - sub_width) / 2.0;
-
-        float pause_width = 640*upscale3;
-        float pause_x = (fake_windowW - pause_width) / 2.0;
-
-        //printf("%f %f, %f %f %f, %d %d\n", sub_x, pause_x, upscale, upscale2, upscale3, Window_xSize, Window_ySize);
-
-        // Main View
-        std3D_DrawMenuSubrect(0, 50, 640, video_height, shift_x + 0, shift_y + 50, upscale);
+        subtitleScale = (float)videoDestination.width / 640.0f;
+        if (subtitleScale > (float)videoDestination.height / 480.0f)
+            subtitleScale = (float)videoDestination.height / 480.0f;
+        subtitleX = (float)videoDestination.x + ((float)videoDestination.width - 640.0f * subtitleScale) / 2.0f;
+        subtitleY = (float)videoDestination.y + (float)videoDestination.height - subsH * subtitleScale;
 
         // Subtitles
         if (jkCutscene_dword_55B750) {
-            
-
             // Some monitors might not have a bottom black bar, so draw an outline
-            std3D_DrawMenuSubrect2(0, subs_y, 640, subs_h, shift_x + sub_x-2, shift_y + fake_windowH - (subs_h*upscale2), upscale2);
-            std3D_DrawMenuSubrect2(0, subs_y, 640, subs_h, shift_x + sub_x+2, shift_y + fake_windowH - (subs_h*upscale2), upscale2);
-            std3D_DrawMenuSubrect2(0, subs_y, 640, subs_h, shift_x + sub_x, shift_y + fake_windowH - (subs_h*upscale2) - 2, upscale2);
-            std3D_DrawMenuSubrect2(0, subs_y, 640, subs_h, shift_x + sub_x, shift_y + fake_windowH - (subs_h*upscale2) + 2, upscale2);
-
-            //std3D_DrawMenuSubrect2(0, subs_y, 640, subs_h, shift_x + sub_x-2, shift_y + fake_windowH - (subs_h*upscale2) -2, upscale2);
-            //std3D_DrawMenuSubrect2(0, subs_y, 640, subs_h, shift_x + sub_x+2, shift_y + fake_windowH - (subs_h*upscale2) +2, upscale2);
-            //std3D_DrawMenuSubrect2(0, subs_y, 640, subs_h, shift_x + sub_x+2, shift_y + fake_windowH - (subs_h*upscale2) - 2, upscale2);
-            //std3D_DrawMenuSubrect2(0, subs_y, 640, subs_h, shift_x + sub_x-2, shift_y + fake_windowH - (subs_h*upscale2) + 2, upscale2);
-
-            std3D_DrawMenuSubrect(0, subs_y, 640, subs_h, shift_x + sub_x, shift_y + fake_windowH - (subs_h*upscale2), upscale2);
+            std3D_DrawMenuSubrect2(0, subsY, 640, subsH, subtitleX - 2, subtitleY, subtitleScale);
+            std3D_DrawMenuSubrect2(0, subsY, 640, subsH, subtitleX + 2, subtitleY, subtitleScale);
+            std3D_DrawMenuSubrect2(0, subsY, 640, subsH, subtitleX, subtitleY - 2, subtitleScale);
+            std3D_DrawMenuSubrect2(0, subsY, 640, subsH, subtitleX, subtitleY + 2, subtitleScale);
+            std3D_DrawMenuSubrect(0, subsY, 640, subsH, subtitleX, subtitleY, subtitleScale);
         }
 
         // Paused
-        std3D_DrawMenuSubrect(0, 10, 640, 40, shift_x + pause_x, shift_y + 0*upscale, upscale3);
+        std3D_DrawMenuSubrect(0, 10, 640, 40, subtitleX, videoDestination.y, subtitleScale);
     }
     else
     {

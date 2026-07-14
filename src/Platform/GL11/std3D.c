@@ -46,6 +46,7 @@
 #include "General/AspectPolicy.h"
 #include "Main/jkGame.h"
 #include "Main/Main.h"
+#include "Main/jkCutscene.h"
 #include "World/jkPlayer.h"
 #include "General/stdBitmap.h"
 #include "stdPlatform.h"
@@ -801,59 +802,40 @@ void std3D_DrawMenu()
 
     if (jkCutscene_isRendering)
     {
-        // Letterboxed cutscene: video band (centered, width-fit), optional
-        // subtitles with a black drop-shadow outline, and the pause text band.
-        // Source bands live in the top-left 640-wide column of the menu buffer.
-        float fake_windowW = (float)dw;
-        float fake_windowH = (float)dh;
+        int videoWidth = 0;
+        int videoHeight = 0;
+        int subsY = Main_bMotsCompat ? 400 : 350;
+        int subsH = Main_bMotsCompat ? 80 : 130;
+        float subtitleScale;
+        float subtitleX;
+        float subtitleY;
+        ResolutionLayoutRect videoDestination;
 
-        int video_height = Main_bMotsCompat ? 350 : 300;
-        int subs_y = Main_bMotsCompat ? 400 : 350;
-        int subs_h = Main_bMotsCompat ? 80  : 130;
+        jkCutscene_GetVideoDimensions(&videoWidth, &videoHeight);
+        if (videoWidth <= 0) videoWidth = 640;
+        if (videoHeight <= 0) videoHeight = Main_bMotsCompat ? 350 : 300;
+        videoDestination = AspectPolicy_Destination(
+            dw, dh, videoWidth, videoHeight, jkPlayer_preserveVideoAspect);
+        std3D_DrawMenuDestination(0, 50, (float)videoWidth, (float)videoHeight, &videoDestination);
 
-        // For ultrawide screens, limit the video width to 16:9.
-        if (dw > dh && ((float)dw / (float)dh) > (Main_bMotsCompat ? (16.0f / 9.0f) : (21.0f / 9.0f)))
-            fake_windowW = fake_windowH * (16.0f / 9.0f);
-
-        float upscale  = fake_windowW / 640.0f;
-        float upscale2 = (fake_windowH - (50.0f + video_height * upscale)) / (float)subs_h;
-        float upscale3 = 1.0f;
-
-        if (upscale2 < 1.0f)
-        {
-            upscale2 = 1.0f;
-            if (fake_windowH > 480.0f)
-                upscale2 = 2.0f;
-        }
-        if (upscale2 > upscale)
-            upscale2 = upscale;
-
-        float shift_y = ((float)dh - fake_windowH) / 2.0f;
-        float shift_x = ((float)dw - fake_windowW) / 2.0f;
-
-        float sub_width = 640.0f * upscale2;
-        float sub_x = (fake_windowW - sub_width) / 2.0f;
-
-        float pause_width = 640.0f * upscale3;
-        float pause_x = (fake_windowW - pause_width) / 2.0f;
-
-        // Main video view
-        std3D_DrawMenuSubrect(0, 50, 640, video_height, shift_x, shift_y + 50, upscale, 255, 255, 255);
+        subtitleScale = (float)videoDestination.width / 640.0f;
+        if (subtitleScale > (float)videoDestination.height / 480.0f)
+            subtitleScale = (float)videoDestination.height / 480.0f;
+        subtitleX = (float)videoDestination.x + ((float)videoDestination.width - 640.0f * subtitleScale) / 2.0f;
+        subtitleY = (float)videoDestination.y + (float)videoDestination.height - subsH * subtitleScale;
 
         // Subtitles (drop-shadow outline drawn black, then the text in white)
         if (jkCutscene_dword_55B750)
         {
-            float sub_dstX = shift_x + sub_x;
-            float sub_dstY = shift_y + fake_windowH - (subs_h * upscale2);
-            std3D_DrawMenuSubrect(0, subs_y, 640, subs_h, sub_dstX - 2, sub_dstY,     upscale2, 0, 0, 0);
-            std3D_DrawMenuSubrect(0, subs_y, 640, subs_h, sub_dstX + 2, sub_dstY,     upscale2, 0, 0, 0);
-            std3D_DrawMenuSubrect(0, subs_y, 640, subs_h, sub_dstX,     sub_dstY - 2, upscale2, 0, 0, 0);
-            std3D_DrawMenuSubrect(0, subs_y, 640, subs_h, sub_dstX,     sub_dstY + 2, upscale2, 0, 0, 0);
-            std3D_DrawMenuSubrect(0, subs_y, 640, subs_h, sub_dstX,     sub_dstY,     upscale2, 255, 255, 255);
+            std3D_DrawMenuSubrect(0, subsY, 640, subsH, subtitleX - 2, subtitleY, subtitleScale, 0, 0, 0);
+            std3D_DrawMenuSubrect(0, subsY, 640, subsH, subtitleX + 2, subtitleY, subtitleScale, 0, 0, 0);
+            std3D_DrawMenuSubrect(0, subsY, 640, subsH, subtitleX, subtitleY - 2, subtitleScale, 0, 0, 0);
+            std3D_DrawMenuSubrect(0, subsY, 640, subsH, subtitleX, subtitleY + 2, subtitleScale, 0, 0, 0);
+            std3D_DrawMenuSubrect(0, subsY, 640, subsH, subtitleX, subtitleY, subtitleScale, 255, 255, 255);
         }
 
         // Pause text
-        std3D_DrawMenuSubrect(0, 10, 640, 40, shift_x + pause_x, shift_y, upscale3, 255, 255, 255);
+        std3D_DrawMenuSubrect(0, 10, 640, 40, subtitleX, (float)videoDestination.y, subtitleScale, 255, 255, 255);
     }
     else if (!jkGame_isDDraw || jkGuiBuildMulti_bRendering)
     {
