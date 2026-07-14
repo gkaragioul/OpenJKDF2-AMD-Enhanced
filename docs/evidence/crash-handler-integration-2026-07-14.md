@@ -10,4 +10,19 @@ Verification performed:
 - A guarded Release gameplay run at 2560x1440 emitted the structured event `handler=drmingw location=diagnostics`.
 - The run exited cleanly, preserved `2560x1440@165`, and left all 75 Steam asset metadata records unchanged.
 
-Runtime evidence is retained outside source control under `runtime-evidence/crash-handler-2026-07-14`. A deliberate unhandled-exception test has not yet been run, so creation and contents of a real `.RPT` remain unproven.
+Gameplay initialization evidence is retained outside source control under `runtime-evidence/crash-handler-2026-07-14`.
+
+## Controlled crash report
+
+An asset-free `openjkdf2-crash-probe.exe` now exercises the same dynamically loaded DrMinGW exports used by the game. `scripts/test-crash-report.ps1` runs it in an isolated directory, waits for the report, terminates any remaining Windows error-dialog process, and validates the output.
+
+Measured Release result:
+
+- unhandled exception: `EXCEPTION_ACCESS_VIOLATION`
+- child exit code: `-1`
+- report created: yes
+- report size: 1,655 bytes
+- exception/stack content: present
+- privacy inspection: executable/module names, versions, addresses, and stack only; no username, filesystem path, command line, save data, or game asset content
+
+The machine-readable result and report are retained outside source control under `runtime-evidence/crash-report-2026-07-14-01`.
