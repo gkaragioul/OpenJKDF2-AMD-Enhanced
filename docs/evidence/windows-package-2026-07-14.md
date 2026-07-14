@@ -3,14 +3,14 @@
 ## Artifact
 
 - Package: `OpenJKDF2-AMD-Enhanced-windows-x64.zip`
-- SHA-256: `2dabdeba6c16ba1298a3a2dbe534449e82e4b60e3db2000498dba1f273f732d6`
+- SHA-256: `040b4735cc8dfc2b98628a6b8b6c319f998ccc66d3f63625d007335e7f176aa5`
 - Configuration: Release x64
-- Source commit: `58959a1229018ce0f0781655b12f2b7926a98a44`
+- Source commit: `4597a6a1`
 - Source worktree recorded clean by `BUILD-PROVENANCE.json`
 
 ## Package audit
 
-`scripts/verify-windows-package.ps1` verified all 36 manifest entries by path, size, and SHA-256. It found zero prohibited Jedi Knight asset files and no unlisted package files. The package contains the two executables, required open-source runtime DLLs, launcher/install/uninstall scripts, configuration example, documentation (including the legal optional-enhancement-pack guide), notices, and 13 dependency license files.
+`scripts/verify-windows-package.ps1` verified all 36 manifest entries by path, size, and SHA-256. It found zero prohibited Jedi Knight asset files and no unlisted package files. The package contains the two executables, required open-source runtime DLLs, launcher/install/uninstall scripts, configuration example, Display Options documentation (including the legal optional-enhancement-pack guide), notices, and 13 dependency license files.
 
 ## Installed acceptance path
 
@@ -29,7 +29,7 @@ Measured results from `scripts/test-clean-install.ps1`:
 - desktop-shortcut removal: passed
 - user-data preservation: passed
 
-The acceptance run's machine-readable result is retained outside source control under `runtime-evidence/clean-install-2026-07-14-03/clean-install-result.json`.
+The refreshed acceptance run's machine-readable result is retained outside source control under `runtime-evidence/clean-install-display-options-2026-07-14-02/clean-install-result.json`.
 
 ## Scope and limitations
 
