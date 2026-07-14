@@ -3,6 +3,7 @@
 
 #include "types.h"
 #include "globals.h"
+#include "General/DisplayMode.h"
 
 #define Window_Main_ADDR (0x0050E750)
 #define Window_MessageLoop_ADDR (0x0050E9C0)
@@ -39,8 +40,10 @@ int Window_DefaultHandler(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam, voi
 
 extern int Window_isHiDpi;
 extern int Window_isFullscreen;
+extern DisplayMode Window_displayMode;
 void Window_SetHiDpi(int val);
 void Window_SetFullscreen(int val);
+void Window_SetDisplayMode(DisplayMode mode);
 
 
 extern int Window_screenXSize;

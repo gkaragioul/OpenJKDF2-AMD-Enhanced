@@ -14,6 +14,8 @@
 #include "Devices/sithConsole.h"
 #include "Platform/wuRegistry.h"
 #include "Main/jkQuakeConsole.h"
+#include "General/DiagnosticLog.h"
+#include "General/DisplayMode.h"
 
 #include "jk.h"
 
@@ -62,9 +64,11 @@ int Window_screenXSize = WINDOW_DEFAULT_WIDTH;
 int Window_screenYSize = WINDOW_DEFAULT_HEIGHT;
 int Window_isHiDpi = 0;
 int Window_isFullscreen = 0;
+DisplayMode Window_displayMode = DISPLAY_MODE_BORDERLESS;
 int Window_needsRecreate = 0;
 int Window_bShouldPopSteamKeyboard = 0;
 static int Window_bSafeMode = 0;
+static int Window_bRestorationGuardReady = 0;
 
 void Window_SetSafeMode(int enabled)
 {
@@ -85,12 +89,18 @@ void Window_SetHiDpi(int val)
 
 void Window_SetFullscreen(int val)
 {
-    if (Window_bSafeMode) val = 0;
-    if (Window_isFullscreen != val)
+    Window_SetDisplayMode(val ? DISPLAY_MODE_BORDERLESS : DISPLAY_MODE_WINDOWED);
+}
+
+void Window_SetDisplayMode(DisplayMode mode)
+{
+    DisplayMode resolved = display_mode_resolve(mode, Window_bSafeMode != 0, Window_bRestorationGuardReady != 0);
+    int fullscreen = resolved != DISPLAY_MODE_WINDOWED;
+    if (Window_displayMode != resolved)
     {
         // Reset window when exiting fullscreen
         // TODO: Add settings for these sizes maybe?
-        if (Window_isFullscreen && !val) {
+        if (Window_isFullscreen && !fullscreen) {
             Window_xSize = WINDOW_DEFAULT_WIDTH;
             Window_ySize = WINDOW_DEFAULT_HEIGHT;
             Window_screenXSize = WINDOW_DEFAULT_WIDTH;
@@ -101,12 +111,20 @@ void Window_SetFullscreen(int val)
 #endif
         }
 
-        Window_isFullscreen = val;
+        Window_displayMode = resolved;
+        Window_isFullscreen = fullscreen;
         Window_needsRecreate = 1;
     }
 
     wuRegistry_SaveBool("Window_isFullscreen", Window_isFullscreen);
-    
+    wuRegistry_SaveInt("Window_displayMode", (int)Window_displayMode);
+
+    {
+        char event[96];
+        snprintf(event, sizeof(event), "display_mode_selected mode=%s requested=%s guard_ready=%s",
+                 display_mode_name(resolved), display_mode_name(mode), Window_bRestorationGuardReady ? "true" : "false");
+        diag_log_event(DIAG_SEVERITY_INFO, "display", event);
+    }
 }
 
 //static wm_handler Window_ext_handlers[16] = {0};
@@ -1311,6 +1329,8 @@ void Window_RecreateSDL2Window()
         std3D_FreeResources();
         SDL_GL_DestroyContext(glWindowContext);
         SDL_DestroyWindow(displayWindow);
+        glWindowContext = NULL;
+        displayWindow = NULL;
     }
 
     // HACK: side-step the json stuff
@@ -1320,15 +1340,6 @@ void Window_RecreateSDL2Window()
     }
 
     SDL_WindowFlags flags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-
-    if (displayWindow) {
-        flags = SDL_GetWindowFlags(displayWindow);
-        //std3D_FreeResources();
-        //SDL_GL_DestroyContext(glWindowContext);
-        //SDL_DestroyWindow(displayWindow);
-
-        flags |= SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-    }
 
 #ifdef WIN64_STANDALONE
     // SDL_HINT_WINDOWS_DPI_AWARENESS has no SDL3 equivalent (removed) -- SDL3
@@ -1340,11 +1351,17 @@ void Window_RecreateSDL2Window()
     else
         flags &= ~SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
-    if (Window_isFullscreen) {
-        //flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-    }
-    else {
-        //flags &= ~SDL_WINDOW_FULLSCREEN_DESKTOP;
+    SDL_Rect desktop_bounds = { 0, 0, Window_screenXSize, Window_screenYSize };
+    if (Window_displayMode == DISPLAY_MODE_BORDERLESS) {
+        SDL_DisplayID display = SDL_GetPrimaryDisplay();
+        if (display && SDL_GetDisplayBounds(display, &desktop_bounds)) {
+            Window_screenXSize = desktop_bounds.w;
+            Window_screenYSize = desktop_bounds.h;
+            Window_xPos = desktop_bounds.x;
+            Window_yPos = desktop_bounds.y;
+        }
+        flags |= SDL_WINDOW_BORDERLESS;
+        flags &= ~SDL_WINDOW_RESIZABLE;
     }
 
 #if defined(ARCH_WASM)
@@ -1381,7 +1398,9 @@ void Window_RecreateSDL2Window()
     SDL_SetWindowPosition(displayWindow, Window_xPos, Window_yPos);
 #endif
 
-    SDL_SetWindowFullscreen(displayWindow, Window_isFullscreen ? true : false);
+    if (Window_displayMode == DISPLAY_MODE_EXCLUSIVE && Window_bRestorationGuardReady) {
+        SDL_SetWindowFullscreen(displayWindow, true);
+    }
     SDL_RaiseWindow(displayWindow);
 
     glWindowContext = SDL_GL_CreateContext(displayWindow);
@@ -1549,9 +1568,10 @@ int Window_Main_Linux(int argc, char** argv)
     
     result = Main_Startup(cmdLine);
 
-    int fullscreen = wuRegistry_GetBool("Window_isFullscreen", 0);
+    int fullscreen = wuRegistry_GetBool("Window_isFullscreen", 1);
+    int display_mode = wuRegistry_GetInt("Window_displayMode", fullscreen ? DISPLAY_MODE_BORDERLESS : DISPLAY_MODE_WINDOWED);
     int hidpi = wuRegistry_GetBool("Window_isHiDpi", 0);
-    Window_SetFullscreen(Window_bSafeMode ? 0 : fullscreen);
+    Window_SetDisplayMode(Window_bSafeMode ? DISPLAY_MODE_WINDOWED : display_mode_from_config(display_mode));
     Window_SetHiDpi(hidpi);
     Window_RecreateSDL2Window();
 

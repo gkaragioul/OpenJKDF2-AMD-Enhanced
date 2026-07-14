@@ -43,7 +43,7 @@ static bool smoke_write_report(void)
     return fclose(stream) == 0;
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
     static const char vertex_source[] =
         "layout(location=0) in vec2 position;\n"
@@ -61,6 +61,10 @@ int main(void)
     GLuint vao = 0, vbo = 0, texture = 0, framebuffer = 0;
     unsigned char pixel[4] = { 0 };
     int result = SMOKE_OK;
+    bool borderless = argc > 1 && strcmp(argv[1], "--borderless") == 0;
+    int window_width = 64;
+    int window_height = 64;
+    SDL_WindowFlags window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN;
 
     diag_log_start(&log_config);
     diag_log_event(DIAG_SEVERITY_INFO, "renderer-smoke", "started hidden=true size=64x64");
@@ -73,7 +77,20 @@ int main(void)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
-    window = SDL_CreateWindow("OpenJKDF2 Renderer Smoke", 64, 64, SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN);
+    if (borderless) {
+        SDL_Rect bounds;
+        SDL_DisplayID display = SDL_GetPrimaryDisplay();
+        if (!display || !SDL_GetDisplayBounds(display, &bounds)) {
+            diag_log_event(DIAG_SEVERITY_ERROR, "renderer-smoke", "desktop_bounds_unavailable");
+            result = SMOKE_CONTEXT;
+            goto cleanup;
+        }
+        window_width = bounds.w;
+        window_height = bounds.h;
+        window_flags |= SDL_WINDOW_BORDERLESS;
+        diag_log_event(DIAG_SEVERITY_INFO, "renderer-smoke", "borderless_requested display_mode_change=false");
+    }
+    window = SDL_CreateWindow("OpenJKDF2 Renderer Smoke", window_width, window_height, window_flags);
     if (!window) {
         diag_log_event(DIAG_SEVERITY_ERROR, "renderer-smoke", SDL_GetError());
         result = SMOKE_CONTEXT;
@@ -84,6 +101,17 @@ int main(void)
         diag_log_event(DIAG_SEVERITY_ERROR, "renderer-smoke", SDL_GetError());
         result = SMOKE_CONTEXT;
         goto cleanup;
+    }
+    if (borderless) {
+        int actual_width = 0;
+        int actual_height = 0;
+        SDL_GetWindowSize(window, &actual_width, &actual_height);
+        if (actual_width != window_width || actual_height != window_height ||
+            !(SDL_GetWindowFlags(window) & SDL_WINDOW_BORDERLESS)) {
+            diag_log_event(DIAG_SEVERITY_ERROR, "renderer-smoke", "borderless_geometry_invalid");
+            result = SMOKE_CONTEXT;
+            goto cleanup;
+        }
     }
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) {

@@ -43,6 +43,11 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_report.c"
         "${PROJECT_SOURCE_DIR}/src/General/DiagnosticReport.c"
     )
+    openjkdf2_add_unit_test(
+        test_display_mode
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_display_mode.c"
+        "${PROJECT_SOURCE_DIR}/src/General/DisplayMode.c"
+    )
 
     if(TARGET_USE_SDL2 AND TARGET_USE_OPENGL AND NOT TARGET_ANDROID AND NOT TARGET_WASM)
         add_executable(

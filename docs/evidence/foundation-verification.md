@@ -31,3 +31,12 @@ This proves the generated-resource OpenGL path on this single RDNA 3 machine.
 It does not prove full-game correctness, RDNA-wide compatibility, borderless
 behavior, frame pacing, or the first-door crash fix. Those remain explicitly
 incomplete in `requirements.csv`.
+
+## Borderless creation smoke
+
+The same generated-resource test was repeated with a hidden borderless window
+sized from the primary display's current bounds. SDL reported the borderless
+flag and exact desktop geometry, rendering/readback passed, and the display was
+2560×1440 at 165 Hz both before and after. This path contains no fullscreen or
+display-mode call. Full gameplay and multi-monitor borderless validation remain
+pending.
