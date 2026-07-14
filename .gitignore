@@ -128,3 +128,4 @@ graphify-out/
 AGENTS.md
 .blocksds
 packaging/dreamcast/disc/*
+/.worktrees/
