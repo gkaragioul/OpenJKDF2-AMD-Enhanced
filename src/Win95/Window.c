@@ -17,6 +17,7 @@
 #include "General/DiagnosticLog.h"
 #include "General/DisplayMode.h"
 #include "General/ResolutionLayout.h"
+#include "General/AspectPolicy.h"
 #include "General/FrameRate.h"
 #include "General/FrameTelemetry.h"
 #include "General/StoragePaths.h"
@@ -628,8 +629,8 @@ void Window_HandleMouseMove(SDL_MouseMotionEvent *event)
 
     if (!jkGame_isDDraw)
     {
-        ResolutionLayoutRect menuViewport = ResolutionLayout_FitAspect(
-            Window_screenXSize, Window_screenYSize, 640.0 / 480.0);
+        ResolutionLayoutRect menuViewport = AspectPolicy_Destination(
+            Window_xSize, Window_ySize, 640, 480, jkPlayer_preserveMenuAspect);
         double logicalX;
         double logicalY;
 

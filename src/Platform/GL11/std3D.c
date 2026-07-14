@@ -43,6 +43,7 @@
 #include "World/sithWorld.h"
 #include "Engine/rdColormap.h"
 #include "Engine/rdCamera.h"
+#include "General/AspectPolicy.h"
 #include "Main/jkGame.h"
 #include "Main/Main.h"
 #include "World/jkPlayer.h"
@@ -670,6 +671,29 @@ static void std3D_DrawMenuSubrect(float x, float y, float w, float h,
     glEnd();
 }
 
+static void std3D_DrawMenuDestination(float x, float y, float w, float h,
+                                      const ResolutionLayoutRect* destination)
+{
+    float tex_w = (float)std3D_menuTexW;
+    float tex_h = (float)std3D_menuTexH;
+    float u1, u2, v1, v2;
+    if (!destination || tex_w < 1.0f || tex_h < 1.0f) return;
+
+    u1 = x / tex_w;
+    u2 = (x + w) / tex_w;
+    v1 = y / tex_h;
+    v2 = (y + h) / tex_h;
+    glColor4ub(255, 255, 255, 255);
+    glBegin(GL_TRIANGLES);
+        glTexCoord2f(u1, v1); glVertex2d(destination->x, destination->y);
+        glTexCoord2f(u1, v2); glVertex2d(destination->x, destination->y + destination->height);
+        glTexCoord2f(u2, v2); glVertex2d(destination->x + destination->width, destination->y + destination->height);
+        glTexCoord2f(u1, v1); glVertex2d(destination->x, destination->y);
+        glTexCoord2f(u2, v2); glVertex2d(destination->x + destination->width, destination->y + destination->height);
+        glTexCoord2f(u2, v1); glVertex2d(destination->x + destination->width, destination->y);
+    glEnd();
+}
+
 // Software-paletted menu presentation.
 //
 // The GUI/menu and 2D cutscene layers are software-rendered by the engine into
@@ -833,12 +857,9 @@ void std3D_DrawMenu()
     }
     else if (!jkGame_isDDraw || jkGuiBuildMulti_bRendering)
     {
-        // Full-screen GUI menus render at a fixed 640x480 in the top-left of the
-        // menu buffer; sample that sub-rect and pillarbox to a 4:3 aspect.
-        float menu_h = (float)dh;
-        float menu_w = menu_h * (640.0f / 480.0f);
-        float menu_x = ((float)dw - menu_w) / 2.0f;
-        std3D_DrawMenuSubrect(0, 0, 640, 480, menu_x, 0, menu_w / 640.0f, 255, 255, 255);
+        ResolutionLayoutRect destination = AspectPolicy_Destination(
+            dw, dh, 640, 480, jkPlayer_preserveMenuAspect);
+        std3D_DrawMenuDestination(0, 0, 640, 480, &destination);
     }
     else
     {

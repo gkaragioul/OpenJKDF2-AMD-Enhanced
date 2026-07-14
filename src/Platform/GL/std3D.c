@@ -20,6 +20,7 @@
 #include "Platform/GL/shader_utils.h"
 #include "Platform/GL/ShaderCompile.h"
 #include "General/DiagnosticLog.h"
+#include "General/AspectPolicy.h"
 #include "Platform/GL/jkgm.h"
 
 #include "SDL2_helper.h"
@@ -1233,12 +1234,13 @@ void std3D_DrawMenu()
     glDepthFunc(GL_ALWAYS);
     glUseProgram(programMenu);
     
-    float menu_w, menu_h, menu_u, menu_v, menu_x;
+    float menu_w, menu_h, menu_u, menu_v, menu_x, menu_y;
     menu_w = (double)Window_xSize;
     menu_h = (double)Window_ySize;
     menu_u = 1.0;
     menu_v = 1.0;
     menu_x = 0.0;
+    menu_y = 0.0;
     
     int bFixHudScale = 0;
 
@@ -1254,9 +1256,12 @@ void std3D_DrawMenu()
         menu_u = (1.0 / Video_menuBuffer.format.width) * 640.0;
         menu_v = (1.0 / Video_menuBuffer.format.height) * 480.0;
 
-        // Keep 4:3 aspect
-        menu_x = (menu_w - (menu_h * (640.0 / 480.0))) / 2.0;
-        menu_w = (menu_h * (640.0 / 480.0));
+        ResolutionLayoutRect destination = AspectPolicy_Destination(
+            Window_xSize, Window_ySize, 640, 480, jkPlayer_preserveMenuAspect);
+        menu_x = (float)destination.x;
+        menu_y = (float)destination.y;
+        menu_w = (float)destination.width;
+        menu_h = (float)destination.height;
     }
     else if (jkCutscene_isRendering) {
         bFixHudScale = 1;
@@ -1278,15 +1283,18 @@ void std3D_DrawMenu()
     }
     else if (jkGuiBuildMulti_bRendering)
     {
-        bFixHudScale = 1;
+        bFixHudScale = 0;
 
         // Stretch screen
         menu_u = (1.0 / Video_menuBuffer.format.width) * 640.0;
         menu_v = (1.0 / Video_menuBuffer.format.height) * 480.0;
 
-        // Keep 4:3 aspect
-        menu_x = (menu_w - (menu_h * (640.0 / 480.0))) / 2.0;
-        menu_w = (menu_h * (640.0 / 480.0));
+        ResolutionLayoutRect destination = AspectPolicy_Destination(
+            Window_xSize, Window_ySize, 640, 480, jkPlayer_preserveMenuAspect);
+        menu_x = (float)destination.x;
+        menu_y = (float)destination.y;
+        menu_w = (float)destination.width;
+        menu_h = (float)destination.height;
     }
     else
     {
@@ -1299,7 +1307,7 @@ void std3D_DrawMenu()
     if (!bFixHudScale)
     {
         GL_tmpVertices[0].x = menu_x;
-        GL_tmpVertices[0].y = 0.0;
+        GL_tmpVertices[0].y = menu_y;
         GL_tmpVertices[0].z = 0.0;
         GL_tmpVertices[0].tu = 0.0;
         GL_tmpVertices[0].tv = 0.0;
@@ -1308,7 +1316,7 @@ void std3D_DrawMenu()
         *(uint32_t*)&GL_tmpVertices[0].nz = 0;
         
         GL_tmpVertices[1].x = menu_x;
-        GL_tmpVertices[1].y = menu_h;
+        GL_tmpVertices[1].y = menu_y + menu_h;
         GL_tmpVertices[1].z = 0.0;
         GL_tmpVertices[1].tu = 0.0;
         GL_tmpVertices[1].tv = menu_v;
@@ -1317,7 +1325,7 @@ void std3D_DrawMenu()
         *(uint32_t*)&GL_tmpVertices[1].nz = 0;
         
         GL_tmpVertices[2].x = menu_x + menu_w;
-        GL_tmpVertices[2].y = menu_h;
+        GL_tmpVertices[2].y = menu_y + menu_h;
         GL_tmpVertices[2].z = 0.0;
         GL_tmpVertices[2].tu = menu_u;
         GL_tmpVertices[2].tv = menu_v;
@@ -1326,7 +1334,7 @@ void std3D_DrawMenu()
         *(uint32_t*)&GL_tmpVertices[2].nz = 0;
         
         GL_tmpVertices[3].x = menu_x + menu_w;
-        GL_tmpVertices[3].y = 0.0;
+        GL_tmpVertices[3].y = menu_y;
         GL_tmpVertices[3].z = 0.0;
         GL_tmpVertices[3].tu = menu_u;
         GL_tmpVertices[3].tv = 0.0;
@@ -1353,7 +1361,7 @@ void std3D_DrawMenu()
         GL_tmpTrisAmt = 0;
 
         // Main View
-        std3D_DrawMenuSubrect(0, 0, 640, 480, menu_x, 0, menu_w/640.0);
+        std3D_DrawMenuSubrect(0, 0, 640, 480, menu_x, menu_y, menu_w/640.0);
     }
     else if (jkCutscene_isRendering)
     {
