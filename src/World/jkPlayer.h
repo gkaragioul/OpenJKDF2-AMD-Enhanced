@@ -141,6 +141,8 @@ extern int jkPlayer_enableOrigAspect;
 extern int jkPlayer_enableBloom;
 extern int jkPlayer_fpslimit;
 extern int jkPlayer_enableVsync;
+extern int jkPlayer_rawMouseInput;
+extern int jkPlayer_mouseAcceleration;
 extern flex_t jkPlayer_ssaaMultiple;
 extern int jkPlayer_enableSSAO;
 extern flex_t jkPlayer_gamma;

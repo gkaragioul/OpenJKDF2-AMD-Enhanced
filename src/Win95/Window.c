@@ -431,6 +431,65 @@ int Window_mouseWheelX = 0;
 int Window_mouseWheelY = 0;
 int Window_lastMouseX = 0;
 int Window_lastMouseY = 0;
+static int Window_mouseCaptureActive = 0;
+static int Window_mouseRelativeActive = 0;
+static int Window_mouseCaptureRawSetting = -1;
+static int Window_mouseCaptureAccelerationSetting = -1;
+
+static void Window_SetGameplayMouseCapture(int enabled)
+{
+    int rawSetting = jkPlayer_rawMouseInput != 0;
+    int accelerationSetting = jkPlayer_mouseAcceleration != 0;
+    int settingsChanged = rawSetting != Window_mouseCaptureRawSetting ||
+        accelerationSetting != Window_mouseCaptureAccelerationSetting;
+
+    if (!displayWindow)
+        return;
+    if (!!enabled == Window_mouseCaptureActive && (!enabled || !settingsChanged))
+        return;
+
+    if (!enabled)
+    {
+        SDL_SetWindowRelativeMouseMode(displayWindow, false);
+        SDL_SetWindowMouseGrab(displayWindow, false);
+        SDL_ShowCursor();
+        Window_lastXRel = 0;
+        Window_lastYRel = 0;
+        if (Window_mouseCaptureActive)
+            diag_log_event(DIAG_SEVERITY_INFO, "input", "mouse_capture=released");
+        Window_mouseCaptureActive = 0;
+        Window_mouseRelativeActive = 0;
+        return;
+    }
+
+    if (Window_mouseCaptureActive)
+        Window_SetGameplayMouseCapture(0);
+
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_CENTER, "1");
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_SYSTEM_SCALE, accelerationSetting ? "1" : "0");
+    Window_mouseCaptureRawSetting = rawSetting;
+    Window_mouseCaptureAccelerationSetting = accelerationSetting;
+
+    if (rawSetting && SDL_SetWindowRelativeMouseMode(displayWindow, true))
+    {
+        Window_mouseRelativeActive = 1;
+        diag_log_event(DIAG_SEVERITY_INFO, "input",
+            accelerationSetting ? "mouse_backend=SDL_relative raw_preferred=true acceleration=system" :
+                                  "mouse_backend=SDL_relative raw_preferred=true acceleration=off");
+    }
+    else
+    {
+        SDL_SetWindowRelativeMouseMode(displayWindow, false);
+        SDL_SetWindowMouseGrab(displayWindow, true);
+        SDL_HideCursor();
+        Window_mouseRelativeActive = 0;
+        diag_log_event(rawSetting ? DIAG_SEVERITY_WARNING : DIAG_SEVERITY_INFO, "input",
+            rawSetting ? "mouse_backend=grabbed_fallback raw_relative_failed=true" :
+                         "mouse_backend=grabbed_fallback raw_preferred=false");
+    }
+    Window_mouseCaptureActive = 1;
+}
+
 int Window_xPos = SDL_WINDOWPOS_CENTERED;
 int Window_yPos = SDL_WINDOWPOS_CENTERED;
 int last_jkGame_isDDraw = 0;
@@ -592,6 +651,7 @@ void Window_HandleWindowEvent(SDL_Event* event)
             break;
         case SDL_EVENT_WINDOW_FOCUS_LOST:
             stdPlatform_Printf("Window %d lost keyboard focus\n", event->window.windowID);
+            Window_SetGameplayMouseCapture(0);
             if (stdControl_IsSystemKeyboardShowing() && Window_bNeedsKeyboardFixed) {
                 stdPlatform_Printf("Fixing keyboard...\n");
 
@@ -1154,6 +1214,7 @@ void Window_SdlUpdate()
 
             case SDL_EVENT_QUIT:
                 stdPlatform_Printf("Quit!\n");
+                Window_SetGameplayMouseCapture(0);
 
                 // Added
                 if (jkPlayer_bHasLoadedSettingsOnce) {
@@ -1206,7 +1267,7 @@ void Window_SdlUpdate()
             SDL_WarpMouseInWindow(displayWindow, Window_menu_mouseX, Window_menu_mouseY);
         }
 
-        SDL_SetWindowRelativeMouseMode(displayWindow, false);
+        Window_SetGameplayMouseCapture(0);
 
         if (!jkGuiBuildMulti_bRendering) {
             std3D_StartScene();
@@ -1270,16 +1331,16 @@ void Window_SdlUpdate()
 
         if (jkQuakeConsole_bOpen)
         {
-            SDL_SetWindowRelativeMouseMode(displayWindow, false);
+            Window_SetGameplayMouseCapture(0);
         }
 
         if (!jkQuakeConsole_bOpen && SDL_GetWindowFlags(displayWindow) & SDL_WINDOW_MOUSE_FOCUS) {
-            SDL_SetWindowRelativeMouseMode(displayWindow, true);
+            Window_SetGameplayMouseCapture(1);
             //SDL_WarpMouseInWindow(displayWindow, 100, 100);
         }
         else
         {
-            SDL_SetWindowRelativeMouseMode(displayWindow, false);
+            Window_SetGameplayMouseCapture(0);
         }
 #endif
     }
@@ -1347,6 +1408,7 @@ void Window_RecreateSDL2Window()
     Window_needsRecreate = 0;
 
     if (displayWindow) {
+        Window_SetGameplayMouseCapture(0);
         std3D_FreeResources();
         SDL_GL_DestroyContext(glWindowContext);
         SDL_DestroyWindow(displayWindow);
@@ -1627,6 +1689,7 @@ int Window_Main_Linux(int argc, char** argv)
     if (Main_bHeadless)
     {
         if (displayWindow) {
+            Window_SetGameplayMouseCapture(0);
             std3D_FreeResources();
             SDL_GL_DestroyContext(glWindowContext);
             SDL_DestroyWindow(displayWindow);
