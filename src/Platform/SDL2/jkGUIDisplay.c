@@ -15,6 +15,8 @@
 #include "General/FrameRate.h"
 #include "General/PresentationMode.h"
 #include "General/QualityPreset.h"
+#include "General/DisplayTransaction.h"
+#include "General/DiagnosticLog.h"
 
 #include "jk.h"
 
@@ -337,10 +339,44 @@ continue_menu:
     }
     else if ( v0 != -1 )
     {
+        DisplaySettings originalDisplay = {
+            Window_displayMode, 0, Window_screenXSize, Window_screenYSize, 0, Window_isHiDpi
+        };
+        DisplaySettings proposedDisplay = originalDisplay;
+        DisplayTransaction displayTransaction;
+        proposedDisplay.mode = jkGuiDisplay_aElements[13].selectedTextEntry
+            ? (originalDisplay.mode == DISPLAY_MODE_WINDOWED ? DISPLAY_MODE_BORDERLESS : originalDisplay.mode)
+            : DISPLAY_MODE_WINDOWED;
+        proposedDisplay.hidpi = jkGuiDisplay_aElements[14].selectedTextEntry;
+        display_transaction_init(&displayTransaction, originalDisplay);
+
         jkPlayer_fov = FOV_MIN + jkGuiDisplay_aElements[10].selectedTextEntry;
         jkPlayer_fovIsVertical = jkGuiDisplay_aElements[12].selectedTextEntry;
-        Window_SetFullscreen(jkGuiDisplay_aElements[13].selectedTextEntry);
-        Window_SetHiDpi(jkGuiDisplay_aElements[14].selectedTextEntry);
+        Window_SetDisplayMode(proposedDisplay.mode);
+        Window_SetHiDpi(proposedDisplay.hidpi);
+
+        if (display_transaction_requires_confirmation(originalDisplay, proposedDisplay))
+        {
+            display_transaction_begin(&displayTransaction, proposedDisplay, SDL_GetTicks(), 15000);
+            Window_RecreateSDL2Window();
+            if (Window_ConfirmDisplaySettings(15000))
+            {
+                display_transaction_confirm(&displayTransaction);
+                diag_log_event(DIAG_SEVERITY_INFO, "display", "display_settings_confirmed");
+            }
+            else
+            {
+                DisplaySettings restore;
+                display_transaction_cancel(&displayTransaction);
+                restore = display_transaction_result(&displayTransaction);
+                Window_SetDisplayMode(restore.mode);
+                Window_SetHiDpi(restore.hidpi);
+                Window_RecreateSDL2Window();
+                jkGuiDisplay_aElements[13].selectedTextEntry = Window_isFullscreen;
+                jkGuiDisplay_aElements[14].selectedTextEntry = Window_isHiDpi;
+                diag_log_event(DIAG_SEVERITY_WARNING, "display", "display_settings_reverted");
+            }
+        }
         jkPlayer_enableTextureFilter = jkGuiDisplay_aElements[15].selectedTextEntry;
         jkPlayer_enableOrigAspect = jkGuiDisplay_aElements[16].selectedTextEntry;
         jkPlayer_fpslimit = FrameRate_ValueFromSlider(jkGuiDisplay_aElements[18].selectedTextEntry);

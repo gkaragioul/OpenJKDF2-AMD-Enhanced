@@ -44,6 +44,7 @@ extern DisplayMode Window_displayMode;
 void Window_SetHiDpi(int val);
 void Window_SetFullscreen(int val);
 void Window_SetDisplayMode(DisplayMode mode);
+int Window_ConfirmDisplaySettings(unsigned int timeoutMs);
 
 
 extern int Window_screenXSize;

@@ -62,7 +62,7 @@ macro(plat_link_and_package)
     target_link_libraries(sith_engine PRIVATE GLUT::GLUT)
     target_link_libraries(sith_engine PRIVATE GLEW::glew_s)
     target_link_libraries(${BIN_NAME} PRIVATE GLEW::glew_s)
-    target_link_libraries(sith_engine PRIVATE ${SDL2_COMMON_LIBS} version imm32 setupapi gdi32 winmm imm32 ole32 oleaut32 shell32 winmm user32 crypt32 advapi32)
+    target_link_libraries(sith_engine PRIVATE ${SDL2_COMMON_LIBS} version imm32 setupapi gdi32 winmm imm32 ole32 oleaut32 shell32 winmm user32 comctl32 crypt32 advapi32)
 
     if(TARGET_CAN_JKGM)
         target_link_libraries(sith_engine PRIVATE PNG::PNG ZLIB::ZLIB)

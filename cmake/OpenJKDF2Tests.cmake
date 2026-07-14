@@ -49,6 +49,11 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/General/DisplayMode.c"
     )
     openjkdf2_add_unit_test(
+        test_display_transaction
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_display_transaction.c"
+        "${PROJECT_SOURCE_DIR}/src/General/DisplayTransaction.c"
+    )
+    openjkdf2_add_unit_test(
         test_resolution_layout
         "${PROJECT_SOURCE_DIR}/src/Tests/test_resolution_layout.c"
         "${PROJECT_SOURCE_DIR}/src/General/ResolutionLayout.c"

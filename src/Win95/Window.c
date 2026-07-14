@@ -23,6 +23,10 @@
 
 #include "jk.h"
 
+#ifdef _WIN32
+#include <commctrl.h>
+#endif
+
 #ifdef ARCH_WASM
 #include <emscripten.h>
 #endif
@@ -134,6 +138,46 @@ void Window_SetDisplayMode(DisplayMode mode)
                  display_mode_name(resolved), display_mode_name(mode), Window_bRestorationGuardReady ? "true" : "false");
         diag_log_event(DIAG_SEVERITY_INFO, "display", event);
     }
+}
+
+#ifdef _WIN32
+static HRESULT CALLBACK Window_DisplayConfirmCallback(HWND dialog, UINT notification, WPARAM timerMs, LPARAM unused, LONG_PTR timeoutMs)
+{
+    (void)unused;
+    if (notification == TDN_TIMER && timerMs >= (WPARAM)timeoutMs)
+        SendMessageW(dialog, TDM_CLICK_BUTTON, IDCANCEL, 0);
+    return S_OK;
+}
+#endif
+
+int Window_ConfirmDisplaySettings(unsigned int timeoutMs)
+{
+#ifdef _WIN32
+    const TASKDIALOG_BUTTON buttons[] = {
+        { IDYES, L"Keep changes" },
+        { IDCANCEL, L"Revert" }
+    };
+    TASKDIALOGCONFIG config;
+    int selected = IDCANCEL;
+    memset(&config, 0, sizeof(config));
+    config.cbSize = sizeof(config);
+    config.dwFlags = TDF_ALLOW_DIALOG_CANCELLATION | TDF_CALLBACK_TIMER | TDF_POSITION_RELATIVE_TO_WINDOW;
+    config.pszWindowTitle = L"OpenJKDF2 AMD Enhanced";
+    config.pszMainInstruction = L"Keep these display settings?";
+    config.pszContent = L"The previous display settings will be restored automatically in 15 seconds.";
+    config.pszMainIcon = TD_WARNING_ICON;
+    config.cButtons = (UINT)(sizeof(buttons) / sizeof(buttons[0]));
+    config.pButtons = buttons;
+    config.nDefaultButton = IDCANCEL;
+    config.pfCallback = Window_DisplayConfirmCallback;
+    config.lpCallbackData = (LONG_PTR)timeoutMs;
+    if (FAILED(TaskDialogIndirect(&config, &selected, NULL, NULL)))
+        return 0;
+    return selected == IDYES;
+#else
+    (void)timeoutMs;
+    return 0;
+#endif
 }
 
 //static wm_handler Window_ext_handlers[16] = {0};
