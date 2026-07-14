@@ -38,6 +38,8 @@ Key evidence includes:
 - 120 FPS frame-cap-only median 8.3232 ms and p95 8.5754 ms; 60/120 first-door
   traversal differed by 7 ms.
 - Production save/load, death/reload, restart, and modern mouse/movement probes.
+- Modern and Classic production control presets passed complete live binding
+  validation plus actual movement and mouse-turn gameplay probes.
 - Exact live Windowed/Borderless sizes at 1080p, 1440p, 4K, and a second monitor,
   with 2560x1440@165 desktop and 75 Steam asset metadata entries invariant.
 - Three focus-loss/reacquisition cycles released mouse capture, and forced
@@ -48,6 +50,9 @@ Key evidence includes:
   recovery prompt led to a clean rendered relaunch.
 - Three presentation modes produced complete framebuffer status, sampled
   zero-error texture uploads, and initial swap-state telemetry in structured logs.
+- The live Windows display-change dialog was captured and left untouched; after
+  16.866 seconds it automatically restored the exact Borderless settings while
+  preserving the 2560x1440@165 desktop.
 - A clean-provenance asset-free Windows package and uninstall preservation test.
 
 ## Unresolved limitations
@@ -57,8 +62,7 @@ Key evidence includes:
   165 Hz desktop behavior and software frame caps were measured.
 - Exclusive Fullscreen remains disabled because the independent restoration
   watchdog has not passed host-authorized forced-restoration testing.
-- Live display-change timed-dialog interaction, broader
-  campaign/cutscene/dialogue/transition coverage, real GOG discovery, and a
+- Broader campaign/cutscene/dialogue/transition coverage, real GOG discovery, and a
   separate clean Windows machine remain incomplete in the requirements ledger.
 
 These limitations are reported rather than inferred away. The safe supported
@@ -67,6 +71,8 @@ fallback is Windowed or Borderless with the conservative renderer/settings.
 ## Reproduction and artifacts
 
 Build Debug or Release exactly as documented in `docs/building-windows.md`.
+Architecture and renderer fallback decisions are in `docs/architecture.md`, and
+the render/simulation clock design is in `docs/timing-design.md`.
 Evidence methods and commands live under `docs/evidence/`; automation is under
 `scripts/`. Package contents, provenance checks, install/uninstall results, and
 the current artifact checksum are recorded in

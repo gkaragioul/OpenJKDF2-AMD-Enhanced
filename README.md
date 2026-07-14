@@ -1,4 +1,17 @@
-# OpenJKDF2
+# OpenJKDF2 AMD Enhanced
+
+OpenJKDF2 AMD Enhanced is a community fork of OpenJKDF2 focused on safe modern
+Windows presentation, diagnostics, frame pacing, input, and capability-based
+AMD RDNA compatibility. It is not affiliated with or endorsed by LucasArts,
+Lucasfilm, Disney, AMD, or the upstream OpenJKDF2 project.
+
+This repository and its release package contain no Jedi Knight game assets. A
+legitimate Steam or GOG installation is required and remains separate and
+read-only. See [Windows build instructions](docs/building-windows.md),
+[architecture decisions](docs/architecture.md), [timing design](docs/timing-design.md),
+[compatibility results](COMPATIBILITY.md), and the [technical report](FINAL-REPORT.md).
+
+## Upstream project history
 
 ![MacOS Screenshot](docs/images/screenshot.png)
 
