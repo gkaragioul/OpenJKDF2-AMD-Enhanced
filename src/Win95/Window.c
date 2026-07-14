@@ -18,6 +18,7 @@
 #include "General/DisplayMode.h"
 #include "General/ResolutionLayout.h"
 #include "General/FrameRate.h"
+#include "General/PresentationMode.h"
 
 #include "jk.h"
 
@@ -400,6 +401,26 @@ SDL_GLContext glWindowContext;
 int Window_lastXRel = 0;
 int Window_lastYRel = 0;
 int Window_lastSampleTime = 0;
+static PresentationVsyncMode Window_ApplyVsyncMode(int requestedMode)
+{
+    PresentationVsyncMode mode = PresentationMode_NormalizeVsync(requestedMode);
+    char event[128];
+
+    if (SDL_GL_SetSwapInterval((int)mode))
+        return mode;
+
+    if (mode == PRESENTATION_VSYNC_ADAPTIVE && SDL_GL_SetSwapInterval(PRESENTATION_VSYNC_ON))
+    {
+        diag_log_event(DIAG_SEVERITY_WARNING, "presentation", "vsync=adaptive unsupported fallback=on");
+        return PRESENTATION_VSYNC_ON;
+    }
+
+    SDL_GL_SetSwapInterval(PRESENTATION_VSYNC_OFF);
+    snprintf(event, sizeof(event), "vsync=%s apply_failed fallback=off", PresentationMode_VsyncName(mode));
+    diag_log_event(DIAG_SEVERITY_WARNING, "presentation", event);
+    return PRESENTATION_VSYNC_OFF;
+}
+
 int Window_lastSampleMs = 0;
 int Window_bMouseLeft = 0;
 int Window_bMouseRight = 0;
@@ -1170,12 +1191,12 @@ void Window_SdlUpdate()
     //printf("%u\n", sampleTime_roundtrip);
     Window_lastSampleTime = SDL_GetTicks();
 
-    static int jkPlayer_enableVsync_last = 0;
+    static int jkPlayer_enableVsync_last = 999;
     int menu_framelimit_amt_ms = 16;
 
     if (jkPlayer_enableVsync_last != jkPlayer_enableVsync)
     {
-        SDL_GL_SetSwapInterval(jkPlayer_enableVsync);
+        Window_ApplyVsyncMode(jkPlayer_enableVsync);
     }
 
     if (!jkGame_isDDraw)
@@ -1435,7 +1456,7 @@ void Window_RecreateSDL2Window()
     }
 
     SDL_GL_MakeCurrent(displayWindow, glWindowContext);
-    SDL_GL_SetSwapInterval(jkPlayer_enableVsync); // Disable vsync
+    Window_ApplyVsyncMode(jkPlayer_enableVsync);
 #ifndef TARGET_ANDROID
     SDL_StartTextInput(displayWindow);
 #endif

@@ -8,6 +8,7 @@
 #include "General/stdString.h"
 #include "General/stdFnames.h"
 #include "General/stdFileUtil.h"
+#include "General/PresentationMode.h"
 #include "Engine/sithAnimClass.h"
 #include "Dss/sithGamesave.h"
 #include "Engine/rdPuppet.h"
@@ -573,7 +574,7 @@ void jkPlayer_WriteConf(char16_t *name)
         stdJSON_SaveBool(ext_fpath, "texturefiltering", jkPlayer_enableTextureFilter);
         stdJSON_SaveBool(ext_fpath, "originalaspect", jkPlayer_enableOrigAspect);
         stdJSON_SaveInt(ext_fpath, "fpslimit", jkPlayer_fpslimit);
-        stdJSON_SaveBool(ext_fpath, "enablevsync", jkPlayer_enableVsync);
+        stdJSON_SaveInt(ext_fpath, "enablevsync", jkPlayer_enableVsync);
         stdJSON_SaveBool(ext_fpath, "enablebloom", jkPlayer_enableBloom);
         stdJSON_SaveFloat(ext_fpath, "ssaamultiple", jkPlayer_ssaaMultiple);
         stdJSON_SaveInt(ext_fpath, "enablessao", jkPlayer_enableSSAO);
@@ -663,7 +664,7 @@ void jkPlayer_ParseLegacyExt()
     if (stdConffile_ReadLine())
     {
         _sscanf(stdConffile_g_aLine, "enablevsync %d", &jkPlayer_enableVsync);
-        jkPlayer_enableVsync = !!jkPlayer_enableVsync;
+        jkPlayer_enableVsync = PresentationMode_NormalizeVsync(jkPlayer_enableVsync);
     }
 
     if (stdConffile_ReadLine())
@@ -771,7 +772,8 @@ int jkPlayer_ReadConf(char16_t *name)
         jkPlayer_enableTextureFilter = stdJSON_GetBool(ext_fpath, "texturefiltering", jkPlayer_enableTextureFilter);
         jkPlayer_enableOrigAspect = stdJSON_GetBool(ext_fpath, "originalaspect", jkPlayer_enableOrigAspect);
         jkPlayer_fpslimit = stdJSON_GetInt(ext_fpath, "fpslimit", jkPlayer_fpslimit);
-        jkPlayer_enableVsync = stdJSON_GetBool(ext_fpath, "enablevsync", jkPlayer_enableVsync);
+        jkPlayer_enableVsync = PresentationMode_NormalizeVsync(
+            stdJSON_GetInt(ext_fpath, "enablevsync", jkPlayer_enableVsync));
         jkPlayer_enableBloom = stdJSON_GetBool(ext_fpath, "enablebloom", jkPlayer_enableBloom);
         jkPlayer_ssaaMultiple = stdJSON_GetFloat(ext_fpath, "ssaamultiple", jkPlayer_ssaaMultiple);
         jkPlayer_enableSSAO = stdJSON_GetInt(ext_fpath, "enablessao", jkPlayer_enableSSAO);
