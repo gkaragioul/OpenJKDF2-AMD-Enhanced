@@ -28,9 +28,9 @@ M9-RDNA3,RDNA3 compatibility,human hardware test,weak,docs/evidence/rdna3-gamepl
 M9-NVIDIA,NVIDIA regression coverage,CI or hardware test,unverified-hardware,,Pending
 M9-INTEL,Intel regression coverage,CI or hardware test,unverified-hardware,,Pending
 M9-GAMEPLAY,First level first door save load death transition and cutscene validation,gameplay evidence,incomplete,docs/evidence/timing-invariance-2026-07-14.md,First-door progression plus save/load death/reload and restart passed; level transition dialogue and cutscene coverage remain pending
-M10-PACKAGE,Legal Windows x64 package without proprietary assets,package audit,missing,,Pending
-M10-DISCOVERY,Steam and GOG discovery plus asset validation,clean machine test,incomplete,docs/evidence/data-overlay-verification-2026-07-14.md,Explicit Steam data directory with spaces verified read-only; automatic discovery browse flow GOG and validation UI pending
-M10-UNINSTALL,Safe uninstall preserving game data saves and settings,clean machine test,missing,,Pending
+M10-PACKAGE,Legal Windows x64 package without proprietary assets,package audit,proven,docs/evidence/windows-package-2026-07-14.md,Final clean-provenance Release ZIP verified all 35 manifest files with zero proprietary findings
+M10-DISCOVERY,Steam and GOG discovery plus asset validation,clean machine test,incomplete,docs/evidence/windows-package-2026-07-14.md,Automatic Steam discovery and asset validation passed; real GOG and interactive browse paths remain unverified
+M10-UNINSTALL,Safe uninstall preserving game data saves and settings,clean machine test,proven,docs/evidence/windows-package-2026-07-14.md,Normal uninstall removed app and shortcut while preserving user data; guarded portable preservation also passed
 M11-DOCS,Build architecture testing troubleshooting licenses and attribution docs,document audit,incomplete,docs/building-windows.md,Foundation documentation exists
 AC-RX7900,RX 7900 XTX full game hardware rendering without corruption or driver crash,gameplay logs and frame captures,incomplete,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,One five-second gameplay frame has no obvious corruption; first-door and sustained play remain pending
 AC-1440P,Correct 2560x1440 borderless gameplay,visual and display tests,weak,docs/evidence/rdna3-gameplay-probe-2026-07-14.md,One actual gameplay frame and display invariant verified; menus videos and extended play pending
@@ -39,5 +39,5 @@ AC-120FPS,Paced 120 Hz rendering without simulation acceleration,frame capture a
 AC-FIRST-DOOR,Previously failing first-door path no longer crashes,gameplay crash logs,proven,docs/evidence/timing-invariance-2026-07-14.md,Two 60/120 capped Release runs activated both physical doors crossed into sector 59 and exited cleanly
 AC-INPUT,Responsive modern mouse and controls,input evidence,proven,docs/evidence/modern-input-2026-07-14.md,Two consecutive fresh-profile Release runs measured W movement and roughly 91 to 92 degrees of relative mouse yaw with clean exit and display invariance
 AC-SAVES,Save load death reload restart preserve progress,gameplay evidence,proven,docs/evidence/death-reload-2026-07-14.md,Production save/load death/reload and fresh-process restart restored distinctive health and position on the tested machine
-AC-LEGAL,Package contains no proprietary Jedi Knight assets,package manifest audit,missing,,Pending
-AC-CLEAN,Clean machine install configure play save uninstall,clean machine recording,missing,,Pending
+AC-LEGAL,Package contains no proprietary Jedi Knight assets,package manifest audit,proven,docs/evidence/windows-package-2026-07-14.md,35-file final artifact passed manifest and prohibited-asset scans with zero findings
+AC-CLEAN,Clean machine install configure play save uninstall,clean machine recording,incomplete,docs/evidence/windows-package-2026-07-14.md,Isolated install on the development host passed Steam discovery launch save restore and uninstall; separate clean Windows host and GOG remain unverified
