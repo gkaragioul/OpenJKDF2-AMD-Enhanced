@@ -55,6 +55,7 @@ DisplaySettings Window_GetDisplaySettings(void);
 int Window_ApplyDisplaySettings(DisplaySettings requested, DisplaySelectionReason* reason);
 void Window_CommitDisplaySettings(DisplaySettings settings);
 int Window_IsRestorationGuardReady(void);
+void Window_SetRestorationGuardReady(int ready);
 
 
 extern int Window_screenXSize;

@@ -10,6 +10,10 @@
   is available; Borderless is the safe default.
 - Do not copy original GOB files into this package. Keep the Steam/GOG install
   separate and pass it through the launcher.
+- Do not remove or rename `OpenJKDF2-Display-Watchdog.exe`. If Windows denies
+  the exact desktop-state preflight, diagnostics report `preflight_failed` and
+  Exclusive remains unavailable; use Borderless, which does not change the
+  desktop mode.
 
 # Display options
 

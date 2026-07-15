@@ -301,6 +301,7 @@ else()
         target_compile_features(openjkdf2-display-watchdog PRIVATE c_std_11)
         target_include_directories(openjkdf2-display-watchdog PRIVATE "${PROJECT_SOURCE_DIR}/src")
         target_link_libraries(openjkdf2-display-watchdog PRIVATE user32)
+        add_dependencies(${BIN_NAME} openjkdf2-display-watchdog)
 
         add_executable(openjkdf2-crash-probe src/Tools/crash_report_probe_main.c)
         target_compile_features(openjkdf2-crash-probe PRIVATE c_std_11)

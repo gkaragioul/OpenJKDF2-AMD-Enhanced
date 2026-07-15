@@ -23,6 +23,10 @@
 #include "General/PathOverlay.h"
 #include "General/StoragePaths.h"
 
+#ifdef WIN32
+#include "Platform/Win32/DisplayWatchdog.h"
+#endif
+
 #ifndef NO_JK_MMAP
 #include "Cog/sithCog.h"
 #include "Cog/sithCogExec.h"
@@ -780,6 +784,22 @@ int main(int argc, char** argv)
         if (diagnostics_started) diag_log_finish(false);
         return 2;
     }
+#ifdef WIN32
+    {
+        bool watchdog_ready = display_watchdog_start(
+            startup_options.diagnostics_dir[0] ? startup_options.diagnostics_dir : "diagnostics");
+        Window_SetRestorationGuardReady(watchdog_ready ? 1 : 0);
+        if (diagnostics_started) {
+            char watchdog_event[256];
+            snprintf(watchdog_event, sizeof(watchdog_event),
+                     "guard_ready=%s status=%s topology_result=%ld display_result=%ld",
+                     watchdog_ready ? "true" : "false", display_watchdog_status(),
+                     display_watchdog_topology_result(), display_watchdog_display_result());
+            diag_log_event(watchdog_ready ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_WARNING,
+                           "display_watchdog", watchdog_event);
+        }
+    }
+#endif
     Window_SetSafeMode(startup_options.safe_mode ? 1 : 0);
 
 #ifdef LINUX
@@ -916,6 +936,17 @@ int main(int argc, char** argv)
     PHYSFS_deinit();
 #endif
 
+#ifdef WIN32
+    {
+        bool watchdog_disarmed = display_watchdog_disarm();
+        Window_SetRestorationGuardReady(0);
+        if (diagnostics_started) {
+            diag_log_event(watchdog_disarmed ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
+                           "display_watchdog",
+                           watchdog_disarmed ? "clean_exit_disarmed=true" : "clean_exit_disarmed=false");
+        }
+    }
+#endif
     TimingDomainsRuntime_Shutdown();
     if (diagnostics_started) {
         diag_log_event(DIAG_SEVERITY_INFO, "startup", "process_finished");

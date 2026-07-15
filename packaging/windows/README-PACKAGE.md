@@ -12,6 +12,11 @@ Run `OpenJKDF2 AMD Enhanced.cmd`. On first run the launcher searches common Stea
 and GOG locations, validates required files, and otherwise asks you to select the
 original game folder. The port reads that folder without copying or modifying it.
 
+`OpenJKDF2-Display-Watchdog.exe` is a required safety helper and must remain
+beside the game executable. The launcher starts the game normally; the engine
+arms the helper itself only after an exact desktop-state restoration preflight
+and ready handshake succeed.
+
 For portable settings and saves, run `OpenJKDF2 AMD Enhanced Portable.cmd`.
 Portable data is stored in `UserData` beside the package. Normal mode stores data
 under `%LOCALAPPDATA%\OpenJKDF2 AMD Enhanced`.

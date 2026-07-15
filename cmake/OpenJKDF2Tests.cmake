@@ -127,6 +127,23 @@ if(BUILD_TESTING)
     )
     set_tests_properties(rdna_renderer_acceptance_contract PROPERTIES LABELS "unit")
 
+    add_test(
+        NAME display_watchdog_integration_contract
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-display-watchdog-integration.ps1"
+    )
+    set_tests_properties(display_watchdog_integration_contract PROPERTIES LABELS "unit")
+
+    if(TARGET openjkdf2-display-watchdog)
+        add_test(
+            NAME display_watchdog_process_contract
+            COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                    -File "${PROJECT_SOURCE_DIR}/scripts/test-display-watchdog-process.ps1"
+                    -WatchdogPath "$<TARGET_FILE:openjkdf2-display-watchdog>"
+        )
+        set_tests_properties(display_watchdog_process_contract PROPERTIES LABELS "unit")
+    endif()
+
     openjkdf2_add_unit_test(
         test_diagnostic_log
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_log.c"

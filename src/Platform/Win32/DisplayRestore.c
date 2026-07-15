@@ -119,6 +119,16 @@ bool display_restore_capture(const wchar_t* state_path)
     return state.count > 0 && state.path_count > 0 && display_restore_write(state_path, &state);
 }
 
+bool display_restore_is_armed(const wchar_t* state_path, bool* armed)
+{
+    DisplayRestoreState state;
+    if (!armed) return false;
+    *armed = false;
+    if (!display_restore_read(state_path, &state)) return false;
+    *armed = state.armed != 0;
+    return true;
+}
+
 bool display_restore_disarm(const wchar_t* state_path)
 {
     DisplayRestoreState state;
@@ -161,6 +171,7 @@ bool display_restore_apply_if_armed(const wchar_t* state_path, unsigned* restore
             success = false;
         }
     }
+    if (success) display_restore_result = DISP_CHANGE_SUCCESSFUL;
     if (!success) {
         LONG global_result = ChangeDisplaySettingsExW(NULL, &state.entries[0].mode, NULL, 0, NULL);
         if (global_result != DISP_CHANGE_SUCCESSFUL) {

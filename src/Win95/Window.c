@@ -786,6 +786,12 @@ int Window_IsRestorationGuardReady(void)
 {
     return Window_bRestorationGuardReady;
 }
+
+void Window_SetRestorationGuardReady(int ready)
+{
+    Window_bRestorationGuardReady = ready != 0;
+}
+
 int last_jkGame_isDDraw = 0;
 #ifdef QUAKE_CONSOLE
 int last_jkQuakeConsole_bOpen = 0;

@@ -10,7 +10,8 @@ try {
     if ($roots.Count -ne 1) { throw "Package must contain exactly one top-level directory" }
     $root = $roots[0].FullName
     foreach ($required in @(
-        "OpenJKDF2-AMD-Enhanced.exe", "OpenAL32.dll", "Launch-OpenJKDF2.ps1",
+        "OpenJKDF2-AMD-Enhanced.exe", "OpenJKDF2-Display-Watchdog.exe",
+        "OpenAL32.dll", "Launch-OpenJKDF2.ps1",
         "OpenJKDF2 AMD Enhanced.cmd", "OpenJKDF2 AMD Enhanced Portable.cmd",
         "Install.ps1", "Uninstall.ps1", "LICENSE.md", "THIRD-PARTY-NOTICES.md",
         "TROUBLESHOOTING.md", "CHANGELOG.md", "ENHANCEMENT-PACKS.md", "CONFIGURATION.example.json",

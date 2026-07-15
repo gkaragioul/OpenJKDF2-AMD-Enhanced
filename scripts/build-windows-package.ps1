@@ -19,6 +19,7 @@ if (Test-Path -LiteralPath $zipPath) { Remove-Item -LiteralPath $zipPath -Force 
 $binaryMap = [ordered]@{
     "openjkdf2-64.exe" = "OpenJKDF2-AMD-Enhanced.exe"
     "openjkdf2-renderer-smoke.exe" = "OpenJKDF2-Renderer-Smoke.exe"
+    "openjkdf2-display-watchdog.exe" = "OpenJKDF2-Display-Watchdog.exe"
     "OpenAL32.dll" = "OpenAL32.dll"
     "exchndl.dll" = "exchndl.dll"
     "mgwhelp.dll" = "mgwhelp.dll"
