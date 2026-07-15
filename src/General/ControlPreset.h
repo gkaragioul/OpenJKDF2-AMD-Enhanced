@@ -7,6 +7,7 @@ typedef enum ControlPreset
     CONTROL_PRESET_MODERN = 1
 } ControlPreset;
 
+ControlPreset ControlPreset_Default(void);
 ControlPreset ControlPreset_Normalize(int value);
 const char* ControlPreset_Name(int value);
 

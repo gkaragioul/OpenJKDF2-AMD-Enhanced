@@ -234,6 +234,13 @@ if(BUILD_TESTING)
         "${PROJECT_SOURCE_DIR}/src/General/ControlPreset.c"
     )
     openjkdf2_add_unit_test(
+        test_default_settings_migration
+        "${PROJECT_SOURCE_DIR}/src/Tests/test_default_settings_migration.c"
+        "${PROJECT_SOURCE_DIR}/src/General/DefaultSettingsMigration.c"
+        "${PROJECT_SOURCE_DIR}/src/General/ControlPreset.c"
+        "${PROJECT_SOURCE_DIR}/src/General/DisplayMode.c"
+    )
+    openjkdf2_add_unit_test(
         test_mouse_smoothing
         "${PROJECT_SOURCE_DIR}/src/Tests/test_mouse_smoothing.c"
         "${PROJECT_SOURCE_DIR}/src/General/MouseSmoothing.c"
