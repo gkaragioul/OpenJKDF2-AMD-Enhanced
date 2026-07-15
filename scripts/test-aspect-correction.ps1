@@ -45,8 +45,8 @@ function Invoke-AspectRun([string]$Domain, [string]$Arguments) {
     $start.FileName = $exePath
     $start.WorkingDirectory = $repoRoot
     $start.UseShellExecute = $false
-    $start.Environment["OPENJKDF2_ASPECT_CAPTURE"] = $Domain
-    $start.Environment["OPENJKDF2_ASPECT_CAPTURE_PATH"] = $shotRelative
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_ASPECT_CAPTURE", $Domain, [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_ASPECT_CAPTURE_PATH", $shotRelative, [EnvironmentVariableTarget]::Process)
     $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot +
         '" --diagnostics-dir diagnostics ' + $Arguments
     $process = [Diagnostics.Process]::Start($start)

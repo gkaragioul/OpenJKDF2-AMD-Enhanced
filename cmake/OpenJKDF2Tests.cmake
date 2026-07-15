@@ -113,6 +113,20 @@ if(BUILD_TESTING)
     )
     set_tests_properties(timing_domains_harness_fixtures PROPERTIES LABELS "unit")
 
+    add_test(
+        NAME powershell_harness_compatibility
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-powershell-compatibility.ps1"
+    )
+    set_tests_properties(powershell_harness_compatibility PROPERTIES LABELS "unit")
+
+    add_test(
+        NAME rdna_renderer_acceptance_contract
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/check-rdna-renderer-acceptance.ps1"
+    )
+    set_tests_properties(rdna_renderer_acceptance_contract PROPERTIES LABELS "unit")
+
     openjkdf2_add_unit_test(
         test_diagnostic_log
         "${PROJECT_SOURCE_DIR}/src/Tests/test_diagnostic_log.c"

@@ -53,13 +53,22 @@ function Start-Game([bool]$Crash) {
     $start.FileName = $exePath
     $start.WorkingDirectory = $repoRoot
     $start.UseShellExecute = $false
+    foreach ($name in @(
+        "OPENJKDF2_VALIDATE_CRASH_MS",
+        "OPENJKDF2_VALIDATE_PRESENTATION_MS",
+        "OPENJKDF2_VALIDATE_PRESENTATION_VSYNC",
+        "OPENJKDF2_VALIDATE_PRESENTATION_FRAME_CAP",
+        "OPENJKDF2_VALIDATE_PRESENTATION_SCREENSHOT"
+    )) {
+        [Environment]::SetEnvironmentVariable($name, $null, [EnvironmentVariableTarget]::Process)
+    }
     if ($Crash) {
-        $start.Environment["OPENJKDF2_VALIDATE_CRASH_MS"] = "3000"
+        [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_CRASH_MS", "3000", [EnvironmentVariableTarget]::Process)
     } else {
-        $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_MS"] = "3000"
-        $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_VSYNC"] = "Off"
-        $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_FRAME_CAP"] = "60"
-        $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_SCREENSHOT"] = (Join-Path $root "recovery.bmp")
+        [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_MS", "3000", [EnvironmentVariableTarget]::Process)
+        [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_VSYNC", "Off", [EnvironmentVariableTarget]::Process)
+        [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_FRAME_CAP", "60", [EnvironmentVariableTarget]::Process)
+        [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_SCREENSHOT", (Join-Path $root "recovery.bmp"), [EnvironmentVariableTarget]::Process)
     }
     $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot +
         '" --diagnostics-dir diagnostics -autostart -sp -episode JK1 -map 01narshadda.jkl'

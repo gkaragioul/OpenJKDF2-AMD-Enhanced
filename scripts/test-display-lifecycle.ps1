@@ -57,9 +57,9 @@ function Start-ValidationGame([string]$Case, [int]$DurationMs) {
     $start.FileName = $exePath
     $start.WorkingDirectory = $repoRoot
     $start.UseShellExecute = $false
-    $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_MS"] = [string]$DurationMs
-    $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_VSYNC"] = "Off"
-    $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_FRAME_CAP"] = "60"
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_MS", [string]$DurationMs, [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_VSYNC", "Off", [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_FRAME_CAP", "60", [EnvironmentVariableTarget]::Process)
     $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot +
         '" --diagnostics-dir diagnostics -autostart -sp -episode JK1 -map 01narshadda.jkl'
     [pscustomobject]@{ Process = [Diagnostics.Process]::Start($start); UserRoot = $userRoot }

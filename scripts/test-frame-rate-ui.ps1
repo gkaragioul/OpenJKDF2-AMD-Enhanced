@@ -52,7 +52,7 @@ function Start-DisplayRun([string]$Name) {
     $log=Join-Path $userRoot 'diagnostics\openjkdf2.jsonl'
     $baselineLine=if(Test-Path $log){(Select-String -LiteralPath $log -Pattern 'display_page displayed=true'|Select-Object -Last 1).Line}else{$null}
     $start=[Diagnostics.ProcessStartInfo]::new(); $start.FileName=$exePath; $start.WorkingDirectory=$repoRoot; $start.UseShellExecute=$false
-    $start.Environment['OPENJKDF2_VALIDATE_DISPLAY_PAGE']='1'
+    [Environment]::SetEnvironmentVariable('OPENJKDF2_VALIDATE_DISPLAY_PAGE', '1', [EnvironmentVariableTarget]::Process)
     $start.Arguments='--data-dir "'+$assetRoot+'" --user-dir "'+$userRoot+'" --diagnostics-dir diagnostics'
     $p=[Diagnostics.Process]::Start($start)
     $deadline=[DateTime]::UtcNow.AddSeconds($TimeoutSeconds); $skipAt=[DateTime]::UtcNow.AddSeconds(2); $skipSent=$false; $line=$null

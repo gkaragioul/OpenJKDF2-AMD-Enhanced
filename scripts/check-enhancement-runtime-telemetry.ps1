@@ -20,5 +20,23 @@ foreach ($token in @(
 )) {
     if (-not $game.Contains($token)) { $missing += $token }
 }
+$harness = Get-Content -Raw -LiteralPath (Join-Path $root 'scripts\test-enhancement-performance.ps1')
+foreach ($token in @(
+    'ConvertFrom-Json',
+    'Get-WinEvent',
+    'shader_stage_events',
+    'distinct_shader_stages',
+    'shader_link_events',
+    'distinct_shader_programs',
+    'incomplete_framebuffers',
+    'texture_upload_errors',
+    'diagnostic_errors',
+    'software_renderer_markers',
+    'application_errors',
+    'minimum_frames'
+)) {
+    if (-not $harness.Contains($token)) { $missing += $token }
+}
+
 if ($missing.Count) { throw ('Enhancement runtime telemetry missing: ' + ($missing -join ', ')) }
 Write-Host 'Enhancement runtime telemetry contract passed.'

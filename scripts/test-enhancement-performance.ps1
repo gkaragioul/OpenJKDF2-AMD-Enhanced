@@ -48,17 +48,61 @@ $start = New-Object Diagnostics.ProcessStartInfo
 $start.FileName = $exePath
 $start.WorkingDirectory = $repoRoot
 $start.UseShellExecute = $false
-$start.Environment["OPENJKDF2_VALIDATE_ENHANCEMENTS_MS"] = [string]$DurationMilliseconds
-$start.Environment["OPENJKDF2_VALIDATE_ENHANCEMENTS_SCREENSHOT"] = "diagnostics\ultra-performance.png"
+[Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_ENHANCEMENTS_MS", [string]$DurationMilliseconds, [EnvironmentVariableTarget]::Process)
+[Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_ENHANCEMENTS_SCREENSHOT", "diagnostics\ultra-performance.png", [EnvironmentVariableTarget]::Process)
 $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot + '" --diagnostics-dir diagnostics -autostart -sp -episode JK1 -map 01narshadda.jkl'
+$eventStart = Get-Date
+$launchStartedUtc = [DateTime]::UtcNow
 $process = [Diagnostics.Process]::Start($start)
 if (-not $process.WaitForExit($TimeoutSeconds * 1000)) { $process.Kill(); throw "Enhancement performance probe timed out" }
+$launchEndedUtc = [DateTime]::UtcNow
 $displayAfter = [OpenJKDF2EnhancementDisplayProbe]::Current()
 $after = Get-AssetSnapshot $assetRoot
 $diagnostics = Join-Path $userRoot "diagnostics"
 $jsonl = Join-Path $diagnostics "openjkdf2.jsonl"
 $png = Join-Path $diagnostics "ultra-performance.png"
 $state = Get-Content -Raw -LiteralPath (Join-Path $diagnostics "run-state.json") | ConvertFrom-Json
+$entries = @(Get-Content -LiteralPath $jsonl | ForEach-Object {
+    if (-not [string]::IsNullOrWhiteSpace($_)) { $_ | ConvertFrom-Json }
+})
+$shaderStages = @($entries | Where-Object { $_.event -match '^shader_compile ' })
+$shaderStageNames = @($shaderStages | ForEach-Object {
+    if ($_.event -match 'name=([^ ]+)') { $Matches[1] }
+} | Sort-Object -Unique)
+$expectedShaderStages = @(
+    'shaders/blur_f.glsl','shaders/blur_v.glsl','shaders/default_f.glsl','shaders/default_v.glsl',
+    'shaders/menu_f.glsl','shaders/menu_v.glsl','shaders/ssao_f.glsl','shaders/ssao_v.glsl',
+    'shaders/ssao_mix_f.glsl','shaders/ssao_mix_v.glsl','shaders/texfbo_f.glsl','shaders/texfbo_v.glsl',
+    'shaders/ui_f.glsl','shaders/ui_v.glsl'
+)
+$shaderPrograms = @($entries | Where-Object { $_.event -match '^shader_link ' })
+$shaderProgramNames = @($shaderPrograms | ForEach-Object {
+    if ($_.event -match 'name=([^ ]+)') { $Matches[1] }
+} | Sort-Object -Unique)
+$expectedShaderPrograms = @('shaders/blur','shaders/default','shaders/menu','shaders/ssao','shaders/ssao_mix','shaders/texfbo','shaders/ui')
+$shaderStageFailures = @($shaderStages | Where-Object { $_.event -notmatch ' ok=true(?: |$)' })
+$shaderLinkFailures = @($shaderPrograms | Where-Object { $_.event -notmatch ' ok=true(?: |$)' })
+$shaderManifestPass = @(Compare-Object $expectedShaderStages $shaderStageNames).Count -eq 0
+$programManifestPass = @(Compare-Object $expectedShaderPrograms $shaderProgramNames).Count -eq 0
+$framebufferEvents = @($entries | Where-Object { $_.event -match '^framebuffer_created ' })
+$incompleteFramebuffers = @($framebufferEvents | Where-Object { $_.event -notmatch ' status=0x8cd5(?: |$)' })
+$textureUploads = @($entries | Where-Object { $_.event -match '^texture_upload count=' })
+$textureUploadErrors = @($textureUploads | Where-Object { $_.event -notmatch ' gl_error=0x0(?: |$)' })
+$diagnosticErrors = @($entries | Where-Object { $_.severity -eq 'error' })
+$softwareRendererMarkers = @($entries | Where-Object { $_.event -match '(?i)software[_ -]?renderer|fallback=software' })
+$exclusiveMarkers = @($entries | Where-Object { $_.event -match '(?i)mode=exclusive|exclusive_fullscreen' })
+$borderlessSwap = @($entries | Where-Object { $_.event -match '^swap_started mode=borderless width=2560 height=1440 ' })
+$applicationErrors = @(Get-WinEvent -FilterHashtable @{LogName='Application'; StartTime=$eventStart; Id=1000} -ErrorAction SilentlyContinue |
+    Where-Object { $_.ProviderName -eq 'Application Error' -and $_.Message -match 'openjkdf2-64\.exe' })
+$executableSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $exePath).Hash
+$strictRendererPass = $shaderStages.Count -eq 28 -and $shaderStageNames.Count -eq 14 -and
+    $shaderStageFailures.Count -eq 0 -and $shaderManifestPass -and
+    $shaderPrograms.Count -eq 14 -and $shaderProgramNames.Count -eq 7 -and
+    $shaderLinkFailures.Count -eq 0 -and $programManifestPass -and
+    $framebufferEvents.Count -ge 18 -and $incompleteFramebuffers.Count -eq 0 -and
+    $textureUploads.Count -ge 14 -and $textureUploadErrors.Count -eq 0 -and
+    $diagnosticErrors.Count -eq 0 -and $softwareRendererMarkers.Count -eq 0 -and
+    $exclusiveMarkers.Count -eq 0 -and $borderlessSwap.Count -ge 1 -and $applicationErrors.Count -eq 0
 $event = Select-String -LiteralPath $jsonl -Pattern "enhancements complete preset=Ultra" | Select-Object -Last 1
 if (-not $event -or $event.Line -notmatch 'total_frames=([0-9]+) samples=([0-9]+) median_ms=([0-9.]+) p95_ms=([0-9.]+) p99_ms=([0-9.]+) worst_ms=([0-9.]+)') {
     throw "Enhancement completion telemetry missing or malformed"
@@ -73,14 +117,27 @@ Add-Type -AssemblyName System.Drawing
 $image = [Drawing.Image]::FromFile($png)
 try { $width = $image.Width; $height = $image.Height } finally { $image.Dispose() }
 $frameBudgetMs = 1000.0 / 60.0
+$minimumFrames = [long][Math]::Floor(($DurationMilliseconds / 1000.0) * 60.0 * 0.90)
+$pacingPass = $totalFrames -ge $minimumFrames -and $samples -eq 60 -and [Math]::Abs($medianMs - $frameBudgetMs) -le $frameBudgetMs * 0.05 -and $p95Ms -le $frameBudgetMs * 1.15
 $result = [ordered]@{
-    schema = 1; startup_result = $process.ExitCode
+    schema = 2; startup_result = $process.ExitCode
+    capture_started_utc = $launchStartedUtc.ToString('o', [Globalization.CultureInfo]::InvariantCulture)
+    capture_completed_utc = $launchEndedUtc.ToString('o', [Globalization.CultureInfo]::InvariantCulture)
+    executable_sha256 = $executableSha256
     display_before = $displayBefore; display_after = $displayAfter; display_invariant = $displayBefore -eq $displayAfter
-    asset_metadata_invariant = (Compare-Object $before $after).Count -eq 0
+    asset_metadata_invariant = @(Compare-Object $before $after).Count -eq 0
     ultra_applied = [bool](Select-String -LiteralPath $jsonl -Pattern "enhancements applied preset=Ultra.*bloom=true ssao=true ssaa=1.5.*replacements=true" -Quiet)
     original_asset_fallback = [bool](Select-String -LiteralPath $jsonl -Pattern "original_asset_fallback reason=no_matching_override" -Quiet)
-    total_frames = $totalFrames; samples = $samples; median_ms = $medianMs; p95_ms = $p95Ms; p99_ms = $p99Ms; worst_ms = $worstMs
-    pacing_pass = $totalFrames -ge 600 -and $samples -eq 60 -and [Math]::Abs($medianMs - $frameBudgetMs) -le $frameBudgetMs * 0.05 -and $p95Ms -le $frameBudgetMs * 1.15
+    strict_renderer_pass = $strictRendererPass
+    shader_stage_events = $shaderStages.Count; distinct_shader_stages = $shaderStageNames.Count; shader_stage_failures = $shaderStageFailures.Count
+    shader_link_events = $shaderPrograms.Count; distinct_shader_programs = $shaderProgramNames.Count; shader_link_failures = $shaderLinkFailures.Count
+    framebuffer_events = $framebufferEvents.Count; incomplete_framebuffers = $incompleteFramebuffers.Count
+    texture_upload_events = $textureUploads.Count; texture_upload_errors = $textureUploadErrors.Count
+    diagnostic_errors = $diagnosticErrors.Count; software_renderer_markers = $softwareRendererMarkers.Count
+    exclusive_markers = $exclusiveMarkers.Count; borderless_swap_events = $borderlessSwap.Count; application_errors = $applicationErrors.Count
+    total_frames = $totalFrames; minimum_frames = $minimumFrames; samples = $samples
+    median_ms = $medianMs; p95_ms = $p95Ms; p99_ms = $p99Ms; worst_ms = $worstMs
+    pacing_pass = $pacingPass
     screenshot_width = $width; screenshot_height = $height
     clean_state = $state.status -eq "clean"
     process_finished = [bool](Select-String -LiteralPath $jsonl -Pattern "process_finished" -Quiet)
@@ -89,7 +146,7 @@ $resultPath = Join-Path $userRoot "enhancement-performance-result.json"
 $result | ConvertTo-Json | Set-Content -LiteralPath $resultPath -Encoding utf8
 $result | ConvertTo-Json
 if ($result.startup_result -ne 1 -or -not $result.display_invariant -or -not $result.asset_metadata_invariant -or
-    -not $result.ultra_applied -or -not $result.original_asset_fallback -or -not $result.pacing_pass -or
-    $width -ne 2560 -or $height -ne 1440 -or -not $result.clean_state -or -not $result.process_finished) {
+    -not $result.ultra_applied -or -not $result.original_asset_fallback -or -not $result.strict_renderer_pass -or
+    -not $result.pacing_pass -or $width -ne 2560 -or $height -ne 1440 -or -not $result.clean_state -or -not $result.process_finished) {
     throw "Enhancement performance verification failed; inspect $resultPath"
 }

@@ -63,10 +63,10 @@ try {
     $start.FileName = $exePath
     $start.WorkingDirectory = $repoRoot
     $start.UseShellExecute = $false
-    $start.Environment["OPENJKDF2_VALIDATE_INPUT_MS"] = "14000"
-    $start.Environment["OPENJKDF2_VALIDATE_INPUT_PRESET"] = $Preset
-    $start.Environment["OPENJKDF2_VALIDATE_INPUT_SCREENSHOT"] = "diagnostics\$screenshotName"
-    $start.Environment["OPENJKDF2_VALIDATE_MOUSE_LATENCY"] = "1"
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_MS", "14000", [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_PRESET", $Preset, [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_SCREENSHOT", "diagnostics\$screenshotName", [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_MOUSE_LATENCY", "1", [EnvironmentVariableTarget]::Process)
     $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot + '" --diagnostics-dir diagnostics -autostart -sp -episode JK1 -map 01narshadda.jkl'
     $process = [Diagnostics.Process]::Start($start)
     $windowDeadline = [DateTime]::UtcNow.AddSeconds(10)

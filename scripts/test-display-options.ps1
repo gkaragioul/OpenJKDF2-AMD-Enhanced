@@ -68,10 +68,10 @@ function Invoke-DisplayCase([string]$Name, [int]$Mode, [int]$Monitor, [int]$Widt
     $start.FileName = $exePath
     $start.WorkingDirectory = $repoRoot
     $start.UseShellExecute = $false
-    $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_MS"] = [string]$DurationMs
-    $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_VSYNC"] = "Off"
-    $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_FRAME_CAP"] = "60"
-    $start.Environment["OPENJKDF2_VALIDATE_PRESENTATION_SCREENSHOT"] = (Join-Path $userRoot "presentation.bmp")
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_MS", [string]$DurationMs, [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_VSYNC", "Off", [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_FRAME_CAP", "60", [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_PRESENTATION_SCREENSHOT", (Join-Path $userRoot "presentation.bmp"), [EnvironmentVariableTarget]::Process)
     $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot +
         '" --diagnostics-dir diagnostics -autostart -sp -episode JK1 -map 01narshadda.jkl'
     $process = [Diagnostics.Process]::Start($start)

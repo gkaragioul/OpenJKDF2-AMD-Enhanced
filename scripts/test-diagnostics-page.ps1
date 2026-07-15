@@ -51,7 +51,7 @@ $start = [Diagnostics.ProcessStartInfo]::new()
 $start.FileName = $exePath
 $start.WorkingDirectory = $repoRoot
 $start.UseShellExecute = $false
-$start.Environment['OPENJKDF2_VALIDATE_DIAGNOSTICS_PAGE'] = '1'
+[Environment]::SetEnvironmentVariable('OPENJKDF2_VALIDATE_DIAGNOSTICS_PAGE', '1', [EnvironmentVariableTarget]::Process)
 $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot +
     '" --diagnostics-dir diagnostics'
 $process = [Diagnostics.Process]::Start($start)
