@@ -1,0 +1,439 @@
+{
+  "schema": 1,
+  "evidence_date": "2026-07-15",
+  "capture_started_utc": "2026-07-15T11:40:01Z",
+  "capture_completed_utc": "2026-07-15T11:42:20Z",
+  "build": "Release x64",
+  "executable_sha256": "A36C96C8D005E5BB330E6DC22F4AB19E4F53B56AEA3592BCDEFEC53BD8FE4C0C",
+  "host": {
+    "os": "Microsoft Windows 11 Pro",
+    "os_version": "10.0.26200",
+    "gpu": "AMD Radeon RX 7900 XTX",
+    "driver_version": "32.0.31021.5001"
+  },
+  "observer": "guarded production timing-domain observer",
+  "weapon_activation": "normal mount/current-weapon COG activation held until a real projectile spawn, then production deactivation",
+  "overall_passed": true,
+  "sample_method": {
+    "validated_warmup_runs": 1,
+    "measured_runs_per_cap": 3,
+    "run_order": [
+      60,
+      120,
+      120,
+      60,
+      60,
+      120
+    ],
+    "aggregation": "median",
+    "non_media_within_cap_simulation_range_ms": {
+      "60": 18,
+      "120": 10
+    },
+    "media_within_cap_simulation_range_ms": 18
+  },
+  "thresholds": {
+    "maximum_cross_cap_simulation_delta_ms": 17,
+    "maximum_wall_relative_delta": 0.05,
+    "wall_relative_denominator_floor_us": 100000,
+    "maximum_wall_absolute_delta_us": 50000,
+    "maximum_media_wall_absolute_delta_us": 100000,
+    "level_transition_wall_policy": "maximum of 100000 us or 20 percent",
+    "expected_events_per_domain_per_run": 1
+  },
+  "build_gates": {
+    "debug": "40/40 passed",
+    "release": "40/40 passed"
+  },
+  "runs": {
+    "60": {
+      "frame_limit": 60,
+      "sample_count": 3,
+      "domains_completed_per_sample": 9,
+      "clean_run_states": 3
+    },
+    "120": {
+      "frame_limit": 120,
+      "sample_count": 3,
+      "domains_completed_per_sample": 9,
+      "clean_run_states": 3
+    },
+    "warmup": {
+      "frame_limit": 60,
+      "sample_count": 1,
+      "domains_completed": 9,
+      "run_state": "clean"
+    }
+  },
+  "domains": [
+    {
+      "name": "weapon",
+      "simulation_samples_ms_60": [
+        514,
+        500,
+        501
+      ],
+      "simulation_samples_ms_120": [
+        505,
+        504,
+        506
+      ],
+      "wall_samples_us_60": [
+        514355,
+        500182,
+        501699
+      ],
+      "wall_samples_us_120": [
+        505186,
+        503873,
+        505802
+      ],
+      "simulation_median_ms_60": 501,
+      "simulation_median_ms_120": 505,
+      "simulation_delta_ms": 4,
+      "simulation_range_ms_60": 14,
+      "simulation_range_ms_120": 2,
+      "wall_median_us_60": 501699,
+      "wall_median_us_120": 505186,
+      "wall_median_delta_us": 3487,
+      "wall_relative_delta": 0.006902,
+      "wall_effective_limit_us": 25259.3,
+      "wall_relative_limit": 0.05,
+      "wall_limit_policy": "minimum",
+      "expected_events_per_run": 1,
+      "observed_events_per_run": 1,
+      "passed": true
+    },
+    {
+      "name": "ai",
+      "simulation_samples_ms_60": [
+        500,
+        500,
+        500
+      ],
+      "simulation_samples_ms_120": [
+        500,
+        500,
+        500
+      ],
+      "wall_samples_us_60": [
+        496752,
+        496165,
+        494151
+      ],
+      "wall_samples_us_120": [
+        494978,
+        496626,
+        496850
+      ],
+      "simulation_median_ms_60": 500,
+      "simulation_median_ms_120": 500,
+      "simulation_delta_ms": 0,
+      "simulation_range_ms_60": 0,
+      "simulation_range_ms_120": 0,
+      "wall_median_us_60": 496165,
+      "wall_median_us_120": 496626,
+      "wall_median_delta_us": 461,
+      "wall_relative_delta": 0.000928,
+      "wall_effective_limit_us": 24831.3,
+      "wall_relative_limit": 0.05,
+      "wall_limit_policy": "minimum",
+      "expected_events_per_run": 1,
+      "observed_events_per_run": 1,
+      "passed": true
+    },
+    {
+      "name": "physics",
+      "simulation_samples_ms_60": [
+        34,
+        34,
+        34
+      ],
+      "simulation_samples_ms_120": [
+        33,
+        34,
+        33
+      ],
+      "wall_samples_us_60": [
+        29920,
+        29867,
+        29985
+      ],
+      "wall_samples_us_120": [
+        29323,
+        30174,
+        30214
+      ],
+      "simulation_median_ms_60": 34,
+      "simulation_median_ms_120": 33,
+      "simulation_delta_ms": 1,
+      "simulation_range_ms_60": 0,
+      "simulation_range_ms_120": 1,
+      "wall_median_us_60": 29920,
+      "wall_median_us_120": 30174,
+      "wall_median_delta_us": 254,
+      "wall_relative_delta": 0.00254,
+      "wall_effective_limit_us": 5000,
+      "wall_relative_limit": 0.05,
+      "wall_limit_policy": "minimum",
+      "expected_events_per_run": 1,
+      "observed_events_per_run": 1,
+      "passed": true
+    },
+    {
+      "name": "animation",
+      "simulation_samples_ms_60": [
+        733,
+        716,
+        716
+      ],
+      "simulation_samples_ms_120": [
+        717,
+        716,
+        725
+      ],
+      "wall_samples_us_60": [
+        730070,
+        713369,
+        713386
+      ],
+      "wall_samples_us_120": [
+        713438,
+        713296,
+        721841
+      ],
+      "simulation_median_ms_60": 716,
+      "simulation_median_ms_120": 717,
+      "simulation_delta_ms": 1,
+      "simulation_range_ms_60": 17,
+      "simulation_range_ms_120": 9,
+      "wall_median_us_60": 713386,
+      "wall_median_us_120": 713438,
+      "wall_median_delta_us": 52,
+      "wall_relative_delta": 0.000073,
+      "wall_effective_limit_us": 35671.9,
+      "wall_relative_limit": 0.05,
+      "wall_limit_policy": "minimum",
+      "expected_events_per_run": 1,
+      "observed_events_per_run": 1,
+      "passed": true
+    },
+    {
+      "name": "particle",
+      "simulation_samples_ms_60": [
+        800,
+        800,
+        800
+      ],
+      "simulation_samples_ms_120": [
+        791,
+        792,
+        792
+      ],
+      "wall_samples_us_60": [
+        796419,
+        796109,
+        796485
+      ],
+      "wall_samples_us_120": [
+        788136,
+        788212,
+        788431
+      ],
+      "simulation_median_ms_60": 800,
+      "simulation_median_ms_120": 792,
+      "simulation_delta_ms": 8,
+      "simulation_range_ms_60": 0,
+      "simulation_range_ms_120": 1,
+      "wall_median_us_60": 796419,
+      "wall_median_us_120": 788212,
+      "wall_median_delta_us": 8207,
+      "wall_relative_delta": 0.010305,
+      "wall_effective_limit_us": 39820.95,
+      "wall_relative_limit": 0.05,
+      "wall_limit_policy": "minimum",
+      "expected_events_per_run": 1,
+      "observed_events_per_run": 1,
+      "passed": true
+    },
+    {
+      "name": "script",
+      "simulation_samples_ms_60": [
+        517,
+        517,
+        517
+      ],
+      "simulation_samples_ms_120": [
+        509,
+        508,
+        508
+      ],
+      "wall_samples_us_60": [
+        512017,
+        512615,
+        513343
+      ],
+      "wall_samples_us_120": [
+        504830,
+        504979,
+        505163
+      ],
+      "simulation_median_ms_60": 517,
+      "simulation_median_ms_120": 508,
+      "simulation_delta_ms": 9,
+      "simulation_range_ms_60": 0,
+      "simulation_range_ms_120": 1,
+      "wall_median_us_60": 512615,
+      "wall_median_us_120": 504979,
+      "wall_median_delta_us": 7636,
+      "wall_relative_delta": 0.014896,
+      "wall_effective_limit_us": 25630.75,
+      "wall_relative_limit": 0.05,
+      "wall_limit_policy": "minimum",
+      "expected_events_per_run": 1,
+      "observed_events_per_run": 1,
+      "passed": true
+    },
+    {
+      "name": "dialogue",
+      "simulation_samples_ms_60": [
+        1366,
+        1367,
+        1350
+      ],
+      "simulation_samples_ms_120": [
+        1366,
+        1359,
+        1359
+      ],
+      "wall_samples_us_60": [
+        1363452,
+        1362892,
+        1345926
+      ],
+      "wall_samples_us_120": [
+        1362787,
+        1355170,
+        1354379
+      ],
+      "simulation_median_ms_60": 1366,
+      "simulation_median_ms_120": 1359,
+      "simulation_delta_ms": 7,
+      "simulation_range_ms_60": 17,
+      "simulation_range_ms_120": 7,
+      "wall_median_us_60": 1362892,
+      "wall_median_us_120": 1355170,
+      "wall_median_delta_us": 7722,
+      "wall_relative_delta": 0.005666,
+      "wall_effective_limit_us": 68144.6,
+      "wall_relative_limit": 0.05,
+      "wall_limit_policy": "minimum",
+      "expected_events_per_run": 1,
+      "observed_events_per_run": 1,
+      "passed": true
+    },
+    {
+      "name": "cutscene",
+      "simulation_samples_ms_60": [
+        6750,
+        6750,
+        6767
+      ],
+      "simulation_samples_ms_120": [
+        6759,
+        6750,
+        6750
+      ],
+      "wall_samples_us_60": [
+        6749992,
+        6749801,
+        6766510
+      ],
+      "wall_samples_us_120": [
+        6758284,
+        6749889,
+        6750098
+      ],
+      "simulation_median_ms_60": 6750,
+      "simulation_median_ms_120": 6750,
+      "simulation_delta_ms": 0,
+      "simulation_range_ms_60": 17,
+      "simulation_range_ms_120": 9,
+      "wall_median_us_60": 6749992,
+      "wall_median_us_120": 6750098,
+      "wall_median_delta_us": 106,
+      "wall_relative_delta": 0.000016,
+      "wall_effective_limit_us": 100000,
+      "wall_relative_limit": 0.05,
+      "wall_limit_policy": "minimum",
+      "expected_events_per_run": 1,
+      "observed_events_per_run": 1,
+      "passed": true
+    },
+    {
+      "name": "level_transition",
+      "simulation_samples_ms_60": [
+        0,
+        0,
+        0
+      ],
+      "simulation_samples_ms_120": [
+        0,
+        0,
+        0
+      ],
+      "wall_samples_us_60": [
+        862111,
+        898606,
+        842235
+      ],
+      "wall_samples_us_120": [
+        23941078,
+        814072,
+        828470
+      ],
+      "simulation_median_ms_60": 0,
+      "simulation_median_ms_120": 0,
+      "simulation_delta_ms": 0,
+      "simulation_range_ms_60": 0,
+      "simulation_range_ms_120": 0,
+      "wall_median_us_60": 862111,
+      "wall_median_us_120": 828470,
+      "wall_median_delta_us": 33641,
+      "wall_relative_delta": 0.039022,
+      "wall_effective_limit_us": 172422.2,
+      "wall_relative_limit": 0.2,
+      "wall_limit_policy": "maximum",
+      "expected_events_per_run": 1,
+      "observed_events_per_run": 1,
+      "passed": true
+    }
+  ],
+  "harness_verification": {
+    "source_contract": "passed",
+    "fixture_valid_accepted": 7,
+    "fixture_invalid_rejected": 11,
+    "negative_probe": {
+      "executable_type": "harmless unit-test executable",
+      "harness_failed_as_expected": true,
+      "child_exit_code": 0,
+      "run_failure": "Timing-domain gameplay window did not appear",
+      "application_errors": 0,
+      "display_before_after": "2560x1440@165",
+      "asset_metadata_check_completed": true
+    }
+  },
+  "safety": {
+    "total_processes": 7,
+    "clean_run_states": 7,
+    "application_errors": 0,
+    "display_before_after_all_runs": "2560x1440@165",
+    "display_invariant": true,
+    "exclusive_fullscreen_invoked": false,
+    "steam_asset_metadata_invariant": true,
+    "diagnostic_error_markers": 0,
+    "failed_shader_markers": 0,
+    "software_renderer_markers": 0,
+    "raw_proprietary_assets_retained_in_repository": false
+  }
+}
