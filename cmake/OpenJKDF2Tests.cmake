@@ -121,6 +121,13 @@ if(BUILD_TESTING)
     set_tests_properties(powershell_harness_compatibility PROPERTIES LABELS "unit")
 
     add_test(
+        NAME package_discovery_contract
+        COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
+                -File "${PROJECT_SOURCE_DIR}/scripts/test-package-tools.ps1"
+    )
+    set_tests_properties(package_discovery_contract PROPERTIES LABELS "unit")
+
+    add_test(
         NAME rdna_renderer_acceptance_contract
         COMMAND "${OPENJKDF2_POWERSHELL}" -NoProfile -ExecutionPolicy Bypass
                 -File "${PROJECT_SOURCE_DIR}/scripts/check-rdna-renderer-acceptance.ps1"
