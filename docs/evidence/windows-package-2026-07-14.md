@@ -46,3 +46,30 @@ The refreshed acceptance run's machine-readable result is retained outside sourc
 ## Scope and limitations
 
 This proves the distributable package and Steam discovery path on the available Windows 11 machine. The GOG discovery implementation and interactive browse fallback are present but have not been exercised against a real GOG installation or through a human UI session. The run used an isolated install root on the development machine rather than a separate freshly provisioned Windows VM, so the broader “clean machine” criterion remains incomplete.
+
+## Discovery-integrated package and acceptance - 2026-07-15
+
+The clean worktree at commit `6380e7e4` produced a Release x64 ZIP with
+SHA-256
+`7c8e2df9a8f40cf70bc5a9a7420273d0ab673fd01768444e45bdab906a9db761`.
+The verifier checked all 37 manifest entries, reported a valid manifest, and
+found zero proprietary files.
+
+The installed package itself passed asset-free fixtures for Steam app manifests,
+secondary Steam libraries, the common GOG Galaxy location, valid browse
+selection, invalid browse selection with the exact missing asset, and
+discovery-only launcher persistence. The fresh installed acceptance then passed:
+
+- automatic discovery and persistence of the legitimate read-only Steam data;
+- installed gameplay launch and a 360,799-byte validation save;
+- same-process and fresh-process save restoration;
+- `2560x1440@165` display invariance and original-asset metadata invariance;
+- application and shortcut removal with launcher configuration and saves kept.
+
+This update exercises automated GOG and browse resolution; the unavailable paths
+are a real GOG installation and a human folder-dialog session. Windows Sandbox,
+Hyper-V, and a second Windows host were also unavailable, so the separate-machine
+portion remains a documented host blocker.
+
+Machine-readable results are in
+`docs/evidence/discovery-clean-install-2026-07-15.json`.

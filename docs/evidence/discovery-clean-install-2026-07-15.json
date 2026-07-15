@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "date": "2026-07-15",
+  "scope": "windows_discovery_and_clean_install",
+  "source_commit": "6380e7e426a7cc852006fa916eca954dbb47b288",
+  "package": {
+    "generated_utc": "2026-07-15T14:42:49.1956036Z",
+    "sha256": "7c8e2df9a8f40cf70bc5a9a7420273d0ab673fd01768444e45bdab906a9db761",
+    "manifest_files_verified": 37,
+    "proprietary_findings": 0,
+    "manifest_valid": true,
+    "source_dirty": false
+  },
+  "asset_free_discovery_contract": {
+    "steam_manifest": true,
+    "steam_secondary_library": true,
+    "gog_common_location": true,
+    "required_asset_validation": true,
+    "automatic_resolution": true,
+    "browse_valid_selection": true,
+    "browse_invalid_selection_explained": true,
+    "discovery_only_launcher": true
+  },
+  "installed_acceptance": {
+    "completed_utc": "2026-07-15T14:44:09.5013527Z",
+    "legitimate_steam_installation": true,
+    "automatic_discovery": true,
+    "first_run_launcher_configured": true,
+    "first_run_discovery_source": "automatic",
+    "gameplay_launched": true,
+    "save_created": true,
+    "save_bytes": 360799,
+    "save_restored_same_process": true,
+    "save_restored_fresh_process": true,
+    "display_before": "2560x1440@165",
+    "display_after": "2560x1440@165",
+    "display_invariant": true,
+    "original_assets_invariant": true,
+    "application_removed": true,
+    "shortcut_removed": true,
+    "user_data_preserved": true,
+    "isolated_install_root": true
+  },
+  "host_boundary": {
+    "separate_windows_host_tested": false,
+    "windows_sandbox_available": false,
+    "hyper_v_available": false,
+    "real_gog_installation_tested": false,
+    "human_browse_dialog_tested": false
+  },
+  "final_gates": {
+    "debug": "45/45 passed",
+    "release_prior": "45/45 passed",
+    "release_final_rerun": "44 passed; 1 not run",
+    "release_blocked_test": "test_video_defaults",
+    "release_block_reason": "Enterprise Windows Code Integrity policy blocked the unsigned executable before test startup.",
+    "policy_id": "{0283ac0f-fff1-49ae-ada1-8a933130cad6}"
+  },
+  "classification": {
+    "M10-DISCOVERY": "proven",
+    "AC-CLEAN": "blocked-host"
+  },
+  "blocker": "A second freshly provisioned Windows host, Windows Sandbox, Hyper-V, and a real GOG installation were unavailable. The full installed acceptance passed in a fresh isolated root on the development host."
+}

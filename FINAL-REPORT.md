@@ -25,8 +25,8 @@ legitimate Jedi Knight installation.
   and Modern/Classic control presets.
 - Modular quality presets and optional asset overlays with original assets as the
   guaranteed fallback.
-- Per-user/portable storage, Steam discovery, asset validation, legal package
-  auditing, safe uninstall, checksums, focused tests, and Windows build scripts.
+- Per-user/portable storage, Steam/GOG discovery, browse validation, legal
+  package auditing, safe uninstall, checksums, and Windows build/test scripts.
 
 ## Measured results
 
@@ -60,7 +60,10 @@ Key evidence includes:
 - The live Windows display-change dialog was captured and left untouched; after
   16.866 seconds it automatically restored the exact Borderless settings while
   preserving the 2560x1440@165 desktop.
-- A clean-provenance asset-free Windows package and uninstall preservation test.
+- A clean-provenance 37-file Windows package passed packaged Steam/GOG/browse
+  fixtures, real automatic Steam configuration, installed gameplay, two-process
+  save restoration, display/asset invariance, uninstall, and user-data
+  preservation with zero proprietary findings.
 
 ## Unresolved limitations
 
@@ -72,8 +75,15 @@ Key evidence includes:
   snapshot reapplication with error 5 and `ChangeDisplaySettingsEx` failed
   with -1, so armed forced-restoration testing is blocked rather than claimed.
 - A full-campaign endurance run and multiplayer hardware session remain
-  unverified; real GOG discovery and a separate clean Windows machine remain
-  incomplete in the requirements ledger.
+  unverified.
+- A real GOG installation and human folder-dialog session were unavailable;
+  automated GOG common-location and browse behavior passed asset-free fixtures.
+- Windows Sandbox, Hyper-V, and a second fresh Windows host were unavailable, so
+  the separate-machine acceptance boundary is recorded as a host blocker.
+- The final Debug gate passed 45/45 and an earlier exact Release gate passed
+  45/45. On the last Release rerun, 44 passed and enterprise Windows Code
+  Integrity blocked the unsigned `test_video_defaults.exe` before startup; this
+  was a policy launch denial, not a failed assertion.
 
 These limitations are reported rather than inferred away. The safe supported
 fallback is Windowed or Borderless with the conservative renderer/settings.
@@ -88,4 +98,6 @@ Evidence methods and commands live under `docs/evidence/`; automation is under
 the current artifact checksum are recorded in
 `docs/evidence/windows-package-2026-07-14.md`. Watchdog lifecycle results and
 the host authorization blocker are in
-`docs/evidence/display-watchdog-2026-07-15.json`.
+`docs/evidence/display-watchdog-2026-07-15.json`. Discovery and installed
+acceptance results are in
+`docs/evidence/discovery-clean-install-2026-07-15.json`.
