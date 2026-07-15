@@ -191,8 +191,8 @@ static jkGuiMenu jkGuiDisplay_aspectMenu = { jkGuiDisplay_aspectElements, 0, 0xF
 static jkGuiElement jkGuiDisplay_displayOptionsElements[23] = {
     { ELEMENT_TEXT,       0, 6, "GUIEXT_DISPLAY_OPTIONS", 3, {20, 20, 600, 40}, 1, 0, NULL, 0, 0, 0, {0}, 0},
     { ELEMENT_TEXT,       0, 0, "GUIEXT_DISPLAY_MODE", 2, {40, 80, 150, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
-    { ELEMENT_SLIDER,     0, 0, (const char*)2, 0, {190, 80, 260, 24}, 1, 0, NULL, jkGuiDisplay_DisplayModeDraw, 0, slider_images, {0}, 0},
-    { ELEMENT_TEXT,       0, 0, display_mode_text, 3, {460, 80, 160, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
+    { ELEMENT_SLIDER,     0, 0, (const char*)2, 0, {160, 80, 160, 24}, 1, 0, NULL, jkGuiDisplay_DisplayModeDraw, 0, slider_images, {0}, 0},
+    { ELEMENT_TEXT,       0, 0, display_mode_text, 3, {330, 80, 290, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
     { ELEMENT_TEXT,       0, 0, "GUIEXT_DISPLAY_MONITOR", 2, {40, 120, 150, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
     { ELEMENT_SLIDER,     0, 0, (const char*)0, 0, {190, 120, 260, 24}, 1, 0, NULL, jkGuiDisplay_DisplayMonitorDraw, 0, slider_images, {0}, 0},
     { ELEMENT_TEXT,       0, 0, display_monitor_text, 3, {460, 120, 160, 24}, 1, 0, NULL, 0, 0, 0, {0}, 0},
@@ -225,11 +225,13 @@ static DisplayMonitor* jkGuiDisplay_SelectedMonitor(void)
 
 void jkGuiDisplay_DisplayModeDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
 {
-    static const char16_t* names[] = {u"Windowed", u"Borderless", u"Exclusive"};
+    static const char16_t* names[] = {
+        u"Windowed", u"Borderless Fullscreen (Recommended)", u"Exclusive Fullscreen"
+    };
     int mode = element->selectedTextEntry;
     if (mode < DISPLAY_MODE_WINDOWED || mode > DISPLAY_MODE_EXCLUSIVE) mode = DISPLAY_MODE_WINDOWED;
     if (mode == DISPLAY_MODE_EXCLUSIVE && !Window_IsRestorationGuardReady())
-        jk_snwprintf(display_mode_text, 64, u"Exclusive (Unavailable)");
+        jk_snwprintf(display_mode_text, 64, u"Exclusive Fullscreen (Unavailable)");
     else
         jk_snwprintf(display_mode_text, 64, u"%ls", names[mode]);
     jkGuiDisplay_displayOptionsElements[21].bIsVisible = !Window_IsRestorationGuardReady();

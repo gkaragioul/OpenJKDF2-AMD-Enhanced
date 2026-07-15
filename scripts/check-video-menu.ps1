@@ -29,6 +29,12 @@ foreach ($key in @('GUIEXT_DISPLAY_OPTIONS', 'GUIEXT_DISPLAY_MODE',
     if ($strings -notmatch [regex]::Escape('"' + $key + '"')) { $missing += "localization:$key" }
     if ($menu -notmatch [regex]::Escape('"' + $key + '"')) { $missing += "display-options-menu:$key" }
 }
+foreach ($label in @('Windowed', 'Borderless Fullscreen (Recommended)', 'Exclusive Fullscreen')) {
+    if (-not $menu.Contains($label)) { $missing += "display-mode-label:$label" }
+}
+foreach ($migrationContract in @('Window_defaultsVersion', 'default_settings_migrate_display', 'WINDOW_DEFAULTS_VERSION')) {
+    if (-not $windowImpl.Contains($migrationContract)) { $missing += "display-default-migration:$migrationContract" }
+}
 foreach ($contract in @('jkGuiDisplay_ShowDisplayOptions', 'Window_GetDisplayInventory',
                          'Window_GetDisplaySettings', 'Window_ApplyDisplaySettings',
                          'Window_CommitDisplaySettings')) {

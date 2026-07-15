@@ -23,6 +23,7 @@
 #include "General/FrameTelemetry.h"
 #include "General/StoragePaths.h"
 #include "General/PresentationMode.h"
+#include "General/DefaultSettingsMigration.h"
 
 #include "jk.h"
 
@@ -2033,11 +2034,32 @@ int Window_Main_Linux(int argc, char** argv)
     int fullscreen = wuRegistry_GetBool("Window_isFullscreen", 1);
     int display_mode = wuRegistry_GetInt("Window_displayMode", fullscreen ? DISPLAY_MODE_BORDERLESS : DISPLAY_MODE_WINDOWED);
     int hidpi = wuRegistry_GetBool("Window_isHiDpi", 0);
+    int defaults_version = wuRegistry_GetInt("Window_defaultsVersion", 0);
+    int window_width = wuRegistry_GetInt("Window_windowWidth", WINDOW_DEFAULT_WIDTH);
+    int window_height = wuRegistry_GetInt("Window_windowHeight", WINDOW_DEFAULT_HEIGHT);
+    int migrated_display = 0;
+    DisplayMode stored_mode = display_mode_from_config(display_mode);
+    stored_mode = default_settings_migrate_display(
+        defaults_version,
+        stored_mode,
+        window_width,
+        window_height,
+        WINDOW_DEFAULT_WIDTH,
+        WINDOW_DEFAULT_HEIGHT,
+        &migrated_display);
+    if (migrated_display)
+    {
+        display_mode = (int)stored_mode;
+        fullscreen = stored_mode != DISPLAY_MODE_WINDOWED;
+        wuRegistry_SaveInt("Window_displayMode", display_mode);
+        wuRegistry_SaveBool("Window_isFullscreen", fullscreen);
+    }
+    wuRegistry_SaveInt("Window_defaultsVersion", WINDOW_DEFAULTS_VERSION);
     DisplaySettings saved_settings = {
-        Window_bSafeMode ? DISPLAY_MODE_WINDOWED : display_mode_from_config(display_mode),
+        Window_bSafeMode ? DISPLAY_MODE_WINDOWED : stored_mode,
         wuRegistry_GetInt("Window_displayMonitor", 0),
-        wuRegistry_GetInt("Window_windowWidth", WINDOW_DEFAULT_WIDTH),
-        wuRegistry_GetInt("Window_windowHeight", WINDOW_DEFAULT_HEIGHT),
+        window_width,
+        window_height,
         wuRegistry_GetInt("Window_refreshHz", 0),
         hidpi
     };

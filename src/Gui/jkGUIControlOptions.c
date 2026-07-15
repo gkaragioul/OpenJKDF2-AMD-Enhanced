@@ -18,8 +18,14 @@
 #include "World/jkPlayer.h"
 #include "Devices/sithControl.h"
 #include "General/ControlPreset.h"
+#include "General/DefaultSettingsMigration.h"
 
-static jkGuiElement jkGuiControlOptions_buttons[21] = {
+static char16_t jkGuiControlOptions_controlStyleValue[32] = {0};
+static int32_t jkGuiControlOptions_sliderImages[2] = {JKGUI_BM_SLIDER_BACK_200, JKGUI_BM_SLIDER_THUMB};
+
+static void jkGuiControlOptions_ControlStyleDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw);
+
+static jkGuiElement jkGuiControlOptions_buttons[23] = {
     {ELEMENT_TEXT, 0, 0, 0, 3, {0, 410, 640, 20}, 1, 0, 0, 0, 0, 0, {0}, 0},
     {ELEMENT_TEXT, 0, 6, "GUI_SETUP", 3, {20, 20, 600, 40}, 1, 0, 0, 0, 0, 0, {0}, 0},
     {ELEMENT_TEXTBUTTON, 100, 2, "GUI_GENERAL", 3, {20, 80, 120, 40},  1, 0, "GUI_GENERAL_HINT", 0, 0, 0, {0}, 0},
@@ -38,12 +44,26 @@ static jkGuiElement jkGuiControlOptions_buttons[21] = {
     {ELEMENT_TEXTBUTTON, 4444, 2, "GUI_SAVECONFIG", 3, {320, 170, 320,  50}, 1, 0, "GUI_SAVECONFIG_HINT", 0, 0, 0, {0}, 0},
     {ELEMENT_TEXTBUTTON, 1, 2, "GUI_OK", 3, {440, 430, 200, 40}, 1, 0, 0, 0, 0, 0, {0}, 0},
     {ELEMENT_TEXTBUTTON, -1, 2, "GUI_CANCEL", 3, {0, 430, 200, 40}, 1, 0, 0, 0, 0, 0, {0}, 0},
-    {ELEMENT_TEXTBUTTON, 4450, 2, "GUIEXT_CONTROLS_MODERN", 3, {40, 340, 270, 40}, 1, 0, "GUIEXT_CONTROLS_MODERN_HINT", 0, 0, 0, {0}, 0},
-    {ELEMENT_TEXTBUTTON, 4451, 2, "GUIEXT_CONTROLS_CLASSIC", 3, {330, 340, 270, 40}, 1, 0, "GUIEXT_CONTROLS_CLASSIC_HINT", 0, 0, 0, {0}, 0},
+    {ELEMENT_TEXT, 0, 0, "GUIEXT_CONTROL_STYLE", 2, {40, 335, 120, 30}, 1, 0, 0, 0, 0, 0, {0}, 0},
+    {ELEMENT_SLIDER, 0, 0, (const char*)1, 0, {160, 335, 180, 30}, 1, 0, 0, jkGuiControlOptions_ControlStyleDraw, 0, jkGuiControlOptions_sliderImages, {0}, 0},
+    {ELEMENT_TEXT, 0, 0, jkGuiControlOptions_controlStyleValue, 3, {350, 335, 120, 30}, 1, 0, 0, 0, 0, 0, {0}, 0},
+    {ELEMENT_TEXTBUTTON, 4450, 2, "GUIEXT_APPLY_CONTROL_STYLE", 3, {470, 330, 150, 40}, 1, 0, 0, 0, 0, 0, {0}, 0},
     {ELEMENT_END, 0, 0, 0, 0, {0}, 0, 0, 0, 0, 0, 0, {0}, 0},
 };
 
 static jkGuiMenu jkGuiControlOptions_menu = {jkGuiControlOptions_buttons, 0, 0xFF, 0xE1, 0xF, 0, 0, jkGui_stdBitmaps, jkGui_stdFonts, 0, 0, "thermloop01.wav", "thrmlpu2.wav", 0, 0, 0, 0, 0, 0};
+
+static void jkGuiControlOptions_ControlStyleDraw(jkGuiElement *element, jkGuiMenu *menu, tVBuffer *vbuf, int redraw)
+{
+    const int preset = ControlPreset_Normalize(element->selectedTextEntry);
+    const char* key = preset == CONTROL_PRESET_MODERN
+        ? "GUIEXT_CONTROL_STYLE_MODERN" : "GUIEXT_CONTROL_STYLE_CLASSIC";
+    element->selectedTextEntry = preset;
+    jk_snwprintf(jkGuiControlOptions_controlStyleValue, 32, u"%ls",
+        jkStrings_GetUniStringWithFallback(key));
+    jkGuiRend_SliderDraw(element, menu, vbuf, redraw);
+    jkGuiRend_UpdateAndDrawClickable(&jkGuiControlOptions_buttons[20], menu, 1);
+}
 
 void jkGuiControlOptions_Startup()
 {
@@ -68,6 +88,7 @@ int jkGuiControlOptions_Show()
     jkGuiControlOptions_buttons[11].boxChecked = sithWeapon_controlOptions & 4;
     jkGuiControlOptions_buttons[12].boxChecked = sithWeapon_controlOptions & 0x10;
     jkGuiControlOptions_buttons[13].boxChecked = sithWeapon_controlOptions & 2;
+    jkGuiControlOptions_buttons[19].selectedTextEntry = ControlPreset_Normalize(jkPlayer_controlPreset);
     jkGuiRend_MenuSetReturnKeyShortcutElement(&jkGuiControlOptions_menu, &jkGuiControlOptions_buttons[16]);
     jkGuiRend_MenuSetEscapeKeyShortcutElement(&jkGuiControlOptions_menu, &jkGuiControlOptions_buttons[17]);
     jkGuiSetup_sub_412EF0(&jkGuiControlOptions_menu, 1);
@@ -81,13 +102,15 @@ int jkGuiControlOptions_Show()
                 break;
             jkGuiControlSaveLoad_Write(1);
         }
-        if (v0 == 4450 || v0 == 4451)
+        if (v0 == 4450)
         {
             if (!jkGuiDialog_YesNoDialog(
                     jkStrings_GetUniStringWithFallback("GUIEXT_CONTROLS_APPLY_TITLE"),
                     jkStrings_GetUniStringWithFallback("GUIEXT_CONTROLS_APPLY_Q")))
                 continue;
-            jkPlayer_controlPreset = v0 == 4450 ? CONTROL_PRESET_MODERN : CONTROL_PRESET_CLASSIC;
+            jkPlayer_controlPreset = ControlPreset_Normalize(
+                jkGuiControlOptions_buttons[19].selectedTextEntry);
+            jkPlayer_controlPresetVersion = CONTROL_DEFAULTS_VERSION;
             if (jkPlayer_controlPreset == CONTROL_PRESET_MODERN)
                 sithControl_ApplyModernPreset();
             else

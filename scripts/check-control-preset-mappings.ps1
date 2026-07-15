@@ -6,7 +6,9 @@ $game = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Main\jkGame.c')
 $player = Get-Content -Raw -LiteralPath (Join-Path $root 'src\World\jkPlayer.c')
 $playerHeader = Get-Content -Raw -LiteralPath (Join-Path $root 'src\World\jkPlayer.h')
 $migration = Get-Content -Raw -LiteralPath (Join-Path $root 'src\General\DefaultSettingsMigration.h')
-$allSources = $control + $header + $game + $player + $playerHeader + $migration
+$options = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Gui\jkGUIControlOptions.c')
+$strings = Get-Content -Raw -LiteralPath (Join-Path $root 'resource\ui\openjkdf2.uni')
+$allSources = $control + $header + $game + $player + $playerHeader + $migration + $options + $strings
 $missing = @()
 foreach($token in @(
     'sithControl_HasBinding',
@@ -26,6 +28,10 @@ foreach($token in @(
     'KEY_MOUSE_B7',
     'DIK_SPACE',
     'DIK_E'
+    'GUIEXT_CONTROL_STYLE'
+    'GUIEXT_CONTROL_STYLE_MODERN'
+    'GUIEXT_CONTROL_STYLE_CLASSIC'
+    'GUIEXT_APPLY_CONTROL_STYLE'
 )) {
     if(-not $allSources.Contains($token)){ $missing += $token }
 }
@@ -33,5 +39,7 @@ if(-not $game.Contains('OPENJKDF2_VALIDATE_INPUT_PRESET')){ $missing += 'runtime
 if(-not $game.Contains('bindings_valid=')){ $missing += 'binding validation telemetry' }
 if($player.Contains('jkPlayer_controlPreset = CONTROL_PRESET_CLASSIC')){ $missing += 'classic player default remains' }
 if($player -match 'sithCvar_RegisterInt\("in_controlPreset",\s*CONTROL_PRESET_CLASSIC'){ $missing += 'classic cvar default remains' }
+if($options -notmatch 'selectedTextEntry\s*=\s*ControlPreset_Normalize\(jkPlayer_controlPreset\)'){ $missing += 'control selector profile initialization' }
+if($options.Contains('GUIEXT_CONTROLS_MODERN') -or $options.Contains('GUIEXT_CONTROLS_CLASSIC')){ $missing += 'independent preset buttons remain' }
 if($missing.Count){ throw ('Control preset mapping contract missing: '+($missing -join ', ')) }
 Write-Host 'Control preset mapping contract passed.'

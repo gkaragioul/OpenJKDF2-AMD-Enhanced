@@ -93,10 +93,10 @@ MSGS 149          # <--- DON'T FORGET TO UPDATE THIS COUNT
 #******************************
 #  General
 #******************************
-   "GUIEXT_CONTROLS_MODERN"                  0 "Apply Modern Controls"
-   "GUIEXT_CONTROLS_MODERN_HINT"             0 "WASD, Space jump, E use, Ctrl/C crouch, and modern mouse bindings."
-   "GUIEXT_CONTROLS_CLASSIC"                 0 "Apply Classic Controls"
-   "GUIEXT_CONTROLS_CLASSIC_HINT"            0 "Restore the original OpenJKDF2 keyboard and mouse bindings."
+   "GUIEXT_CONTROL_STYLE"                    0 "Control Style"
+   "GUIEXT_CONTROL_STYLE_MODERN"             0 "Modern"
+   "GUIEXT_CONTROL_STYLE_CLASSIC"            0 "Classic"
+   "GUIEXT_APPLY_CONTROL_STYLE"              0 "Apply Control Style"
    "GUIEXT_CONTROLS_APPLY_TITLE"             0 "Apply Control Preset"
    "GUIEXT_CONTROLS_APPLY_Q"                 0 "Replace your current keyboard and mouse bindings?"
    "KEY_MOUSE_WHEEL_UP"                      0 "Mouse Wheel Up"
