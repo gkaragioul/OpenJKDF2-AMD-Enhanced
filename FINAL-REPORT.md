@@ -32,11 +32,13 @@ legitimate Jedi Knight installation.
 The requirements ledger at `docs/evidence/requirements.csv` is authoritative.
 Key evidence includes:
 
-- RX 7900 XTX hardware-rendered first-level and first-door probes without the
-  prior shader failure or driver crash.
+- RX 7900 XTX one-minute 2560x1440 Ultra hardware run recorded 3,597 frames;
+  all 14 GLSL stages and 7 programs passed, all 18 framebuffers were complete,
+  and no texture-upload error, software fallback, crash, or obvious corruption
+  was observed. Independent evidence also covers the previously failing first door.
 - Correct 2560x1440 Borderless gameplay and aspect-correct HUD/menu/video captures.
-- 120 FPS frame-cap-only median 8.3232 ms and p95 8.5754 ms; 60/120 first-door
-  traversal differed by 7 ms.
+- 120 FPS frame-cap-only median 8.3232 ms and p95 8.5754 ms; nine production
+  gameplay domains had a maximum 60/120 simulation-median delta of 9 ms.
 - Production save/load, death/reload, restart, and modern mouse/movement probes.
 - Modern and Classic production control presets passed complete live binding
   validation plus actual movement and mouse-turn gameplay probes.
@@ -62,8 +64,9 @@ Key evidence includes:
   165 Hz desktop behavior and software frame caps were measured.
 - Exclusive Fullscreen remains disabled because the independent restoration
   watchdog has not passed host-authorized forced-restoration testing.
-- Broader campaign/cutscene/dialogue/transition coverage, real GOG discovery, and a
-  separate clean Windows machine remain incomplete in the requirements ledger.
+- A full-campaign endurance run and multiplayer hardware session remain
+  unverified; real GOG discovery and a separate clean Windows machine remain
+  incomplete in the requirements ledger.
 
 These limitations are reported rather than inferred away. The safe supported
 fallback is Windowed or Borderless with the conservative renderer/settings.

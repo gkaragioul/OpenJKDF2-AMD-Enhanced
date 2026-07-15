@@ -68,7 +68,7 @@ Expected: `PASS: PowerShell process harnesses use the Windows PowerShell 5.1-com
 - Consumes: `resource/shaders/*.glsl`, `ShaderCompile.c`, `std3D.c`, and `Window.c`.
 - Produces: CTest `rdna_renderer_acceptance_contract`.
 
-- [ ] **Step 1: Write the source contract**
+- [x] **Step 1: Write the source contract**
 
 Require these fourteen stages and seven program loads:
 
@@ -83,17 +83,17 @@ $programs = @('default','menu','ui','texfbo','blur','ssao','ssao_mix')
 
 Also require compile/link status checks, sized formats, framebuffer completeness, context fallback telemetry, extension-gated anisotropy, and compatibility-fallback logging. Reject vendor-string conditionals.
 
-- [ ] **Step 2: Run the contract and verify RED**
+- [x] **Step 2: Run the contract and verify RED**
 
 Run: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\check-rdna-renderer-acceptance.ps1`
 
 Expected: FAIL until every promised invariant has an exact assertion.
 
-- [ ] **Step 3: Make only audit-driven corrections**
+- [x] **Step 3: Make only audit-driven corrections**
 
 Use exact positive and negative source patterns. Do not add a backend or vendor workaround. If a production check is missing, add a focused failing C test before its minimal implementation.
 
-- [ ] **Step 4: Verify focused tests**
+- [x] **Step 4: Verify focused tests**
 
 Run: `ctest --test-dir build/msvc-release -R 'shader|renderer|quality|rdna' --output-on-failure`
 
@@ -109,21 +109,21 @@ Expected: every selected test passes.
 - Consumes: JSONL diagnostics, run-state, screenshot, Windows Application log, and Steam/display snapshots.
 - Produces: `enhancement-performance-result.json` with strict renderer fields.
 
-- [ ] **Step 1: Extend the source contract**
+- [x] **Step 1: Extend the source contract**
 
 Require 28 compile events / 14 distinct stages, 14 links / 7 distinct programs, zero incomplete FBOs, zero texture errors, zero diagnostic errors, zero software-renderer markers, and zero Application Errors.
 
-- [ ] **Step 2: Verify RED**
+- [x] **Step 2: Verify RED**
 
 Run: `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\check-enhancement-runtime-telemetry.ps1`
 
 Expected: FAIL because the old harness only validates pacing and dimensions.
 
-- [ ] **Step 3: Parse structured evidence**
+- [x] **Step 3: Parse structured evidence**
 
 Parse each JSONL record, compare unique logical names to the declared lists, and query Application Error only between launch and exit for `openjkdf2-64.exe`.
 
-- [ ] **Step 4: Scale the pacing floor**
+- [x] **Step 4: Scale the pacing floor**
 
 ```powershell
 $minimumFrames = [Math]::Floor(($DurationMilliseconds / 1000.0) * 60.0 * 0.90)
@@ -132,7 +132,7 @@ $pacingPass = $totalFrames -ge $minimumFrames -and
   $p95Ms -le (1000.0 / 60.0) * 1.15
 ```
 
-- [ ] **Step 5: Verify GREEN**
+- [x] **Step 5: Verify GREEN**
 
 Expected: the runtime telemetry contract passes.
 
@@ -149,7 +149,7 @@ Expected: the runtime telemetry contract passes.
 - Consumes: strict raw capture plus first-door, timing, input, save/load, crash-restoration, and package evidence.
 - Produces: privacy-safe proof for `M3-RDNA` and `AC-RX7900` only.
 
-- [ ] **Step 1: Run the final capture**
+- [x] **Step 1: Run the final capture**
 
 ```powershell
 $root = Join-Path (Get-Location) ('build\rdna-renderer-final-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
@@ -160,15 +160,15 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\test-enhancement
 
 Expected: 2560x1440 Borderless, clean exit, display/Steam invariant, at least 3,240 frames, and all strict checks pass.
 
-- [ ] **Step 2: Inspect the screenshot**
+- [x] **Step 2: Inspect the screenshot**
 
 Confirm coherent geometry, textures, character model, lighting, and HUD without obvious shader corruption. Keep it ignored.
 
-- [ ] **Step 3: Curate evidence**
+- [x] **Step 3: Curate evidence**
 
 Record timestamps, executable hash, privacy-safe host labels, event counts, pacing, safety invariants, visual result, and cross-evidence links; omit raw paths.
 
-- [ ] **Step 4: Update claims conservatively**
+- [x] **Step 4: Update claims conservatively**
 
 Set `M3-RDNA` and `AC-RX7900` proven. Keep unavailable hardware unverified and full-campaign coverage a limitation.
 
@@ -180,7 +180,7 @@ Set `M3-RDNA` and `AC-RX7900` proven. Keep unavailable hardware unverified and f
 - Consumes: final tree and raw capture.
 - Produces: focused implementation and evidence commits.
 
-- [ ] **Step 1: Run exact gates**
+- [x] **Step 1: Run exact gates**
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\build-windows.ps1 -Configuration Debug -Test
@@ -189,11 +189,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\build-windows.ps
 
 Expected: all tests pass in both configurations.
 
-- [ ] **Step 2: Audit equality/privacy**
+- [x] **Step 2: Audit equality/privacy**
 
 Require exact counts, pacing, executable hash, safety state, no private paths, and no staged raw files.
 
-- [ ] **Step 3: Commit separately**
+- [x] **Step 3: Commit separately**
 
 Implementation: `test: harden Windows renderer validation`.
 

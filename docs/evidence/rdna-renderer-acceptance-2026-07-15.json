@@ -1,0 +1,122 @@
+{
+  "schema": 1,
+  "evidence_date": "2026-07-15",
+  "capture_started_utc": "2026-07-15T12:52:23.2493863Z",
+  "capture_completed_utc": "2026-07-15T12:53:32.0047634Z",
+  "executable_sha256": "C64083B15FA2D039487992A1F2F2D7720D3BEB83856256FFE02BBA64CA0235B7",
+  "host": {
+    "os": "Microsoft Windows 11 Pro 10.0.26200",
+    "gpu": "AMD Radeon RX 7900 XTX",
+    "architecture": "RDNA 3",
+    "driver": "32.0.31021.5001",
+    "identity_evidence": "privacy-safe startup baseline and in-game diagnostics page"
+  },
+  "backend": {
+    "name": "hardware OpenGL",
+    "api": "OpenGL 3.3 Core Profile",
+    "reported_glsl": "4.60",
+    "software_renderer": false,
+    "gpu_name_used_for_path_selection": false
+  },
+  "presentation": {
+    "mode": "borderless",
+    "width": 2560,
+    "height": 1440,
+    "desktop_refresh_hz": 165,
+    "display_before": "2560x1440@165",
+    "display_after": "2560x1440@165",
+    "display_invariant": true,
+    "exclusive_fullscreen_invoked": false
+  },
+  "quality": {
+    "preset": "Ultra",
+    "texture_filtering": true,
+    "anisotropy": 16,
+    "mipmap_bias": 0.5,
+    "bloom": true,
+    "ssao": true,
+    "ssaa": 1.5,
+    "texture_precache": true,
+    "optional_replacement_discovery": true,
+    "original_asset_fallback": true
+  },
+  "source_contract": {
+    "passed": true,
+    "shader_stage_manifest": 14,
+    "shader_program_manifest": 7,
+    "compile_and_link_status_checked": true,
+    "compiler_and_linker_logs_captured": true,
+    "sized_internal_formats_required": true,
+    "framebuffer_completeness_required": true,
+    "texture_gather_extension_fallback_required": true,
+    "anisotropy_extension_gate_required": true,
+    "context_creation_fallback_tiers_required": true,
+    "vendor_name_conditionals": 0,
+    "reference_specs": [
+      "https://registry.khronos.org/OpenGL/specs/gl/glspec33.core.pdf",
+      "https://registry.khronos.org/OpenGL/specs/gl/GLSLangSpec.3.30.pdf"
+    ]
+  },
+  "runtime": {
+    "startup_result": 1,
+    "clean_state": true,
+    "process_finished": true,
+    "asset_metadata_invariant": true,
+    "strict_renderer_pass": true,
+    "shader_stage_events": 28,
+    "distinct_shader_stages": 14,
+    "shader_stage_failures": 0,
+    "shader_link_events": 14,
+    "distinct_shader_programs": 7,
+    "shader_link_failures": 0,
+    "framebuffer_events": 18,
+    "incomplete_framebuffers": 0,
+    "texture_upload_events": 14,
+    "texture_upload_errors": 0,
+    "diagnostic_errors": 0,
+    "software_renderer_markers": 0,
+    "exclusive_markers": 0,
+    "borderless_swap_events": 1,
+    "application_errors": 0,
+    "total_frames": 3597,
+    "minimum_frames": 3240,
+    "statistics_window_frames": 60,
+    "median_ms": 16.5683,
+    "p95_ms": 18.6066,
+    "p99_ms": 22.9111,
+    "worst_ms": 22.9111,
+    "pacing_pass": true,
+    "screenshot_width": 2560,
+    "screenshot_height": 1440
+  },
+  "visual_inspection": {
+    "performed": true,
+    "coherent_level_geometry": true,
+    "coherent_textures_and_materials": true,
+    "coherent_character_rendering": true,
+    "coherent_lighting": true,
+    "coherent_hud": true,
+    "obvious_shader_corruption": false,
+    "raw_screenshot_committed": false
+  },
+  "combined_acceptance_evidence": [
+    "docs/evidence/upstream-baseline-2026-07-14.md",
+    "docs/evidence/timing-invariance-2026-07-14.md",
+    "docs/evidence/timing-domains-2026-07-14.md",
+    "docs/evidence/control-presets-2026-07-14.md",
+    "docs/evidence/save-load-lifecycle-2026-07-14.md",
+    "docs/evidence/death-reload-2026-07-14.md",
+    "docs/evidence/gameplay-crash-restoration-2026-07-14.md",
+    "docs/evidence/windows-package-2026-07-14.md"
+  ],
+  "boundaries": {
+    "rdna_1": "unverified-hardware",
+    "rdna_2": "unverified-hardware",
+    "nvidia": "unverified-hardware",
+    "intel": "unverified-hardware",
+    "full_campaign": "unverified",
+    "exclusive_fullscreen": "not tested; safety-gated"
+  },
+  "raw_profile_or_proprietary_assets_committed": false,
+  "overall_passed": true
+}
