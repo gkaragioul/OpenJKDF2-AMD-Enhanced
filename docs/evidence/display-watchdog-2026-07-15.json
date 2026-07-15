@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "date": "2026-07-15",
+  "scope": "windows_display_watchdog",
+  "source_commit": "c5ed5c0c0f9633e00e4cc226f4fdb4acb164977f",
+  "exclusive_runtime_tested": false,
+  "process_contract": {
+    "capture_started_utc": "2026-07-15T14:04:51.1542226Z",
+    "capture_completed_utc": "2026-07-15T14:04:52.7434230Z",
+    "helper_sha256": "42fe49248d305e06b98fb6f132c7c4d0cf2e33a78a92c633eda3f3d1961ff19c",
+    "display_before": "2560x1440@165",
+    "display_after_preflight": "2560x1440@165",
+    "display_after": "2560x1440@165",
+    "display_invariant": true,
+    "capture_exit_code": 0,
+    "restore_preflight_exit_code": 4,
+    "restore_preflight_ready": false,
+    "ready_status": "ready",
+    "ready_parent_pid_matched": true,
+    "disarmed_parent_exit_wait": "parent_exit",
+    "disarmed_parent_exit_restore": "success",
+    "disarmed_parent_exit_display_count": 0,
+    "disarmed_state_rejected": true
+  },
+  "production_borderless": {
+    "capture_started_utc": "2026-07-15T14:04:15.1283186Z",
+    "capture_completed_utc": "2026-07-15T14:04:28.9619757Z",
+    "executable_sha256": "f7b148a5cbc85c040a9a350fe949bd618ba5f2bb60b5d575fe2ecf534a28390c",
+    "guard_ready": false,
+    "status": "preflight_failed",
+    "topology_result": 5,
+    "display_result": -1,
+    "clean_exit_disarmed": true,
+    "display_before": "2560x1440@165",
+    "display_after": "2560x1440@165",
+    "display_invariant": true,
+    "exclusive_markers": 0,
+    "process_finished": true
+  },
+  "package": {
+    "generated_utc": "2026-07-15T14:03:44.3762395Z",
+    "sha256": "add291bbb9b9319fddb7a2abc8b8cd9510883bce82c3feb6b45863fb4ab6c253",
+    "manifest_files_verified": 37,
+    "proprietary_findings": 0,
+    "source_dirty": false,
+    "watchdog_size_bytes": 16384
+  },
+  "classification": "blocked-host",
+  "blocker": "The available Codex desktop token cannot reapply the exact active display snapshot: SetDisplayConfig returned ERROR_ACCESS_DENIED (5), and ChangeDisplaySettingsEx returned DISP_CHANGE_FAILED (-1).",
+  "fallback": "Exclusive remains gated off; Windowed and Borderless remain supported."
+}

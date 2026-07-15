@@ -12,6 +12,18 @@
 
 `scripts/verify-windows-package.ps1` verified all 36 manifest entries by path, size, and SHA-256. It found zero prohibited Jedi Knight asset files and no unlisted package files. The package contains the two executables, required open-source runtime DLLs, launcher/install/uninstall scripts, configuration example, Display Options documentation (including the legal optional-enhancement-pack guide), notices, and 13 dependency license files.
 
+## Watchdog-integrated package re-audit - 2026-07-15
+
+The clean worktree at commit `c5ed5c0c` produced a refreshed Release x64 ZIP
+with SHA-256
+`add291bbb9b9319fddb7a2abc8b8cd9510883bce82c3feb6b45863fb4ab6c253`.
+The verifier checked all 37 manifest entries with zero proprietary findings and
+a valid manifest. The added `OpenJKDF2-Display-Watchdog.exe` is 16,384 bytes
+with SHA-256
+`42fe49248d305e06b98fb6f132c7c4d0cf2e33a78a92c633eda3f3d1961ff19c`.
+This re-audit covers package provenance and contents; the installed Steam
+acceptance path below remains the separate 2026-07-14 run.
+
 ## Installed acceptance path
 
 The final ZIP was extracted to an isolated acceptance directory and installed to an isolated per-user-style application directory. The test used the legitimate Steam installation at `D:\SteamLibrary\steamapps\common\Star Wars Jedi Knight` read-only.

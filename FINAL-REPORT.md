@@ -16,7 +16,8 @@ legitimate Jedi Knight installation.
   video aspect policies.
 - Safe Windowed and desktop-native Borderless modes, SDL display enumeration,
   multi-monitor selection, confirmation-only persistence, timed reversion, safe
-  startup fallback, and Exclusive safety gating.
+  startup fallback, and a packaged fail-closed restoration watchdog that gates
+  Exclusive behind an exact-snapshot preflight and process handshake.
 - Frame-cap choices from 30 through 240 FPS plus Desktop Refresh and Unlimited,
   VSync Off/On/Adaptive behavior, high-resolution pacing telemetry, and fixed-step
   gameplay timing protections.
@@ -50,6 +51,10 @@ Key evidence includes:
 - A real gameplay access-violation crash generated a 3,949-byte DrMinGW report;
   desktop/cursor state remained invariant and the accepted last-known-good
   recovery prompt led to a clean rendered relaunch.
+- The production watchdog contract passed armed-state/PID readiness, disarmed
+  parent-exit proof, and disarmed-state rejection. A clean Borderless run logged
+  `preflight_failed` with Win32 results `5/-1`, disarmed cleanly, and preserved
+  `2560x1440@165`; actual armed restoration remains blocked by host authorization.
 - Three presentation modes produced complete framebuffer status, sampled
   zero-error texture uploads, and initial swap-state telemetry in structured logs.
 - The live Windows display-change dialog was captured and left untouched; after
@@ -62,8 +67,10 @@ Key evidence includes:
 - RDNA 1, RDNA 2, NVIDIA, and Intel hosts were unavailable and remain unverified.
 - Physical 60, 120, and 144 Hz display modes were unavailable on the tested host;
   165 Hz desktop behavior and software frame caps were measured.
-- Exclusive Fullscreen remains disabled because the independent restoration
-  watchdog has not passed host-authorized forced-restoration testing.
+- Exclusive Fullscreen remains disabled on the tested host. The watchdog is
+  production-integrated and packaged, but `SetDisplayConfig` denied exact
+  snapshot reapplication with error 5 and `ChangeDisplaySettingsEx` failed
+  with -1, so armed forced-restoration testing is blocked rather than claimed.
 - A full-campaign endurance run and multiplayer hardware session remain
   unverified; real GOG discovery and a separate clean Windows machine remain
   incomplete in the requirements ledger.
@@ -79,4 +86,6 @@ the render/simulation clock design is in `docs/timing-design.md`.
 Evidence methods and commands live under `docs/evidence/`; automation is under
 `scripts/`. Package contents, provenance checks, install/uninstall results, and
 the current artifact checksum are recorded in
-`docs/evidence/windows-package-2026-07-14.md`.
+`docs/evidence/windows-package-2026-07-14.md`. Watchdog lifecycle results and
+the host authorization blocker are in
+`docs/evidence/display-watchdog-2026-07-15.json`.

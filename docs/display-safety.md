@@ -18,10 +18,16 @@ Only confirmed settings are written to the per-user registry; timeout, Cancel,
 or rejection restores the snapshot. Borderless does not overwrite the saved
 Windowed dimensions.
 
-Exclusive mode remains unavailable until the separately running restoration
-watchdog has captured all active displays and its forced-termination behavior
-has passed before/after display-state verification.
+On Windows, the engine captures the active topology and attempts an exact
+no-op restoration preflight before it starts the separately running helper. It
+recaptures and arms the state, waits for an armed-state/PID ready handshake, and
+only then marks the restoration guard ready. Clean exit disarms the state; a
+crash or forced parent exit leaves the helper responsible for restoration.
 
+The available desktop token denied the exact preflight, so the production guard
+remains false and Exclusive continues to resolve to Borderless on this host.
 Measured Windowed, Borderless, multi-monitor, desktop-mode, and Steam-data
 invariance evidence is recorded in
-`docs/evidence/display-options-2026-07-14.md`. Exclusive was not invoked.
+`docs/evidence/display-options-2026-07-14.md`. Watchdog integration and the
+host blocker are recorded in `docs/evidence/watchdog-verification.md`.
+Exclusive was not invoked.

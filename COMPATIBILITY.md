@@ -18,5 +18,6 @@ Exclusive Fullscreen is safety-gated and was not tested.
 
 Evidence: `docs/evidence/rdna-renderer-acceptance-2026-07-15.md`,
 `docs/evidence/timing-domains-2026-07-14.md`,
-`docs/evidence/display-options-2026-07-14.md`, and
-`docs/evidence/vsync-modes-2026-07-14.md`.
+`docs/evidence/display-options-2026-07-14.md`,
+`docs/evidence/vsync-modes-2026-07-14.md`, and
+`docs/evidence/watchdog-verification.md`.
