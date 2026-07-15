@@ -12,6 +12,7 @@
 #include "General/FixedStep.h"
 #include "General/DiagnosticLog.h"
 #include "General/SaveLoadProbe.h"
+#include "General/TimingDomainsRuntime.h"
 #include "Win95/stdComm.h"
 #include "Devices/sithConsole.h"
 #include "Win95/Window.h"
@@ -418,6 +419,7 @@ int sithUpdate()
     if ( (g_submodeFlags & 8) != 0 )
     {
         sithTime_Advance();
+        TimingDomainsRuntime_RefreshClock((uint64_t)sithTime_g_msecGameTime, Linux_TimeUs());
         sithMessage_ProcessMessages();
 
 #ifdef TARGET_RETRO_HOMEBREW
@@ -471,6 +473,7 @@ int sithUpdate()
         sithAdvanceRenderTick();
         sithSoundMixer_ResumeMusic(0);
         sithTime_Advance();
+        TimingDomainsRuntime_RefreshClock((uint64_t)sithTime_g_msecGameTime, Linux_TimeUs());
 
 #ifdef FIXED_TIMESTEP_PHYS
         if (NEEDS_STEPPED_PHYS) {

@@ -60,6 +60,7 @@ void sithWeapon_UpdateActorWeaponState(SithThing *pThing);
 void sithWeapon_ActivateWeapon(SithThing *pThing, sithCog *pCog, flex_t waitTime, int mode);
 flex_t sithWeapon_DeactivateWeapon(SithThing *pThing, sithCog *cogCtx, int mode);
 int sithWeapon_AutoSelect(SithThing *player, int weapIdx);
+int sithWeapon_ValidationFirePrimary(SithThing* pThing);
 int sithWeapon_ProcessWeaponControls(SithThing *pThing, flex_t secDeltaTime);
 MATH_FUNC void sithWeapon_GetAimOrient(rdMatrix34 *pOutOrient, SithThing *pShooter, rdMatrix34 *pStartOrient, rdVector3 *pFireOffset, flex_t autoAimFovX, flex_t autoAimFovZ);
 MATH_FUNC SithThing* sithWeapon_FireProjectile(SithThing *pShooter, SithThing *pProjectile, sithSound *hFireSnd, int submode, rdVector3 *pFireOffset, rdVector3 *pAimError, flex_t scale, int16_t flags, flex_t autoAimFovX, flex_t autoAimFovZ, int extra);

@@ -1319,7 +1319,7 @@ void sithSoundMixer_StopSound(sithPlayingSound *hChannel)
 
     sithSoundMixer_FreePlayingSound(hChannel);
     if (wasPlaying)
-        TimingDomainsRuntime_NotifyDialogue();
+        TimingDomainsRuntime_NotifyDialogue(hChannel);
 }
 
 sithPlayingSound* sithSoundMixer_GetSoundFromIdx(int idx)

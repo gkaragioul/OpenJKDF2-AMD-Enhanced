@@ -31,6 +31,9 @@ int sithWeapon_mots_5a3258 = -1;
 int sithWeapon_motsAConv[10] = {
     10, 11, 2, 3, 4, 5, 6, 7, 8, 9
 };
+static int sithWeapon_validationPrimaryActive;
+static SithThing* sithWeapon_validationPrimaryThing;
+static void sithWeapon_ValidationReleasePrimary(SithThing* pThing);
 
 void sithWeapon_InitDefaults()
 {
@@ -501,9 +504,6 @@ SithThing* sithWeapon_WeaponFire(SithThing *pShooter, SithThing *pProjectileTemp
 
     spawned = sithWeapon_WeaponFireProjectile(pShooter, pProjectileTemplate, pFireDir, pFirePos, hFireSnd, submode, extra, projectileFlags, secDeltaTime, 0);
 
-    if (spawned)
-        TimingDomainsRuntime_NotifyWeapon();
-
     if ( spawned && sithMessage_g_outputstream )
         sithDSSThing_Fire(pShooter, pProjectileTemplate, pFireDir, pFirePos, hFireSnd, submode, extra, projectileFlags, secDeltaTime, spawned->guid, -1, 255, 0);
 
@@ -620,6 +620,11 @@ LABEL_31:
         }
     }
 
+    if (v9 && sithWeapon_validationPrimaryActive &&
+        pShooter == sithWeapon_validationPrimaryThing) {
+        TimingDomainsRuntime_NotifyWeaponFire(pShooter, sithWeapon_fireWait);
+        sithWeapon_ValidationReleasePrimary(pShooter);
+    }
     return v9;
 }
 
@@ -889,6 +894,8 @@ void sithWeapon_StartupEntry()
 {
     sithWeapon_8BD0A0[0] = -1.0;
     sithWeapon_a8BD030[0] = 0;
+    sithWeapon_validationPrimaryActive = 0;
+    sithWeapon_validationPrimaryThing = NULL;
     sithWeapon_8BD0A0[1] = -1.0;
     sithWeapon_8BD060 = -1.0;
     sithWeapon_LastFireTimeSecs = -1.0;
@@ -1041,6 +1048,7 @@ void sithWeapon_UpdateActorWeaponState(SithThing *pThing)
         }
         sithWeapon_8BD024 = -1;
     }
+    TimingDomainsRuntime_NotifyWeaponReady(pThing);
 }
 
 void sithWeapon_ActivateWeapon(SithThing *pThing, sithCog *pCog, flex_t waitTime, int mode)
@@ -1116,6 +1124,53 @@ int sithWeapon_AutoSelect(SithThing *player, int weapIdx)
         }
     }
     return v7;
+}
+
+int sithWeapon_ValidationFirePrimary(SithThing* pThing)
+{
+    SithInventoryType* weapon;
+    int weapon_id;
+    if (!pThing || pThing->type != SITH_THING_PLAYER ||
+        (pThing->flags & SITH_TF_DEAD) ||
+        (pThing->weaponParams.flags & SITH_WF_EMITAITARGETEDEVENT)) {
+        return -1;
+    }
+    if (sithTime_g_secGameTime < sithWeapon_secMountWait) return -2;
+    if (sithWeapon_8BD024 != -1) {
+        sithWeapon_UpdateActorWeaponState(pThing);
+        if (sithWeapon_8BD024 != -1) return -5;
+    }
+    if (sithWeapon_a8BD030[0]) return -6;
+    if (!sithThing_MotsTick(3, 0, 0.0)) return -3;
+
+    weapon_id = sithInventory_GetCurrentWeapon(pThing);
+    weapon = sithInventory_GetType(weapon_id);
+    if (!weapon || !(weapon->flags & ITEMINFO_WEAPON) || !weapon->cog) return -4;
+
+    sithWeapon_validationPrimaryThing = pThing;
+    sithWeapon_a8BD030[0] = 1;
+    sithWeapon_validationPrimaryActive = 1;
+    sithCog_SendMessage(weapon->cog, SITH_MESSAGE_ACTIVATE,
+                        SENDERTYPE_SYSTEM, 0, SENDERTYPE_THING, pThing->idx, 0);
+    return 1;
+}
+
+static void sithWeapon_ValidationReleasePrimary(SithThing* pThing)
+{
+    SithInventoryType* weapon;
+    int weapon_id;
+    if (!sithWeapon_validationPrimaryActive || !pThing ||
+        pThing != sithWeapon_validationPrimaryThing) return;
+
+    weapon_id = sithInventory_GetCurrentWeapon(pThing);
+    weapon = sithInventory_GetType(weapon_id);
+    sithWeapon_a8BD030[0] = 0;
+    sithWeapon_validationPrimaryActive = 0;
+    sithWeapon_validationPrimaryThing = NULL;
+    if (weapon && weapon->cog) {
+        sithCog_SendMessage(weapon->cog, SITH_MESSAGE_DEACTIVATED,
+                            SENDERTYPE_SYSTEM, 0, SENDERTYPE_THING, pThing->idx, 0);
+    }
 }
 
 // MOTS altered TODO?

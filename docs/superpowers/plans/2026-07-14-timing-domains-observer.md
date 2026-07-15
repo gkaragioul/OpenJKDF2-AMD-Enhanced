@@ -35,7 +35,7 @@
 - `src/Tests/test_*.c` and `cmake/OpenJKDF2Tests.cmake`: unit and source-contract tests.
 - `scripts/test-timing-domains.ps1`: isolated 60/120 runtime harness and comparison.
 - `docs/evidence/timing-domains-2026-07-14.*`: raw machine-readable proof and human summary.
-- `docs/requirements.csv`: promote only requirements demonstrated by passing evidence.
+- `docs/evidence/requirements.csv`: promote only requirements demonstrated by passing evidence.
 
 ### Task 1: Startup Activation Contract
 
@@ -276,13 +276,19 @@ After `StartupOptions_Parse` and path resolution in `src/main.c`, call `TimingDo
 
 - [ ] **Step 4: Dispatch ordinary scenario actions**
 
-In the bridge, dispatch one action once using existing production entry points and validation-owned engine objects. Begin the matching observer record before dispatch. Use fixed simulation deadlines recorded beside each action. Do not call observer completion from the dispatcher.
+In the bridge, dispatch one action once using existing production entry points and
+validation-owned engine objects. Begin each observer record before dispatch,
+except weapon timing, which arms a finite timeout and starts measurement only
+when the passive real-projectile hook confirms a shot. Do not call observer
+completion from the dispatcher.
 
 - [ ] **Step 5: Add passive subsystem notifications**
 
 Add enabled-guarded calls only:
 
-- `sithWeapon.c`: weapon activation/projectile lifecycle event.
+- `sithWeapon.c`: commit held primary state before synchronous COG activation,
+  observe real projectile spawn/cooldown, release normally after the spawn, and
+  complete only at the natural weapon-ready transition.
 - `sithAI.c:sithAI_Tick`: expected AI decision/tick count.
 - `sithPhysics.c:sithPhysics_UpdateThing`: validation object crossing its target threshold.
 - `rdPuppet.c:rdPuppet_RemoveTrack`: natural animation track removal.
@@ -328,7 +334,14 @@ git commit -m "feat: connect timing observer to production domains"
 
 - [ ] **Step 1: Create failing parser/comparison fixtures**
 
-Fixtures cover nine complete domains, missing domain, duplicate domain, failed reason, malformed JSON, non-zero child exit, and threshold failure. Require comparison rules: equal observed event counts; equal terminal state; simulation duration difference at most one 60 Hz simulation tick; wall duration difference at most `max(100 ms, 20%)`; no driver crash; display snapshot unchanged.
+Fixtures cover nine complete domains, missing/duplicate/failed records, malformed
+JSON, non-zero child exit, and threshold failures. They accept seven boundary-valid
+datasets and reject eleven invalid datasets. Source contracts separately cover
+child and batch safety paths. Require exact event counts and terminal states;
+within-cap non-media ranges of 18 ms at 60 FPS and 10 ms at 120 FPS with an
+18 ms asynchronous-media floor; ordinary wall medians within the tighter of
+50 ms or 5%; dialogue/cutscene within the tighter of 100 ms or 5%; level-load
+wall medians within the larger of 100 ms or 20%; and unchanged safety invariants.
 
 - [ ] **Step 2: Run fixtures before implementation**
 
@@ -342,7 +355,15 @@ Define parameters `-Executable`, `-DataDir`, `-OutputDir`, and `-FixtureOnly`. R
 
 - [ ] **Step 4: Implement isolated child launches**
 
-Create fresh `user-60`, `user-120`, `diagnostics-60`, and `diagnostics-120` directories. Launch windowed/borderless-safe runs with exact data/user/diagnostics paths and frame limits. Bound each process; on timeout terminate it, record failure, and still check display and Application Error events. Never pass an exclusive-fullscreen option.
+Create a fresh user and diagnostics directory per process. Run one validated
+warm-up, then three measured samples per cap in the reversible interleaved order
+60/120/120/60/60/120. Enforce non-media within-cap simulation ranges of 18 ms
+at 60 FPS and 10 ms at 120 FPS, with an 18 ms floor for asynchronous media.
+Compare simulation medians within 17 ms and enforce the domain-specific wall
+policies defined in Step 1. Bound each process; on timeout terminate it and
+record the failure, but defer throwing until display, Application Error, and
+Steam metadata safety checks are captured. Never pass an Exclusive option,
+focus the game, or inject desktop input.
 
 - [ ] **Step 5: Pass fixture tests and register them**
 
@@ -362,7 +383,7 @@ git commit -m "test: compare gameplay timing at 60 and 120 fps"
 **Files:**
 - Create: `docs/evidence/timing-domains-2026-07-14.json`
 - Create: `docs/evidence/timing-domains-2026-07-14.md`
-- Modify: `docs/requirements.csv`
+- Modify: `docs/evidence/requirements.csv`
 
 **Interfaces:**
 - Consumes: exact Debug/Release test results and `scripts/test-timing-domains.ps1` comparison output.
@@ -386,20 +407,29 @@ Run:
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\test-timing-domains.ps1 `
-  -Executable build-release\openjkdf2.exe `
+  -Executable build\msvc-release\openjkdf2-64.exe `
   -DataDir 'D:\SteamLibrary\steamapps\common\Star Wars Jedi Knight' `
   -OutputDir docs\evidence\timing-domains-raw-2026-07-14
 ```
 
-Expected: exit 0; all nine domains pass at both caps; comparison passes; no Application Error event; display snapshots match.
+Expected: exit 0; the warm-up and all six measured processes complete all nine
+domains; within-cap ranges and median comparisons pass; no Application Error
+event is recorded; every display snapshot matches.
 
 - [ ] **Step 4: Review raw evidence before promotion**
 
-Open both JSONL files and the comparison JSON. Confirm domain names are unique and complete, process exits are zero, the backend is hardware rendering, no `atio6axx.dll` failure is present, and Steam directory metadata remains unchanged.
+Open all seven JSONL files and the comparison JSON. Confirm domain names are
+unique and complete, process exits use the engine's documented success code, the
+backend is hardware rendering, no `atio6axx.dll` failure is present, and Steam
+directory metadata remains unchanged.
 
 - [ ] **Step 5: Write evidence artifacts**
 
-Copy the comparison into `docs/evidence/timing-domains-2026-07-14.json`. The Markdown report records commit, executable hash, GPU/driver, Windows build, commands, nine-domain table at 60/120, thresholds, frame-time summary, display snapshots, event-log result, Steam invariant, limitations, and links to raw files.
+Curate the comparison into `docs/evidence/timing-domains-2026-07-14.json`, retaining
+every scored simulation and wall-time sample. The Markdown report records commit,
+executable hash, GPU/driver, Windows build, commands, the nine-domain 60/120 table,
+thresholds, display snapshots, event-log result, Steam invariant, and limitations.
+Raw profiles remain ignored because they contain proprietary autosaves.
 
 - [ ] **Step 6: Promote only proven ledger rows**
 
@@ -407,14 +437,14 @@ Change `M5-TIMING`, `M9-GAMEPLAY`, and `AC-120FPS` from `incomplete` to `proven`
 
 - [ ] **Step 7: Verify the clean tree and final diff**
 
-Run: `git diff --check; git status --short; git diff -- docs/requirements.csv docs/evidence/timing-domains-2026-07-14.md`
+Run: `git diff --check; git status --short; git diff -- docs/evidence/requirements.csv docs/evidence/timing-domains-2026-07-14.md`
 
 Expected: no whitespace errors; only intended evidence/ledger files remain uncommitted; no build output or proprietary assets are staged.
 
 - [ ] **Step 8: Commit evidence and promotions**
 
 ```powershell
-git add docs/evidence/timing-domains-2026-07-14.json docs/evidence/timing-domains-2026-07-14.md docs/requirements.csv
+git add docs/evidence/timing-domains-2026-07-14.json docs/evidence/timing-domains-2026-07-14.md docs/evidence/requirements.csv
 git commit -m "docs: prove gameplay timing at 60 and 120 fps"
 ```
 

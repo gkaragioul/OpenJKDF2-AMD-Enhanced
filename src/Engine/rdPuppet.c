@@ -385,12 +385,12 @@ int rdPuppet_RemoveTrack(rdPuppet *pPuppet, int track)
 {
     RD_ASSERTREL((track >= 0) && (track < RDPUPPET_MAX_TRACKS)); // Added
     RD_ASSERTREL(pPuppet != NULL); // Added
+    TimingDomainsRuntime_NotifyAnimation(pPuppet, track);
     if ( pPuppet->aTracks[track].callback )
         pPuppet->aTracks[track].callback(pPuppet->renderData->pThing, track, 0);
     pPuppet->aTracks[track].status = 0;
     pPuppet->aTracks[track].keyframe = 0;
     pPuppet->aTracks[track].callback = 0;
-    TimingDomainsRuntime_NotifyAnimation();
     return 1;
 }
 

@@ -160,8 +160,6 @@ void sithPhysics_UpdateThing(SithThing *pThing, flex_t secDeltaTime)
     if (!pThing->sector)
         return;
 
-    TimingDomainsRuntime_NotifyPhysics();
-
     rdVector_Zero3(&pThing->physicsParams.deltaVelocity);
     rdVector_Zero3(&pThing->physicsParams.gravityForce);
 
@@ -205,6 +203,8 @@ void sithPhysics_UpdateThing(SithThing *pThing, flex_t secDeltaTime)
     {
         sithPhysics_UpdateThingPhysics(pThing, secDeltaTime);
     }
+
+    TimingDomainsRuntime_NotifyPhysics(pThing, pThing->position.x, pThing->position.y, pThing->position.z);
 }
 
 void sithPhysics_ApplyForce(SithThing *pThing, rdVector3 *force)

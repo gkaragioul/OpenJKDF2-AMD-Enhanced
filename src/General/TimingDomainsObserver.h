@@ -53,6 +53,13 @@ typedef struct TimingDomainsObserver
     int passed;
 } TimingDomainsObserver;
 
+typedef struct TimingDomainsClock
+{
+    uint64_t epoch;
+    uint64_t previous_raw_tick;
+    int initialized;
+} TimingDomainsClock;
+
 void TimingDomainsObserver_Init(TimingDomainsObserver* observer);
 int TimingDomainsObserver_Begin(TimingDomainsObserver* observer, TimingDomainId id, uint32_t expected_events, uint64_t tick, uint64_t wall_us);
 int TimingDomainsObserver_Notify(TimingDomainsObserver* observer, TimingDomainId id, uint64_t tick, uint64_t wall_us);
@@ -61,5 +68,7 @@ void TimingDomainsObserver_CheckTimeout(TimingDomainsObserver* observer, TimingD
 int TimingDomainsObserver_Finalize(TimingDomainsObserver* observer);
 const char* TimingDomainsObserver_DomainName(TimingDomainId id);
 const char* TimingDomainsObserver_ReasonName(TimingDomainReason reason);
+void TimingDomainsClock_Init(TimingDomainsClock* clock);
+uint64_t TimingDomainsClock_Update(TimingDomainsClock* clock, uint64_t raw_tick);
 
 #endif

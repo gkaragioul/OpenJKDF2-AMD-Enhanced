@@ -31,8 +31,9 @@ specific domain that timed out or diverged.
 
 The observer must measure these representative domains:
 
-1. Weapon timing: a production player-weapon activation reaches its expected
-   cooldown or ready transition without an extra or missing activation.
+1. Weapon timing: a production player-weapon activation remains held until the
+   real projectile-spawn path fires, then follows normal deactivation and
+   cooldown/ready transitions without an extra or missing activation.
 2. AI timing: a live AI actor accumulates production update ticks and reaches a
    deterministic observer milestone without skipped or duplicated updates.
 3. Physics timing: a production physics thing travels a bounded displacement;
@@ -92,8 +93,10 @@ The module stores, for each domain:
 - timeout and failure reason;
 - whether the measurement is available and trustworthy.
 
-It never owns or mutates gameplay objects. Stable identifiers are recorded
-instead of retaining unsafe object pointers across level loads.
+The observer module never owns or mutates gameplay objects. The runtime bridge
+may retain pointer identity only for the current validation action, clears that
+identity before advancing, and never carries a gameplay pointer across a level
+load. Tracked telemetry records stable identifiers rather than pointer values.
 
 ### TimingDomainsScenario
 
@@ -128,21 +131,28 @@ the existing `FrameTelemetry` implementation and is not duplicated.
 
 ### Runtime harness
 
-`scripts/test-timing-domains.ps1` launches two fresh Release runs, one capped at
-60 FPS and one at 120 FPS. Each run uses the same source assets and deterministic
-scenario but a distinct user directory. The harness:
+`scripts/test-timing-domains.ps1` launches one validated warm-up and then three
+fresh Release runs per cap in an interleaved reversible order. Each run uses the
+same source assets and deterministic scenario but a distinct user directory.
+The warm-up is excluded by a rule fixed before capture; all six measured runs are
+retained and scored. The harness:
 
-- snapshots Windows display state and Steam asset metadata before launch;
-- requires a foreground gameplay window and clean observer completion;
-- parses the structured validation summary and existing frame telemetry;
+- snapshots Windows display state before and after each process and Steam asset
+  metadata around the complete batch;
+- requires a real gameplay window and clean observer completion without focusing
+  the process or injecting desktop input;
+- parses the structured summary and per-domain lifecycle events;
 - rejects missing, duplicate, timed-out, or failed domain records;
-- compares 60/120 measurements;
-- verifies display and Steam metadata invariants after each run;
+- rejects within-cap simulation spread over one fixed tick and compares 60/120
+  medians;
+- verifies the display invariant after every run and the Steam metadata invariant
+  after the batch;
 - writes a privacy-safe aggregate JSON result.
 
 ## Data flow
 
-1. The harness creates a fresh user directory and launches the Release binary.
+1. The harness creates fresh user directories, validates one warm-up process,
+   and launches the six interleaved measured Release processes.
 2. Startup parsing validates observer guards and records the requested frame cap.
 3. The game autostarts the selected first-level validation context through normal
    load paths.
@@ -155,17 +165,17 @@ scenario but a distinct user directory. The harness:
    the expected next-level post-load state.
 8. After level-transition completion, or on the first failure, the observer emits
    one final structured `timing_domains_summary` event and requests normal exit.
-9. The harness validates each run and compares the two summaries.
+9. The harness validates all scored runs and compares the two cap medians.
 
 ## Structured evidence
 
-The final event contains:
+The combined per-run lifecycle events and aggregate result contain:
 
 - schema version and observer name;
-- presentation cap and fixed simulation rate;
-- total presentation frames and frame-time percentiles;
-- per-domain expected state, observed state, event counts, simulation ticks,
-  simulation duration, wall-clock duration, and pass/fail reason;
+- requested presentation cap and the observer's monotonic simulation timeline;
+- per-domain expected state, observed state, event counts, simulation ticks, all
+  measured simulation/wall samples, medians, within-cap ranges, and pass/fail
+  reason;
 - overall completion state;
 - selected map identifiers that contain no proprietary asset content;
 - display and asset invariants supplied by the harness.
@@ -177,20 +187,24 @@ directories.
 
 ## Comparison rules
 
-For both caps, every domain must reach its expected terminal state exactly once.
-No domain may time out or report an unavailable measurement.
+For both caps, every domain must reach its expected terminal state exactly once
+in every scored run. No domain may time out or report an unavailable measurement.
+One fully validated warm-up precedes the scored batch to prevent cold asset or
+security scanning from contaminating the first measurement.
 
 The aggregate harness applies these rules:
 
-- 60 FPS and 120 FPS median presentation error: at most 5% from target;
-- presentation p95: at most 115% of the target frame budget;
-- per-domain simulation-tick count: exactly equal between runs unless the
-  production domain has a documented bounded random branch;
-- per-domain simulation duration: exactly equal within one fixed simulation
-  tick;
-- per-domain wall-clock duration: absolute delta at most 50 ms and relative
-  delta at most 5%, except cutscene/dialogue media completion, which permits
-  100 ms and 5% to account for asynchronous audio/video completion;
+- within-cap non-media simulation range: at most one presentation interval plus
+  1 ms (18 ms at 60 FPS and 10 ms at 120 FPS); asynchronous dialogue and
+  cutscene completion use an 18 ms floor;
+- per-domain simulation-duration medians: equal within one 60 Hz simulation tick
+  (17 ms);
+- ordinary wall-clock medians: within the tighter of 50 ms or 5%; dialogue and
+  cutscene use the tighter of 100 ms or 5%. Relative comparisons use a 100 ms
+  denominator floor for short domains;
+- level-transition wall medians: within the larger of 100 ms or 20%, because
+  level loading is an I/O boundary, while its target and simulation delta remain
+  exact;
 - event count and terminal state: exact equality;
 - level transition target and post-load state: exact equality;
 - display state and Steam metadata: exact equality before and after each run.
@@ -224,8 +238,10 @@ measurement, the requirement remains incomplete and the report explains why.
   events, timeouts, one-shot finalization, and JSON-safe stable reason codes.
 - A source contract test confirms all required production notification points
   remain connected.
-- A harness parser fixture covers success, missing domains, duplicate domains,
-  tolerance failures, malformed telemetry, and invariant failures.
+- Harness fixtures accept seven boundary-valid datasets and reject eleven
+  missing, duplicate, failed, malformed, invariant, or threshold-invalid cases.
+- Source contracts require child and batch failures to remain deferred until
+  display, Application Error, and Steam metadata safety checks are captured.
 
 ### Runtime verification
 

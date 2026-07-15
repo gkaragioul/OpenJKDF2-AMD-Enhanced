@@ -65,11 +65,24 @@ static void test_finalize_marks_missing_domains(void)
     assert(strcmp(TimingDomainsObserver_ReasonName(TIMING_REASON_MISSING), "missing") == 0);
 }
 
+static void test_monotonic_clock_carries_epoch_across_level_reset(void)
+{
+    TimingDomainsClock clock;
+    TimingDomainsClock_Init(&clock);
+    assert(TimingDomainsClock_Update(&clock, 100) == 100);
+    assert(TimingDomainsClock_Update(&clock, 120) == 120);
+    assert(TimingDomainsClock_Update(&clock, 0) == 120);
+    assert(TimingDomainsClock_Update(&clock, 5) == 125);
+    assert(TimingDomainsClock_Update(&clock, 0) == 125);
+    assert(TimingDomainsClock_Update(&clock, 7) == 132);
+}
+
 int main(void)
 {
     test_ordered_success();
     test_event_count_and_duplicates();
     test_bad_state_and_timeout();
     test_finalize_marks_missing_domains();
+    test_monotonic_clock_carries_epoch_across_level_reset();
     return 0;
 }

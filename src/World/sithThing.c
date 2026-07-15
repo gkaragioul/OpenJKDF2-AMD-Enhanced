@@ -616,7 +616,7 @@ void sithThing_RemoveThing(SithThing* pThing)
     sithNet_things[sithNet_thingsIdx + 1] = v2;
     sithNet_thingsIdx = v5 + 1;
     if (wasParticle)
-        TimingDomainsRuntime_NotifyParticle();
+        TimingDomainsRuntime_NotifyParticle(pThing);
 }
 
 void sithThing_FreeThing(SithThing* pThing)

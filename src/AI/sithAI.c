@@ -713,7 +713,7 @@ void sithAI_CreateAIFramesFomMarker(SithThing *pNewThing, SithThing *pMarker, rd
 
 void sithAI_Tick(SithThing *thing, flex_t deltaSeconds)
 {
-    TimingDomainsRuntime_NotifyAI();
+    TimingDomainsRuntime_NotifyAI(thing);
     if ( thing->type == SITH_THING_ACTOR && thing->actorParams.health > 0.0 )
     {
         if (thing->actor->flags & SITHAI_MODE_TURNING)

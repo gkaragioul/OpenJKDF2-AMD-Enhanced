@@ -98,3 +98,20 @@ const char* TimingDomainsObserver_ReasonName(TimingDomainReason reason)
     static const char* names[] = { "none", "duplicate", "timeout", "bad_state", "missing" };
     return reason >= TIMING_REASON_NONE && reason <= TIMING_REASON_MISSING ? names[reason] : "invalid";
 }
+
+void TimingDomainsClock_Init(TimingDomainsClock* clock)
+{
+    if (clock) memset(clock, 0, sizeof(*clock));
+}
+
+uint64_t TimingDomainsClock_Update(TimingDomainsClock* clock, uint64_t raw_tick)
+{
+    if (!clock) return raw_tick;
+    if (!clock->initialized) {
+        clock->initialized = 1;
+    } else if (raw_tick < clock->previous_raw_tick) {
+        clock->epoch += clock->previous_raw_tick;
+    }
+    clock->previous_raw_tick = raw_tick;
+    return clock->epoch + raw_tick;
+}

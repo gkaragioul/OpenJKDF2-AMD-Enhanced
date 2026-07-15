@@ -57,7 +57,7 @@ int sithEvent_CreateEvent(int taskId, SithEventParams *params, uint32_t when)
     SithEvent *v5;
     SithEvent *i;
 
-    SITH_ASSERTREL((taskId > 0) && (taskId < 5) && (when >= 0)); // Added: ported J3D assert
+    SITH_ASSERTREL((taskId > 0) && (taskId < SITH_NUM_EVENTS) && (when >= 0)); // Added: ported J3D assert
 
     if ( sithEvent_numFreeEventBuffers )
         timer = &sithEvent_aEvents[sithEvent_arrLut[--sithEvent_numFreeEventBuffers]];
@@ -149,7 +149,7 @@ void sithEvent_Process()
         if (sithEvent_aTasks[i->taskNum].pfProcess)
         {
             sithEvent_aTasks[i->taskNum].pfProcess(0, &i->params);
-            TimingDomainsRuntime_NotifyScript();
+            TimingDomainsRuntime_NotifyScript(i->taskNum, i->params.idx);
         }
         
         sithEvent_FreeEvent(i);

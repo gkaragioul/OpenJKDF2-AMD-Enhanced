@@ -24,6 +24,7 @@
 #include "Main/jkRes.h"
 #include "Main/jkStrings.h"
 #include "General/TimingDomainsRuntime.h"
+#include "General/DiagnosticLog.h"
 #include "Gui/jkGUIRend.h"
 #include "Gui/jkGUI.h"
 #include "Gui/jkGUIMultiTally.h"
@@ -59,6 +60,17 @@
 #else
 #define TICKRATE_MS (20) // 50fps
 #endif
+
+static void jkMain_LogTimingTransition(const char* phase, int result)
+{
+    char event[256];
+    if (!TimingDomainsRuntime_IsEnabled()) return;
+    snprintf(event, sizeof(event),
+             "%s current_state=%d next_state=%d stop_tick=%d gui_busy=%d result=%d",
+             phase, jkSmack_currentGuiState, jkSmack_nextGuiState,
+             jkSmack_stopTick, jkGuiRend_thing_five, result);
+    diag_log_event(DIAG_SEVERITY_INFO, "timing_validation", event);
+}
 
 char jkMain_aLevelJklFnameMots[128];
 char jkMain_motsIdk[128];
@@ -295,6 +307,7 @@ void jkMain_GuiAdvance()
     }
     if ( jkSmack_stopTick && !jkGuiRend_thing_five )
     {
+        jkMain_LogTimingTransition("level_transition_state_change", 1);
         jkGuiRend_thing_four = 0;
         v4 = jkSmack_currentGuiState;
         v5 = jkMain_aGuiStateFuncs[jkSmack_currentGuiState].leaveFunc;
@@ -576,6 +589,9 @@ void jkMain_GameplayShow(int a1, int a2)
         }
 
         level_loaded = v3;
+        jkMain_LogTimingTransition("level_transition_post_load", level_loaded);
+        TimingDomainsRuntime_RefreshClock((uint64_t)sithTime_g_msecGameTime, Linux_TimeUs());
+        TimingDomainsRuntime_NotifyLevelTransition(jkMain_aLevelJklFname, level_loaded);
         jkGuiTitle_LoadingFinalize();
         if ( !level_loaded )
         {
@@ -704,6 +720,12 @@ void jkMain_GameplayTick(int a2)
     }
 
     if (!thing_eight) {
+        return;
+    }
+
+    if (TimingDomainsRuntime_ShouldRequestLevelTransition()) {
+        jkMain_LogTimingTransition("level_transition_dispatch", 1);
+        jkMain_LoadLevelSingleplayer("JK1", "02narshadda.jkl");
         return;
     }
 
@@ -1042,7 +1064,7 @@ int jkMain_LoadLevelSingleplayer(char *pGobPath, char *pEpisodeName)
             jkGuiRend_thing_four = 1;
         jkSmack_stopTick = 1;
         jkSmack_nextGuiState = 5;
-        TimingDomainsRuntime_NotifyLevelTransition();
+        jkMain_LogTimingTransition("level_transition_queued", 1);
     }
     else
     {

@@ -6,10 +6,14 @@
 #include "Raster/rdCache.h"
 #include "Raster/rdZRaster.h"
 #include "Engine/sithRender.h"
+#include "Engine/sithPhysics.h"
+#include "Engine/sithPuppet.h"
 #include "World/sithWorld.h"
 #include "World/jkPlayer.h"
 #include "World/sithSector.h"
 #include "World/sithThing.h"
+#include "World/sithTemplate.h"
+#include "World/sithWeapon.h"
 #include "Win95/Video.h"
 #include "Win95/stdComm.h"
 #include "Platform/std3D.h"
@@ -24,6 +28,8 @@
 #include "Engine/rdColormap.h"
 #include "Engine/sithCamera.h"
 #include "Devices/sithControl.h"
+#include "Devices/sithSound.h"
+#include "Devices/sithSoundMixer.h"
 #include "Primitives/rdMatrix.h"
 #include "General/stdString.h"
 #include "General/DiagnosticLog.h"
@@ -35,6 +41,7 @@
 #include "General/RuntimeProbe.h"
 #include "General/TimingDomainsRuntime.h"
 #include "Gameplay/sithTime.h"
+#include "Gameplay/sithEvent.h"
 #include "Main/jkCutscene.h"
 #include "Main/jkMain.h"
 
@@ -47,6 +54,17 @@
 
 #if defined(_WIN32)
 #include <windows.h>
+#endif
+
+#if defined(SDL2_RENDER) && !defined(TARGET_RETRO_HOMEBREW)
+#define TIMING_SCRIPT_TASK_ID 5
+#define TIMING_SCRIPT_TOKEN 0x54494D45
+
+static int jkGame_TimingScriptTask(int32_t unused, SithEventParams* params)
+{
+    (void)unused;
+    return params && params->idx == TIMING_SCRIPT_TOKEN;
+}
 #endif
 
 #if defined(TARGET_TWL)
@@ -434,16 +452,121 @@ int jkGame_Update()
         static int timingFrameCapApplied = 0;
         if (!timingFrameCapApplied)
         {
+            sithControl_ApplyModernPreset();
+            jkHudInv_InputInit();
             jkPlayer_fpslimit = TimingDomainsRuntime_FrameLimit();
             jkPlayer_enableVsync = 0;
             FrameTelemetry_Reset();
             timingFrameCapApplied = 1;
         }
         TimingDomainsRuntime_Tick((uint64_t)sithTime_g_msecGameTime, Linux_TimeUs());
+        if (TimingDomainsRuntime_ShouldActivateWeapon())
+        {
+            SithWorld* pTimingWorld = sithWorld_g_pCurrentWorld;
+            SithThing* pTimingPlayer = pTimingWorld ? pTimingWorld->pLocalPlayer : NULL;
+            int timingWeaponResult = 0;
+            if (pTimingPlayer)
+                timingWeaponResult = sithWeapon_ValidationFirePrimary(pTimingPlayer);
+            if (timingWeaponResult != 1)
+            {
+                char timingWeaponEvent[192];
+                snprintf(timingWeaponEvent, sizeof(timingWeaponEvent),
+                         "weapon_activation_attempt result=%d game_time=%.3f mount_wait=%.3f selection=%d pressed=%d",
+                         timingWeaponResult, (double)sithTime_g_secGameTime,
+                         (double)sithWeapon_secMountWait, sithWeapon_8BD024,
+                         sithWeapon_a8BD030[0]);
+                diag_log_event(DIAG_SEVERITY_INFO, "timing_validation", timingWeaponEvent);
+            }
+        }
+        if (TimingDomainsRuntime_ShouldStartAI())
+        {
+            SithWorld* pTimingWorld = sithWorld_g_pCurrentWorld;
+            if (pTimingWorld)
+            {
+                uint32_t i;
+                for (i = 0; i < pTimingWorld->numThings; ++i)
+                {
+                    SithThing* pTimingActor = &pTimingWorld->aThings[i];
+                    if (pTimingActor->type == SITH_THING_ACTOR && pTimingActor->controlType == SITH_CT_AI &&
+                        pTimingActor->actor && pTimingActor->actorParams.health > 0.0 &&
+                        !(pTimingActor->flags & (SITH_TF_DEAD | SITH_TF_DESTROYED)))
+                    {
+                        TimingDomainsRuntime_RegisterTarget(TIMING_DOMAIN_AI, pTimingActor, 0);
+                        break;
+                    }
+                }
+            }
+        }
+        if (TimingDomainsRuntime_ShouldStartPhysics())
+        {
+            SithWorld* pTimingWorld = sithWorld_g_pCurrentWorld;
+            SithThing* pTimingPlayer = pTimingWorld ? pTimingWorld->pLocalPlayer : NULL;
+            if (pTimingPlayer && pTimingPlayer->moveType == SITH_MT_PHYSICS)
+            {
+                rdVector3 force = pTimingPlayer->orient.lvec;
+                force.z = 0.0f;
+                force.x *= pTimingPlayer->physicsParams.mass * 0.5f;
+                force.y *= pTimingPlayer->physicsParams.mass * 0.5f;
+                sithPhysics_ApplyForce(pTimingPlayer, &force);
+                TimingDomainsRuntime_RegisterPhysicsTarget(pTimingPlayer,
+                    pTimingPlayer->position.x, pTimingPlayer->position.y, pTimingPlayer->position.z);
+            }
+        }
+        if (TimingDomainsRuntime_ShouldStartAnimation())
+        {
+            SithWorld* pTimingWorld = sithWorld_g_pCurrentWorld;
+            SithThing* pTimingPlayer = pTimingWorld ? pTimingWorld->pLocalPlayer : NULL;
+            if (pTimingPlayer && pTimingPlayer->renderData.puppet)
+            {
+                int timingTrack = sithPuppet_PlayMode(pTimingPlayer, SITH_ANIM_ACTIVATE, NULL);
+                if (timingTrack >= 0)
+                    TimingDomainsRuntime_RegisterTarget(TIMING_DOMAIN_ANIMATION,
+                        pTimingPlayer->renderData.puppet, timingTrack);
+            }
+        }
+        if (TimingDomainsRuntime_ShouldSpawnParticle())
+        {
+            SithWorld* pTimingWorld = sithWorld_g_pCurrentWorld;
+            SithThing* pTimingPlayer = pTimingWorld ? pTimingWorld->pLocalPlayer : NULL;
+            SithThing* pTimingTemplate = sithTemplate_GetTemplate("+rpt_sparks");
+            if (pTimingPlayer && pTimingTemplate)
+            {
+                SithThing* pTimingParticle = sithThing_CreateThing(pTimingTemplate, pTimingPlayer);
+                if (pTimingParticle)
+                    TimingDomainsRuntime_RegisterTarget(TIMING_DOMAIN_PARTICLE, pTimingParticle, 0);
+            }
+        }
+        if (TimingDomainsRuntime_ShouldStartScript())
+        {
+            SithEventParams timingParams;
+            memset(&timingParams, 0, sizeof(timingParams));
+            timingParams.idx = TIMING_SCRIPT_TOKEN;
+            sithEvent_RegisterTask(TIMING_SCRIPT_TASK_ID, jkGame_TimingScriptTask, 0, SITHEVENT_TASKONDEMAND);
+            if (sithEvent_CreateEvent(TIMING_SCRIPT_TASK_ID, &timingParams, 500))
+                TimingDomainsRuntime_RegisterScriptTarget(TIMING_SCRIPT_TASK_ID, TIMING_SCRIPT_TOKEN);
+        }
+        if (TimingDomainsRuntime_ShouldStartDialogue())
+        {
+            sithSound* pTimingVoice = sithSound_Load("i00ky01z.wav", 1);
+            if (pTimingVoice)
+            {
+                sithPlayingSound* pTimingChannel = sithSoundMixer_PlaySound(
+                    pTimingVoice, 1.0f, 0.0f, SITHSOUNDFLAG_VOICE | SITHSOUNDFLAG_HIGHPRIO);
+                if (pTimingChannel)
+                    TimingDomainsRuntime_RegisterTarget(TIMING_DOMAIN_DIALOGUE, pTimingChannel, 0);
+            }
+        }
         if (TimingDomainsRuntime_ShouldStartCutscene())
-            jkCutscene_sub_421310("resource\\video\\01-02A.SMK");
-        if (TimingDomainsRuntime_ShouldRequestLevelTransition())
-            jkMain_LoadLevelSingleplayer("JK1", "01-02A");
+        {
+            char cutsceneEvent[160];
+            int cutsceneResult = jkCutscene_sub_421310("resource\\video\\41DA.SMK");
+            snprintf(cutsceneEvent, sizeof(cutsceneEvent),
+                     "cutscene_request result=%d rendering=%s",
+                     cutsceneResult, jkCutscene_isRendering ? "true" : "false");
+            diag_log_event(DIAG_SEVERITY_INFO, "timing_validation", cutsceneEvent);
+        }
+        if (jkCutscene_isRendering && jkCutscene_smack_related_loops())
+            jkCutscene_sub_421410();
         if (TimingDomainsRuntime_IsFinished())
             g_should_exit = 1;
     }
