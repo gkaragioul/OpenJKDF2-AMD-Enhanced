@@ -28,6 +28,8 @@
 static int sithControl_followingPlayer = 0;
 static int sithControl_curDebugCam = 0;
 static char16_t sithControl_debugWStrTmp[256];
+static stdControlKeyInfo sithControl_classicPresetSnapshot[INPUT_FUNC_MAX];
+static int sithControl_classicPresetSnapshotValid = 0;
 
 // MOTS added
 static flex_t sithControl_008d7f44 = 0.0;
@@ -1936,6 +1938,59 @@ void sithControl_ApplyModernPreset()
     sithControl_DefaultHelper(INPUT_FUNC_NEXTWEAPON, KEY_MOUSE_B7, INPUT_MAPPING_FLAG_DXKEY);
 }
 
+void sithControl_CaptureClassicPresetSnapshot()
+{
+    sithControl_ApplyClassicPreset();
+    _memcpy(sithControl_classicPresetSnapshot, sithControl_aInputFuncToKeyinfo,
+        sizeof(sithControl_classicPresetSnapshot));
+    sithControl_classicPresetSnapshotValid = 1;
+}
+
+int sithControl_MatchesCapturedClassicPreset()
+{
+    int functionId;
+
+    if (!sithControl_classicPresetSnapshotValid)
+        return 0;
+
+    for (functionId = 0; functionId < INPUT_FUNC_MAX; ++functionId)
+    {
+        const stdControlKeyInfo* expected = &sithControl_classicPresetSnapshot[functionId];
+        const stdControlKeyInfo* actual = &sithControl_aInputFuncToKeyinfo[functionId];
+        int matched[8] = { 0 };
+        unsigned int expectedIndex;
+
+        if (actual->numEntries != expected->numEntries)
+            return 0;
+
+        for (expectedIndex = 0; expectedIndex < expected->numEntries; ++expectedIndex)
+        {
+            const stdControlKeyInfoEntry* expectedEntry = &expected->aEntries[expectedIndex];
+            unsigned int actualIndex;
+            int found = 0;
+
+            for (actualIndex = 0; actualIndex < actual->numEntries; ++actualIndex)
+            {
+                const stdControlKeyInfoEntry* actualEntry = &actual->aEntries[actualIndex];
+                if (!matched[actualIndex] &&
+                    actualEntry->dxKeyNum == expectedEntry->dxKeyNum &&
+                    actualEntry->flags == expectedEntry->flags &&
+                    actualEntry->binaryAxisVal == expectedEntry->binaryAxisVal)
+                {
+                    matched[actualIndex] = 1;
+                    found = 1;
+                    break;
+                }
+            }
+
+            if (!found)
+                return 0;
+        }
+    }
+
+    return 1;
+}
+
 int sithControl_HasBinding(int functionId, int controlId, int requiredFlags)
 {
     unsigned int i;
@@ -1977,12 +2032,14 @@ int sithControl_ValidatePresetBindings(int preset)
     }
     return sithControl_HasBinding(INPUT_FUNC_JUMP, DIK_SPACE, INPUT_MAPPING_FLAG_DXKEY) &&
         sithControl_HasBinding(INPUT_FUNC_DUCK, DIK_LCONTROL, INPUT_MAPPING_FLAG_DXKEY) &&
+        sithControl_HasBinding(INPUT_FUNC_DUCK, DIK_C, INPUT_MAPPING_FLAG_DXKEY) &&
         sithControl_HasBinding(INPUT_FUNC_ACTIVATE, DIK_E, INPUT_MAPPING_FLAG_DXKEY) &&
         sithControl_HasBinding(INPUT_FUNC_FIRE2, KEY_MOUSE_B2, INPUT_MAPPING_FLAG_DXKEY) &&
         sithControl_HasBinding(INPUT_FUNC_PREVWEAPON, KEY_MOUSE_B6, INPUT_MAPPING_FLAG_DXKEY) &&
         sithControl_HasBinding(INPUT_FUNC_NEXTWEAPON, KEY_MOUSE_B7, INPUT_MAPPING_FLAG_DXKEY) &&
         !sithControl_HasBinding(INPUT_FUNC_ACTIVATE, DIK_SPACE, INPUT_MAPPING_FLAG_DXKEY) &&
-        !sithControl_HasBinding(INPUT_FUNC_FIRE1, DIK_LCONTROL, INPUT_MAPPING_FLAG_DXKEY);
+        !sithControl_HasBinding(INPUT_FUNC_FIRE1, DIK_LCONTROL, INPUT_MAPPING_FLAG_DXKEY) &&
+        !sithControl_HasBinding(INPUT_FUNC_JUMP, KEY_MOUSE_B2, INPUT_MAPPING_FLAG_DXKEY);
 }
 
 void sithControl_RegisterKeyFunction(int functionId)

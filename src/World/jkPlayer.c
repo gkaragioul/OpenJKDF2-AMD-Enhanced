@@ -10,6 +10,7 @@
 #include "General/stdFileUtil.h"
 #include "General/PresentationMode.h"
 #include "General/ControlPreset.h"
+#include "General/DefaultSettingsMigration.h"
 #include "General/QualityPreset.h"
 #include "Engine/sithAnimClass.h"
 #include "Dss/sithGamesave.h"
@@ -65,7 +66,8 @@ int jkPlayer_enableVsync = 1;
 int jkPlayer_rawMouseInput = 1;
 int jkPlayer_mouseAcceleration = 0;
 int jkPlayer_mouseSmoothing = 0;
-int jkPlayer_controlPreset = CONTROL_PRESET_CLASSIC;
+int jkPlayer_controlPreset = CONTROL_PRESET_MODERN;
+int jkPlayer_controlPresetVersion = CONTROL_DEFAULTS_VERSION;
 int jkPlayer_showFrameStats = 0;
 int jkPlayer_qualityPreset = QUALITY_PRESET_CLASSIC;
 int jkPlayer_anisotropy = 1;
@@ -201,7 +203,7 @@ void jkPlayer_StartupVars()
     sithCvar_RegisterBool("in_rawMouse",                1,                          &jkPlayer_rawMouseInput,            CVARFLAG_LOCAL);
     sithCvar_RegisterBool("in_mouseAcceleration",       0,                          &jkPlayer_mouseAcceleration,        CVARFLAG_LOCAL);
     sithCvar_RegisterBool("in_mouseSmoothing",          0,                          &jkPlayer_mouseSmoothing,           CVARFLAG_LOCAL);
-    sithCvar_RegisterInt("in_controlPreset",            CONTROL_PRESET_CLASSIC,     &jkPlayer_controlPreset,           CVARFLAG_LOCAL);
+    sithCvar_RegisterInt("in_controlPreset",            ControlPreset_Default(),    &jkPlayer_controlPreset,           CVARFLAG_LOCAL);
     sithCvar_RegisterBool("r_showFrameStats",           0,                          &jkPlayer_showFrameStats,          CVARFLAG_LOCAL);
     sithCvar_RegisterInt("r_qualityPreset",             QUALITY_PRESET_CLASSIC,     &jkPlayer_qualityPreset,           CVARFLAG_LOCAL);
     sithCvar_RegisterInt("r_anisotropy",                1,                          &jkPlayer_anisotropy,              CVARFLAG_LOCAL);
@@ -260,7 +262,8 @@ void jkPlayer_ResetVars()
     jkPlayer_rawMouseInput = 1;
     jkPlayer_mouseAcceleration = 0;
     jkPlayer_mouseSmoothing = 0;
-    jkPlayer_controlPreset = CONTROL_PRESET_CLASSIC;
+    jkPlayer_controlPreset = ControlPreset_Default();
+    jkPlayer_controlPresetVersion = CONTROL_DEFAULTS_VERSION;
     jkPlayer_showFrameStats = 0;
     jkPlayer_qualityPreset = QUALITY_PRESET_CLASSIC;
     jkPlayer_anisotropy = 1;
@@ -518,7 +521,9 @@ void jkPlayer_CreateConf(char16_t *name)
     stdFileUtil_MkDir("player");
     stdFnames_MakePath(pathName, 128, "player", a1);
     stdFileUtil_MkDir(pathName);
-    sithControl_DefaultInit();
+    sithControl_ApplyModernPreset();
+    jkPlayer_controlPreset = ControlPreset_Default();
+    jkPlayer_controlPresetVersion = CONTROL_DEFAULTS_VERSION;
     jkHudInv_InputInit();
     jkPlayer_SetRank(0);
     sithPlayer_SetInvItemAmount(SITHBIN_CHOICE, 0.0);
@@ -617,6 +622,7 @@ void jkPlayer_WriteConf(char16_t *name)
         stdJSON_SaveBool(ext_fpath, "mouseacceleration", jkPlayer_mouseAcceleration);
         stdJSON_SaveBool(ext_fpath, "mousesmoothing", jkPlayer_mouseSmoothing);
         stdJSON_SaveInt(ext_fpath, "controlpreset", jkPlayer_controlPreset);
+        stdJSON_SaveInt(ext_fpath, "controlpresetversion", jkPlayer_controlPresetVersion);
         stdJSON_SaveBool(ext_fpath, "showframestats", jkPlayer_showFrameStats);
         stdJSON_SaveInt(ext_fpath, "qualitypreset", jkPlayer_qualityPreset);
         stdJSON_SaveInt(ext_fpath, "anisotropy", jkPlayer_anisotropy);
@@ -750,6 +756,8 @@ int jkPlayer_ReadConf(char16_t *name)
     char fpath[256]; // Added: 128 -> 256
     char ext_fpath[256];
     char ext_fpath_cvars[256];
+    int exactStockClassic = 0;
+    int persistControlDefaults = 0;
 
     int version = 0;
     if (!jkPlayer_VerifyWcharName(name))
@@ -779,7 +787,9 @@ int jkPlayer_ReadConf(char16_t *name)
         jkPlayer_ReadOptionsConf();
         sithWeapon_ReadConf();
         //jk_printf("%s\n", stdConffile_g_aLine);
+        sithControl_CaptureClassicPresetSnapshot();
         sithControl_ReadConf();
+        exactStockClassic = sithControl_MatchesCapturedClassicPreset();
 
         // HACK
 #ifdef TARGET_RETRO_HOMEBREW
@@ -827,7 +837,8 @@ int jkPlayer_ReadConf(char16_t *name)
         jkPlayer_mouseAcceleration = stdJSON_GetBool(ext_fpath, "mouseacceleration", jkPlayer_mouseAcceleration);
         jkPlayer_mouseSmoothing = stdJSON_GetBool(ext_fpath, "mousesmoothing", jkPlayer_mouseSmoothing);
         jkPlayer_controlPreset = ControlPreset_Normalize(
-            stdJSON_GetInt(ext_fpath, "controlpreset", jkPlayer_controlPreset));
+            stdJSON_GetInt(ext_fpath, "controlpreset", CONTROL_PRESET_CLASSIC));
+        jkPlayer_controlPresetVersion = stdJSON_GetInt(ext_fpath, "controlpresetversion", 0);
         jkPlayer_showFrameStats = stdJSON_GetBool(ext_fpath, "showframestats", jkPlayer_showFrameStats);
         jkPlayer_qualityPreset = QualityPreset_Normalize(
             stdJSON_GetInt(ext_fpath, "qualitypreset", jkPlayer_qualityPreset));
@@ -868,6 +879,19 @@ int jkPlayer_ReadConf(char16_t *name)
 
 #ifdef QOL_IMPROVEMENTS
         sithCvar_LoadLocals(ext_fpath_cvars);
+        jkPlayer_controlPreset = ControlPreset_Normalize(jkPlayer_controlPreset);
+
+        persistControlDefaults = jkPlayer_controlPresetVersion < CONTROL_DEFAULTS_VERSION;
+        if (default_settings_should_migrate_controls(
+                jkPlayer_controlPresetVersion,
+                jkPlayer_controlPreset,
+                exactStockClassic))
+        {
+            sithControl_ApplyModernPreset();
+            jkPlayer_controlPreset = CONTROL_PRESET_MODERN;
+            jkHudInv_InputInit();
+        }
+        jkPlayer_controlPresetVersion = CONTROL_DEFAULTS_VERSION;
 
         if (jkPlayer_fov < FOV_MIN)
             jkPlayer_fov = FOV_MIN;
@@ -883,13 +907,17 @@ int jkPlayer_ReadConf(char16_t *name)
 #endif
         
         stdConffile_Close();
+        if (persistControlDefaults)
+            jkPlayer_WriteConf(name);
         return 1;
     }
     else
     {
         stdConffile_Close();
         jkPlayer_setDiff = 1;
-        sithControl_DefaultInit();
+        sithControl_ApplyModernPreset();
+        jkPlayer_controlPreset = ControlPreset_Default();
+        jkPlayer_controlPresetVersion = CONTROL_DEFAULTS_VERSION;
         return 0;
     }
     return 0;

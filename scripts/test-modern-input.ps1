@@ -3,7 +3,8 @@ param(
     [Parameter(Mandatory = $true)][string]$DataDir,
     [Parameter(Mandatory = $true)][string]$UserDir,
     [string]$Executable = "build/msvc-release/openjkdf2-64.exe",
-    [ValidateSet("Modern", "Classic")][string]$Preset = "Modern",
+    [ValidateSet("Default", "Modern", "Classic")][string]$Preset = "Default",
+    [switch]$PersistPreset,
     [int]$TimeoutSeconds = 30
 )
 
@@ -64,7 +65,8 @@ try {
     $start.WorkingDirectory = $repoRoot
     $start.UseShellExecute = $false
     [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_MS", "14000", [EnvironmentVariableTarget]::Process)
-    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_PRESET", $Preset, [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_PRESET", $(if ($Preset -eq "Default") { $null } else { $Preset }), [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_PERSIST_INPUT_PRESET", $(if ($PersistPreset -and $Preset -ne "Default") { "1" } else { $null }), [EnvironmentVariableTarget]::Process)
     [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_SCREENSHOT", "diagnostics\$screenshotName", [EnvironmentVariableTarget]::Process)
     [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_MOUSE_LATENCY", "1", [EnvironmentVariableTarget]::Process)
     $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot + '" --diagnostics-dir diagnostics -autostart -sp -episode JK1 -map 01narshadda.jkl'
@@ -93,6 +95,8 @@ try {
     if (-not $process.WaitForExit($TimeoutSeconds * 1000)) { $process.Kill(); throw "$Preset input probe timed out" }
 } finally {
     if ($wDown) { [OpenJKDF2InputProbe]::keybd_event($w, 0, $keyUp, [UIntPtr]::Zero) }
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_PRESET", $null, [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_PERSIST_INPUT_PRESET", $null, [EnvironmentVariableTarget]::Process)
 }
 $displayAfter = [OpenJKDF2InputProbe]::Current()
 $after = Get-AssetSnapshot $assetRoot
@@ -122,13 +126,16 @@ $consumeP95Us = Get-Percentile $consumeUs 0.95
 $totalP95Us = Get-Percentile $totalUs 0.95
 $minimumLatencySamples = 6
 $maximumP95LatencyUs = 50000
+$effectivePreset = if ($Preset -eq "Default") { "Modern" } else { $Preset }
+$applied = if ($Preset -eq "Default") { "false" } else { "true" }
 $result = [ordered]@{
     schema = 1; startup_result = $process.ExitCode
     display_before = $displayBefore; display_after = $displayAfter; display_invariant = $displayBefore -eq $displayAfter
     asset_metadata_invariant = (Compare-Object $before $after).Count -eq 0
     focus_verified = $focusVerified
     preset = $Preset
-    preset_bindings_valid = [bool](Select-String -LiteralPath $jsonl -Pattern "input preset=$Preset applied=true bindings_valid=true" -Quiet)
+    effective_preset = $effectivePreset
+    preset_bindings_valid = [bool](Select-String -LiteralPath $jsonl -Pattern "input preset=$effectivePreset applied=$applied persisted=(true|false) bindings_valid=true" -Quiet)
     moved = [bool](Select-String -LiteralPath $jsonl -Pattern "input complete moved=true" -Quiet)
     turned = [bool](Select-String -LiteralPath $jsonl -Pattern "input complete moved=true turned=true" -Quiet)
     input_event = if ($event) { $event.Line } else { $null }

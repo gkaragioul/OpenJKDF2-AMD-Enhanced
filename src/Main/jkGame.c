@@ -36,6 +36,7 @@
 #include "General/FrameTelemetry.h"
 #include "General/FrameRate.h"
 #include "General/ControlPreset.h"
+#include "General/DefaultSettingsMigration.h"
 #include "General/PresentationMode.h"
 #include "General/QualityPreset.h"
 #include "General/RuntimeProbe.h"
@@ -929,20 +930,36 @@ int jkGame_Update()
             if (!inputPresetApplied)
             {
                 const char* requestedPreset = getenv("OPENJKDF2_VALIDATE_INPUT_PRESET");
-                const int preset = requestedPreset && !__strcmpi(requestedPreset, "Classic")
-                    ? CONTROL_PRESET_CLASSIC : CONTROL_PRESET_MODERN;
+                const char* persistRequestedPreset = getenv("OPENJKDF2_PERSIST_INPUT_PRESET");
+                const int explicitPreset = requestedPreset && requestedPreset[0];
+                const int persistPreset = explicitPreset && persistRequestedPreset &&
+                    persistRequestedPreset[0] && _strcmp(persistRequestedPreset, "0");
+                const int preset = explicitPreset
+                    ? (!__strcmpi(requestedPreset, "Classic") ? CONTROL_PRESET_CLASSIC : CONTROL_PRESET_MODERN)
+                    : ControlPreset_Normalize(jkPlayer_controlPreset);
                 int bindingsValid;
-                char presetEvent[160];
-                if (preset == CONTROL_PRESET_CLASSIC)
-                    sithControl_ApplyClassicPreset();
-                else
-                    sithControl_ApplyModernPreset();
-                jkHudInv_InputInit();
+                char presetEvent[192];
+                if (explicitPreset)
+                {
+                    if (preset == CONTROL_PRESET_CLASSIC)
+                        sithControl_ApplyClassicPreset();
+                    else
+                        sithControl_ApplyModernPreset();
+                    jkHudInv_InputInit();
+                }
+                if (persistPreset)
+                {
+                    jkPlayer_controlPreset = preset;
+                    jkPlayer_controlPresetVersion = CONTROL_DEFAULTS_VERSION;
+                    jkPlayer_WriteConf(jkPlayer_playerShortName);
+                }
                 inputPresetApplied = true;
                 bindingsValid = sithControl_ValidatePresetBindings(preset);
                 snprintf(presetEvent, sizeof(presetEvent),
-                         "input preset=%s applied=true bindings_valid=%s",
+                         "input preset=%s applied=%s persisted=%s bindings_valid=%s",
                          ControlPreset_Name(preset),
+                         explicitPreset ? "true" : "false",
+                         persistPreset ? "true" : "false",
                          bindingsValid ? "true" : "false");
                 diag_log_event(bindingsValid ? DIAG_SEVERITY_INFO : DIAG_SEVERITY_ERROR,
                                "validation", presetEvent);

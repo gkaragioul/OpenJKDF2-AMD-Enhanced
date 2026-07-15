@@ -148,6 +148,7 @@ extern int jkPlayer_rawMouseInput;
 extern int jkPlayer_mouseAcceleration;
 extern int jkPlayer_mouseSmoothing;
 extern int jkPlayer_controlPreset;
+extern int jkPlayer_controlPresetVersion;
 extern int jkPlayer_showFrameStats;
 extern int jkPlayer_qualityPreset;
 extern int jkPlayer_anisotropy;
