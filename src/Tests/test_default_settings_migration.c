@@ -22,8 +22,13 @@ int main(void)
         1600, 900, 1280, 960, &changed) == DISPLAY_MODE_WINDOWED);
     assert(changed == 0);
 
-    changed = 1;
+    changed = 0;
     assert(default_settings_migrate_display(1, DISPLAY_MODE_WINDOWED,
+        1280, 960, 1280, 960, &changed) == DISPLAY_MODE_BORDERLESS);
+    assert(changed == 1);
+
+    changed = 1;
+    assert(default_settings_migrate_display(2, DISPLAY_MODE_WINDOWED,
         1280, 960, 1280, 960, &changed) == DISPLAY_MODE_WINDOWED);
     assert(changed == 0);
 

@@ -7,6 +7,8 @@ $startup = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Main\Main.c')
 $gameplay = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Main\jkGame.c')
 $window = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Win95\Window.h')
 $windowImpl = Get-Content -Raw -LiteralPath (Join-Path $root 'src\Win95\Window.c')
+$player = Get-Content -Raw -LiteralPath (Join-Path $root 'src\World\jkPlayer.c')
+$defaults = Get-Content -Raw -LiteralPath (Join-Path $root 'src\General\DefaultSettingsMigration.h')
 $missing = @()
 
 $declaredCount = [int]([regex]::Match($strings, '(?m)^MSGS\s+(\d+)').Groups[1].Value)
@@ -39,6 +41,15 @@ foreach ($contract in @('jkGuiDisplay_ShowDisplayOptions', 'Window_GetDisplayInv
                          'Window_GetDisplaySettings', 'Window_ApplyDisplaySettings',
                          'Window_CommitDisplaySettings')) {
     if ($menu -notmatch [regex]::Escape($contract)) { $missing += "display-options-behavior:$contract" }
+}
+if ($menu.Contains('jkGuiSetup_sub_412EF0(&jkGuiDisplay_displayOptionsMenu')) {
+    $missing += 'display-options-interactivity:setup-navigation-helper-disables-controls'
+}
+if ($player.Contains('Window_SetFullscreen(')) {
+    $missing += 'display-ownership:player-profile-overrides-global-mode'
+}
+if ($defaults -notmatch '#define\s+WINDOW_DEFAULTS_VERSION\s+2') {
+    $missing += 'display-default-migration:corrective-version-2'
 }
 
 if (($menu | Select-String -Pattern 'ELEMENT_TEXTBUTTON,\s+1,\s+2,\s+"GUIEXT_APPLY"' -AllMatches).Matches.Count -lt 2) {

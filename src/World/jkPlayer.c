@@ -692,8 +692,9 @@ void jkPlayer_ParseLegacyExt()
     if (stdConffile_ReadLine())
     {
         _sscanf(stdConffile_g_aLine, "windowfullscreen %d", &fulltmp);
-        fulltmp = !!fulltmp;
-        Window_SetFullscreen(fulltmp);
+        /* Display mode is machine-wide registry state. Keep consuming this
+           legacy profile field for file-format compatibility, but do not let
+           it override the active monitor's display configuration. */
     }
 
     if (stdConffile_ReadLine())
@@ -824,7 +825,7 @@ int jkPlayer_ReadConf(char16_t *name)
         jkPlayer_fov = stdJSON_GetInt(ext_fpath, "fov", jkPlayer_fov);
         jkPlayer_fovIsVertical = stdJSON_GetBool(ext_fpath, "fovisvertical", jkPlayer_fovIsVertical);
         Window_isHiDpi_tmp = stdJSON_GetBool(ext_fpath, "windowishidpi", Window_isHiDpi);
-        Window_isFullscreen_tmp = stdJSON_GetBool(ext_fpath, "windowfullscreen", Window_isFullscreen);
+        Window_isFullscreen_tmp = Window_isFullscreen;
         jkPlayer_enableTextureFilter = stdJSON_GetBool(ext_fpath, "texturefiltering", jkPlayer_enableTextureFilter);
         jkPlayer_enableOrigAspect = stdJSON_GetBool(ext_fpath, "originalaspect", jkPlayer_enableOrigAspect);
         jkPlayer_preserveMenuAspect = stdJSON_GetBool(ext_fpath, "preservemenuaspect", jkPlayer_preserveMenuAspect);
@@ -879,6 +880,9 @@ int jkPlayer_ReadConf(char16_t *name)
 
 #ifdef QOL_IMPROVEMENTS
         sithCvar_LoadLocals(ext_fpath_cvars);
+        /* Older profiles and cvar files stored r_fullscreen per player. The
+           Display Options menu now owns this machine-wide setting. */
+        Window_isFullscreen_tmp = Window_isFullscreen;
         jkPlayer_controlPreset = ControlPreset_Normalize(jkPlayer_controlPreset);
 
         persistControlDefaults = jkPlayer_controlPresetVersion < CONTROL_DEFAULTS_VERSION;
@@ -899,7 +903,6 @@ int jkPlayer_ReadConf(char16_t *name)
             jkPlayer_fov = FOV_MAX;
 
         Window_SetHiDpi(Window_isHiDpi_tmp);
-        Window_SetFullscreen(Window_isFullscreen_tmp);
 
         std3D_UpdateSettings();
 

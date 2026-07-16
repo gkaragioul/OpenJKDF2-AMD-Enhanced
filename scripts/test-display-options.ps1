@@ -43,7 +43,7 @@ function Get-AssetSnapshot([string]$Path) {
 function New-Registry([string]$Path, [int]$Mode, [int]$Monitor, [int]$Width, [int]$Height, [int]$Refresh) {
     $registry = [ordered]@{
         InstallType = 9
-        Window_defaultsVersion = 1
+        Window_defaultsVersion = 2
         Window_displayMode = $Mode
         Window_isFullscreen = ($Mode -ne 0)
         Window_isHiDpi = $false
@@ -172,7 +172,7 @@ $failed = @($runs | Where-Object {
     -not $_.client_size_pass -or -not $_.display_invariant -or $_.exit_code -ne 1 -or
     -not $_.clean_state -or -not $_.process_finished -or $_.shader_failure -or
     -not $_.persisted_window_size_pass -or -not $_.screenshot_size_pass -or
-    $_.persisted_defaults_version -ne 1 -or
+    $_.persisted_defaults_version -ne 2 -or
     $_.persisted_mode -ne (@{"Windowed"=0;"Borderless"=1}[$_.requested_mode]) -or
     $_.persisted_monitor -ne $_.monitor_ordinal
 })

@@ -347,7 +347,6 @@ static int jkGuiDisplay_ShowDisplayOptions(void)
     jkGuiDisplay_displayOptionsElements[21].bIsVisible = !Window_IsRestorationGuardReady();
     jkGuiRend_MenuSetReturnKeyShortcutElement(&jkGuiDisplay_displayOptionsMenu, &jkGuiDisplay_displayOptionsElements[19]);
     jkGuiRend_MenuSetEscapeKeyShortcutElement(&jkGuiDisplay_displayOptionsMenu, &jkGuiDisplay_displayOptionsElements[20]);
-    jkGuiSetup_sub_412EF0(&jkGuiDisplay_displayOptionsMenu, 0);
     clicked = jkGuiRend_DisplayAndReturnClicked(&jkGuiDisplay_displayOptionsMenu);
     if (clicked == 1)
     {

@@ -4,7 +4,7 @@
 #include "General/DisplayMode.h"
 
 #define CONTROL_DEFAULTS_VERSION 1
-#define WINDOW_DEFAULTS_VERSION 1
+#define WINDOW_DEFAULTS_VERSION 2
 
 int default_settings_should_migrate_controls(int stored_version, int preset, int exact_stock_classic);
 DisplayMode default_settings_migrate_display(
