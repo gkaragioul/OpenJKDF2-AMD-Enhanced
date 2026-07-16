@@ -34,13 +34,14 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\build-windows.ps
 The final fresh Release verification rebuilt the full engine and passed 46/46
 tests with zero failures in 90.72 seconds.
 
-The final fresh Debug verification rebuilt and linked the full engine, and all
-45 tests that Windows permitted to start passed. Windows enterprise Code
-Integrity blocked the newly linked, unsigned `test_path_overlay.exe` before its
-test body started, so CTest reported 45/46 plus `BAD_COMMAND`. Windows Code
-Integrity events 3033 and 3077 name the enterprise signing policy as the cause.
-The earlier Debug implementation gate had already executed and passed 46/46.
-No security policy was disabled or bypassed.
+The final fresh Debug verification rebuilt and linked the full engine. On its
+first test invocation, all 45 tests that Windows permitted to start passed, but
+Windows enterprise Code Integrity blocked the newly linked, unsigned
+`test_path_overlay.exe` before its test body started. Windows Code Integrity
+events 3033 and 3077 name the enterprise signing policy as the cause. A normal
+targeted relink produced a newly assessed artifact that Windows allowed; the
+complete Debug suite was then rerun and passed 46/46 with zero failures in 65.12
+seconds. No security policy was disabled or bypassed.
 
 The same host exhibited this hash-reputation behavior during the pre-change
 baseline, when Windows blocked a newly linked `test_display_selection.exe`.
