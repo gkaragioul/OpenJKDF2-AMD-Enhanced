@@ -42,12 +42,18 @@ foreach ($name in @(
     Copy-Item -LiteralPath (Join-Path $packageSource $name) -Destination (Join-Path $stage $name)
 }
 Copy-Item -LiteralPath (Join-Path $repoRoot "LICENSE.md") -Destination (Join-Path $stage "LICENSE.md")
+Copy-Item -LiteralPath (Join-Path $repoRoot "LICENSING.md") -Destination (Join-Path $stage "LICENSING.md")
 Copy-Item -LiteralPath (Join-Path $repoRoot "docs\building-windows.md") -Destination (Join-Path $stage "BUILDING.md")
 Copy-Item -LiteralPath (Join-Path $repoRoot "docs\diagnostics.md") -Destination (Join-Path $stage "DIAGNOSTICS.md")
 
 $licenseMap = [ordered]@{
     "lib\SDL\LICENSE.txt" = "SDL-LICENSE.txt"
     "lib\SDL_mixer\LICENSE.txt" = "SDL_mixer-LICENSE.txt"
+    "lib\SDL_mixer\external\ogg\COPYING" = "Ogg-COPYING.txt"
+    "lib\SDL_mixer\external\vorbis\COPYING" = "Vorbis-COPYING.txt"
+    "lib\SDL_mixer\external\opus\COPYING" = "Opus-COPYING.txt"
+    "lib\SDL_mixer\external\opusfile\COPYING" = "Opusfile-COPYING.txt"
+    "lib\SDL_mixer\src\dr_libs\LICENSE" = "dr_libs-LICENSE.txt"
     "lib\openal\COPYING" = "OpenAL-Soft-COPYING.txt"
     "lib\freeglut\COPYING" = "FreeGLUT-COPYING.txt"
     "lib\glew\LICENSE.txt" = "GLEW-LICENSE.txt"
@@ -56,6 +62,8 @@ $licenseMap = [ordered]@{
     "src\external\libsmacker\COPYING" = "libsmacker-COPYING.txt"
     "src\external\libsmusher\LICENSE" = "libsmusher-LICENSE.txt"
     "src\external\nativefiledialog-extended\LICENSE" = "nativefiledialog-LICENSE.txt"
+    "src\external\fcaseopen\LICENSE.txt" = "fcaseopen-LICENSE.txt"
+    "3rdparty\json\LICENSE.MIT" = "nlohmann-json-LICENSE.txt"
     "3rdparty\drmingw-0.9.3-win64\doc\LICENSE.txt" = "DrMinGW-LICENSE.txt"
     "3rdparty\drmingw-0.9.3-win64\doc\LICENSE-zlib.txt" = "DrMinGW-zlib-LICENSE.txt"
     "3rdparty\drmingw-0.9.3-win64\doc\LICENSE-libdwarf.txt" = "DrMinGW-libdwarf-LICENSE.txt"

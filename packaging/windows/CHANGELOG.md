@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0 - 2026-07-16
+
+- Fixed Display Options interactivity so monitor and mode choices can be
+  selected normally.
+- Kept display mode as machine-wide state instead of allowing legacy player
+  profiles to override Borderless Fullscreen.
+- Added a corrective one-time defaults migration so existing stock/windowed
+  profiles receive the native-resolution Borderless default without changing
+  deliberately customized current settings.
+- Completed release licensing, source-provenance, and third-party notices.
+
 ## 2026-07-15
 
 - Made Modern the default control style for new player profiles: WASD and mouse

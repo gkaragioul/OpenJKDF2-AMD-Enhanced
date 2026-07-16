@@ -13,11 +13,21 @@ try {
         "OpenJKDF2-AMD-Enhanced.exe", "OpenJKDF2-Display-Watchdog.exe",
         "OpenAL32.dll", "Launch-OpenJKDF2.ps1",
         "OpenJKDF2 AMD Enhanced.cmd", "OpenJKDF2 AMD Enhanced Portable.cmd",
-        "Install.ps1", "Uninstall.ps1", "LICENSE.md", "THIRD-PARTY-NOTICES.md",
+        "Install.ps1", "Uninstall.ps1", "LICENSE.md", "LICENSING.md", "THIRD-PARTY-NOTICES.md",
         "TROUBLESHOOTING.md", "CHANGELOG.md", "ENHANCEMENT-PACKS.md", "CONFIGURATION.example.json",
         "PACKAGE-MANIFEST.json", "BUILD-PROVENANCE.json"
     )) {
         if (-not (Test-Path -LiteralPath (Join-Path $root $required) -PathType Leaf)) { throw "Required package file missing: $required" }
+    }
+    foreach ($requiredLicense in @(
+        "libsmacker-COPYING.txt", "OpenAL-Soft-COPYING.txt", "DrMinGW-LICENSE.txt",
+        "SDL-LICENSE.txt", "SDL_mixer-LICENSE.txt", "Ogg-COPYING.txt",
+        "Vorbis-COPYING.txt", "Opus-COPYING.txt", "Opusfile-COPYING.txt",
+        "dr_libs-LICENSE.txt", "nlohmann-json-LICENSE.txt"
+    )) {
+        if (-not (Test-Path -LiteralPath (Join-Path $root "Licenses\$requiredLicense") -PathType Leaf)) {
+            throw "Required package license missing: $requiredLicense"
+        }
     }
 
     Import-Module (Join-Path $root "PackageTools.psm1") -Force
