@@ -46,7 +46,8 @@ focus; untested GPUs use standards-based capability checks and fallbacks.
 - 64-bit Windows 11 (the supported and tested release target).
 - A GPU and driver supporting an OpenGL 3.3 core profile.
 - A legal Steam or GOG installation of *Jedi Knight: Dark Forces II*.
-- About 150 MB for the engine package, separate from the original game.
+- Less than 20 MB extracted for the engine package, separate from the original
+  game.
 
 ## Install in three steps
 
