@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-07-15
+
+- Made Modern the default control style for new player profiles: WASD and mouse
+  look, left-click primary fire, right-click secondary fire, Space jump,
+  Ctrl/C crouch, Shift run, E use, mouse-wheel weapon selection, number-key
+  weapon selection, Tab map, and Escape menu.
+- Added a saved Modern/Classic Control Style selector under
+  **Setup > Controls > Control Options**. Untouched legacy Classic profiles are
+  migrated once; customized legacy bindings are preserved.
+- Made Borderless Fullscreen the clean-install and stock-settings default.
+  Display Options now clearly offers Windowed, Borderless Fullscreen
+  (Recommended), and safety-gated Exclusive Fullscreen.
+
 ## 2026-07-14
 
 - Added standards-compliant AMD/RDNA renderer diagnostics and fallbacks.

@@ -17,12 +17,21 @@
 
 # Display options
 
-Use **Setup > Display > Display Options** to select Windowed or Borderless,
-the target monitor, and the Windowed size. Borderless always uses the selected
-monitor's current desktop mode and does not request a resolution or refresh-rate
-change. Confirm the timed prompt to keep a change; cancellation or timeout
-restores the complete previous display settings.
+Use **Setup > Display > Display Options** to select Windowed, Borderless
+Fullscreen (Recommended), or Exclusive Fullscreen, plus the target monitor and
+Windowed size. Borderless is the default, always uses the selected monitor's
+current desktop mode, and does not request a resolution or refresh-rate change.
+Confirm the timed prompt to keep a change; cancellation or timeout restores the
+complete previous display settings.
 
 Exclusive Fullscreen is intentionally unavailable until the display-restoration
 guard reports ready. Do not bypass this safety gate. If a saved display is no
 longer connected, startup falls back to safe Windowed settings.
+
+# Controls
+
+New profiles default to Modern controls. If right-click jumps, the active
+profile is using Classic or custom legacy bindings. Open
+**Setup > Controls > Control Options**, set **Control Style** to Modern, and
+select **Apply Control Style**. This maps right-click to secondary fire and
+Space to jump. Classic remains available from the same selector.
