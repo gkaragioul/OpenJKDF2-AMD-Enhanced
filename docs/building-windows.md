@@ -25,7 +25,7 @@ directories, builds only `openjkdf2-64`, and optionally runs CTest tests labeled
 unit runs.
 
 The same Release command runs on GitHub Actions `windows-latest` for pushes to
-`amd-enhanced/main`, pull requests, and manual dispatches. CTest includes C11
+`main`, pull requests, and manual dispatches. CTest includes C11
 portability/static source checks, manifest and documentation contracts, and the
 compiled unit suite. `.editorconfig` provides the repository formatting policy;
 focused commits are also checked with `git diff --check` before integration.
