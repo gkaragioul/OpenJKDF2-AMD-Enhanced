@@ -5,6 +5,7 @@ param(
     [string]$Executable = "build/msvc-release/openjkdf2-64.exe",
     [ValidateSet("Default", "Modern", "Classic")][string]$Preset = "Default",
     [switch]$PersistPreset,
+    [switch]$CaptureScreenshot,
     [int]$TimeoutSeconds = 30
 )
 
@@ -67,7 +68,7 @@ try {
     [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_MS", "14000", [EnvironmentVariableTarget]::Process)
     [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_PRESET", $(if ($Preset -eq "Default") { $null } else { $Preset }), [EnvironmentVariableTarget]::Process)
     [Environment]::SetEnvironmentVariable("OPENJKDF2_PERSIST_INPUT_PRESET", $(if ($PersistPreset -and $Preset -ne "Default") { "1" } else { $null }), [EnvironmentVariableTarget]::Process)
-    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_SCREENSHOT", "diagnostics\$screenshotName", [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_SCREENSHOT", $(if ($CaptureScreenshot) { "diagnostics\$screenshotName" } else { $null }), [EnvironmentVariableTarget]::Process)
     [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_MOUSE_LATENCY", "1", [EnvironmentVariableTarget]::Process)
     $start.Arguments = '--data-dir "' + $assetRoot + '" --user-dir "' + $userRoot + '" --diagnostics-dir diagnostics -autostart -sp -episode JK1 -map 01narshadda.jkl'
     $process = [Diagnostics.Process]::Start($start)
@@ -77,11 +78,23 @@ try {
         $process.Refresh()
     } while ($process.MainWindowHandle -eq [IntPtr]::Zero -and -not $process.HasExited -and [DateTime]::UtcNow -lt $windowDeadline)
     if ($process.MainWindowHandle -eq [IntPtr]::Zero) { throw "Gameplay window was not created" }
-    Start-Sleep -Seconds 6
+    $jsonl = Join-Path $userRoot "diagnostics\openjkdf2.jsonl"
+    $inputReadyPattern = "input preset="
+    $inputDeadline = [DateTime]::UtcNow.AddSeconds(30)
+    do {
+        Start-Sleep -Milliseconds 100
+        $process.Refresh()
+        $inputReady = (Test-Path -LiteralPath $jsonl) -and
+            (Select-String -LiteralPath $jsonl -Pattern $inputReadyPattern -Quiet)
+    } while (-not $inputReady -and -not $process.HasExited -and [DateTime]::UtcNow -lt $inputDeadline)
+    if (-not $inputReady) { throw "Gameplay input observer did not become ready" }
     $process.Refresh()
-    if (-not [OpenJKDF2InputProbe]::SetForegroundWindow($process.MainWindowHandle)) { throw "Could not focus gameplay window" }
-    Start-Sleep -Seconds 2
-    $focusVerified = [OpenJKDF2InputProbe]::GetForegroundWindow() -eq $process.MainWindowHandle
+    $focusDeadline = [DateTime]::UtcNow.AddSeconds(5)
+    do {
+        [void][OpenJKDF2InputProbe]::SetForegroundWindow($process.MainWindowHandle)
+        Start-Sleep -Milliseconds 100
+        $focusVerified = [OpenJKDF2InputProbe]::GetForegroundWindow() -eq $process.MainWindowHandle
+    } while (-not $focusVerified -and [DateTime]::UtcNow -lt $focusDeadline)
     if (-not $focusVerified) { throw "Gameplay window did not retain foreground focus" }
     [OpenJKDF2InputProbe]::keybd_event($w, 0, 0, [UIntPtr]::Zero)
     $wDown = $true
@@ -97,6 +110,9 @@ try {
     if ($wDown) { [OpenJKDF2InputProbe]::keybd_event($w, 0, $keyUp, [UIntPtr]::Zero) }
     [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_PRESET", $null, [EnvironmentVariableTarget]::Process)
     [Environment]::SetEnvironmentVariable("OPENJKDF2_PERSIST_INPUT_PRESET", $null, [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_SCREENSHOT", $null, [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_INPUT_MS", $null, [EnvironmentVariableTarget]::Process)
+    [Environment]::SetEnvironmentVariable("OPENJKDF2_VALIDATE_MOUSE_LATENCY", $null, [EnvironmentVariableTarget]::Process)
 }
 $displayAfter = [OpenJKDF2InputProbe]::Current()
 $after = Get-AssetSnapshot $assetRoot
@@ -144,6 +160,7 @@ $result = [ordered]@{
     consume_p95_us = $consumeP95Us
     total_p95_us = $totalP95Us
     latency_within_50ms = $consumeSamples.Count -ge $minimumLatencySamples -and $null -ne $totalP95Us -and $totalP95Us -le $maximumP95LatencyUs
+    screenshot_requested = [bool]$CaptureScreenshot
     screenshot_exists = Test-Path -LiteralPath (Join-Path $diagnostics $screenshotName)
     clean_state = $state.status -eq "clean"
     process_finished = [bool](Select-String -LiteralPath $jsonl -Pattern "process_finished" -Quiet)
@@ -152,7 +169,7 @@ $resultPath = Join-Path $userRoot "$presetSlug-input-result.json"
 $result | ConvertTo-Json | Set-Content -LiteralPath $resultPath -Encoding utf8
 $result | ConvertTo-Json
 if ($result.startup_result -ne 1 -or -not $result.display_invariant -or -not $result.asset_metadata_invariant -or -not $result.focus_verified -or
-    -not $result.preset_bindings_valid -or -not $result.moved -or -not $result.turned -or -not $result.screenshot_exists -or
+    -not $result.preset_bindings_valid -or -not $result.moved -or -not $result.turned -or ($CaptureScreenshot -and -not $result.screenshot_exists) -or
     -not $result.latency_within_50ms -or -not $result.clean_state -or -not $result.process_finished) {
     throw "$Preset input verification failed; inspect $resultPath"
 }

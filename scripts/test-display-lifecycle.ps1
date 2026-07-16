@@ -27,6 +27,7 @@ public static class OpenJKDF2LifecycleProbe {
  [StructLayout(LayoutKind.Sequential)] public struct R { public int l,t,r,b; public override string ToString(){return l+","+t+","+r+","+b;} }
  [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern bool EnumDisplaySettings(string n,int m,ref D d);
  [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
+ [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
  [DllImport("user32.dll")] public static extern bool GetClipCursor(out R r);
  public static string Current(){var d=new D();d.s=(short)Marshal.SizeOf(typeof(D));if(!EnumDisplaySettings(null,-1,ref d))throw new InvalidOperationException();return d.w+"x"+d.h+"@"+d.hz;}
  public static string Clip(){R r;if(!GetClipCursor(out r))throw new InvalidOperationException();return r.ToString();}
@@ -94,10 +95,25 @@ $focusForm.Show(); [Windows.Forms.Application]::DoEvents()
 $focusTransfers = 0
 try {
     for ($i = 0; $i -lt 3; $i++) {
-        if (-not $shell.AppActivate($focusRun.Process.Id)) { throw "Could not focus game on loop $i" }
+        $gameFocusDeadline = [DateTime]::UtcNow.AddSeconds(5)
+        do {
+            [void]$shell.AppActivate($focusRun.Process.Id)
+            Start-Sleep -Milliseconds 100
+            $gameFocused = [OpenJKDF2LifecycleProbe]::GetForegroundWindow() -eq $gameHandle
+        } while (-not $gameFocused -and [DateTime]::UtcNow -lt $gameFocusDeadline)
+        if (-not $gameFocused) { throw "Could not verify game focus on loop $i" }
         Start-Sleep -Milliseconds 500
-        if (-not [OpenJKDF2LifecycleProbe]::SetForegroundWindow($focusForm.Handle)) { throw "Could not transfer focus on loop $i" }
-        [Windows.Forms.Application]::DoEvents(); Start-Sleep -Milliseconds 500
+
+        $formFocusDeadline = [DateTime]::UtcNow.AddSeconds(5)
+        do {
+            $focusForm.Activate()
+            [void][OpenJKDF2LifecycleProbe]::SetForegroundWindow($focusForm.Handle)
+            [Windows.Forms.Application]::DoEvents()
+            Start-Sleep -Milliseconds 100
+            $formFocused = [OpenJKDF2LifecycleProbe]::GetForegroundWindow() -eq $focusForm.Handle
+        } while (-not $formFocused -and [DateTime]::UtcNow -lt $formFocusDeadline)
+        if (-not $formFocused) { throw "Could not verify focus transfer on loop $i" }
+        Start-Sleep -Milliseconds 500
         $focusTransfers++
     }
     [void][OpenJKDF2LifecycleProbe]::SetForegroundWindow($gameHandle)
