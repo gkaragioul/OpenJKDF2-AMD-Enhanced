@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Clarified that the engine package must remain separate from the original game
+  directory and documented the exact files required when selecting game data.
+- Added first-launch guidance for imported or customized profiles whose legacy
+  bindings produce inverted vertical look or Classic mouse-button behavior.
+- Documented that the current community binaries are unsigned, how Windows 11
+  Smart App Control can block them, and the security implications of its
+  system-wide setting.
+
 ## 1.0 - 2026-07-16
 
 - Fixed Display Options interactivity so monitor and mode choices can be

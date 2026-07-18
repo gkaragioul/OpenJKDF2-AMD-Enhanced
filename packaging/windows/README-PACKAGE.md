@@ -8,9 +8,19 @@ endorsed by LucasArts, Lucasfilm, Disney, AMD, Valve, GOG, or upstream OpenJKDF2
 No game files are included. A legally owned Steam or GOG installation is
 required.
 
-Run `OpenJKDF2 AMD Enhanced.cmd`. On first run the launcher searches common Steam
-and GOG locations, validates required files, and otherwise asks you to select the
-original game folder. The port reads that folder without copying or modifying it.
+> **Windows 11 Smart App Control:** the current 1.0 community binaries are not
+> yet code-signed. Smart App Control may block an unsigned executable even when
+> its package hash is correct, and Windows does not provide a per-app exception.
+> Do not change a system-wide security setting merely to bypass an unexpected
+> download. First verify `SHA256SUMS.txt`, confirm that the package came from the
+> official GitHub release, and read `TROUBLESHOOTING.md`.
+
+Extract this entire package into its own writable folder and keep the package
+layout intact. Do not merge it into the original Jedi Knight directory. Run
+`OpenJKDF2 AMD Enhanced.cmd`. On first run the launcher searches common Steam and
+GOG locations, validates required files, and otherwise asks you to select the
+original folder containing `JK.EXE`, `Episode\JK1.GOB`, `Resource\Res1hi.gob`, and
+`Resource\Res2.gob`. The port reads that folder without copying or modifying it.
 
 New player profiles use Modern controls by default: WASD and mouse look,
 left-click primary fire, right-click secondary fire, Space jump, Ctrl/C crouch,
@@ -18,7 +28,9 @@ Shift run, E use, the mouse wheel and number keys for weapons, Tab for the map,
 and Escape for the menu. To switch styles, open
 **Setup > Controls > Control Options**, choose Modern or Classic under
 **Control Style**, then select **Apply Control Style**. The choice is saved to
-the active player profile.
+the active player profile. Imported or customized profiles keep their existing
+bindings. If vertical mouse look is inverted, or right-click jumps, apply the
+Modern style once for that profile.
 
 The game opens in Borderless Fullscreen by default. Use
 **Setup > Display > Display Options** to choose Windowed, Borderless Fullscreen

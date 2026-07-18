@@ -33,3 +33,14 @@ if (-not $NoShortcut) {
     Set-Content -LiteralPath (Join-Path $target "install-state.json") -Encoding utf8
 Write-Output "Installed OpenJKDF2 AMD Enhanced to $target"
 if ($shortcutPath) { Write-Output "Created desktop shortcut $shortcutPath" }
+Write-Output "Keep the original Jedi Knight installation separate; the launcher will locate or ask for its folder on first run."
+Write-Output "If an imported profile has inverted vertical look, apply Modern once under Setup > Controls > Control Options."
+try {
+    $smartAppControl = (Get-MpComputerStatus -ErrorAction Stop).SmartAppControlState
+    $gameSignature = Get-AuthenticodeSignature -LiteralPath (Join-Path $target "OpenJKDF2-AMD-Enhanced.exe")
+    if ($smartAppControl -eq "On" -and $gameSignature.Status -ne "Valid") {
+        Write-Warning "Windows Smart App Control is On and this community build is not code-signed. Windows may block it with 'An Application Control policy has blocked this file.' Smart App Control has no per-app exception; read TROUBLESHOOTING.md before changing the system-wide setting."
+    }
+} catch {
+    Write-Verbose "Smart App Control status could not be queried: $($_.Exception.Message)"
+}

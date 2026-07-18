@@ -59,5 +59,12 @@ if ($DiscoveryOnly) {
 $arguments = @("--data-dir", ('"' + $DataDir + '"'))
 if ($Portable) { $arguments += "--portable" }
 $arguments += $GameArguments
-$process = Start-Process -FilePath $executable -WorkingDirectory $packageRoot -ArgumentList $arguments -PassThru -Wait
+try {
+    $process = Start-Process -FilePath $executable -WorkingDirectory $packageRoot -ArgumentList $arguments -PassThru -Wait
+} catch {
+    if ($_.Exception.Message -match "Application Control policy has blocked this file") {
+        throw "Windows Smart App Control blocked the unsigned community build before it could start. Smart App Control has no per-app exception. Verify the release SHA-256, then read TROUBLESHOOTING.md before changing the system-wide Windows Security setting."
+    }
+    throw
+}
 exit $process.ExitCode

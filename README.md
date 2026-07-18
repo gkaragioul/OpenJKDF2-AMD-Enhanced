@@ -14,6 +14,15 @@ pacing, and observable OpenGL 3.3 rendering on modern AMD Radeon hardware.
 > [Steam](https://store.steampowered.com/app/32380/) or
 > [GOG](https://www.gog.com/en/game/star_wars_jedi_knight_dark_forces_ii).
 
+> [!WARNING]
+> The current 1.0 community binaries are not yet code-signed. Windows 11 Smart
+> App Control may therefore report **"An Application Control policy has blocked
+> this file"**, even when the ZIP hash is correct. Smart App Control has no
+> per-app exception: use a future release signed by a trusted certificate, or
+> make an informed system-wide choice under **Windows Security > App & browser
+> control > Smart App Control**. Turning it off is not required on systems where
+> the package runs normally. See the [Windows troubleshooting guide](packaging/windows/TROUBLESHOOTING.md#smart-app-control-blocks-the-game).
+
 ## Screenshots
 
 | Gameplay | Modern controls |
@@ -52,8 +61,10 @@ focus; untested GPUs use standards-based capability checks and fallbacks.
 ## Install in three steps
 
 1. Download `OpenJKDF2-AMD-Enhanced-windows-x64-1.0.zip` from the
-   [1.0 release](https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced/releases/tag/1.0)
-   and extract the **entire** ZIP to a normal writable folder.
+   [1.0 release](https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced/releases/tag/1.0).
+   Create a new writable folder for the port, then extract the **entire** ZIP
+   there. Keep the package layout intact. **Do not** merge these files into the
+   original Jedi Knight folder.
 2. In the extracted folder, right-click `Install.ps1` and choose **Run with
    PowerShell**. If Windows blocks scripts, open PowerShell in that folder and run:
 
@@ -63,10 +74,19 @@ focus; untested GPUs use standards-based capability checks and fallbacks.
 
 3. Start **OpenJKDF2 AMD Enhanced** from the new desktop shortcut. The launcher
    searches common Steam and GOG locations. If it cannot find the game, select
-   the folder that contains your legal installation when prompted.
+   the original installation folder containing `JK.EXE`, `Episode\JK1.GOB`,
+   `Resource\Res1hi.gob`, and `Resource\Res2.gob` when prompted.
 
 The engine reads the original installation in place; it does not copy or modify
 your game files.
+
+### First launch checklist
+
+- New player profiles use Modern controls automatically. Imported or customized
+  profiles keep their existing bindings so the port does not overwrite them.
+- If looking up and down is inverted, or right-click jumps, open
+  **Setup → Controls → Options → Control Style**, choose **Modern**, then
+  select **Apply Control Style**. This is saved to the active player profile.
 
 ### Portable mode and uninstall
 
@@ -91,7 +111,8 @@ Modern is the default for new player profiles:
 
 Switch at any time through **Setup → Controls → Options → Control Style**. Choose
 **Modern** or **Classic**, then select **Apply Control Style**. The choice is
-saved to the active player profile.
+saved to the active player profile. Existing customized profiles are intentionally
+preserved and may need this one-time selection after upgrading.
 
 ## Display modes
 
@@ -122,7 +143,16 @@ are also included inside the ZIP.
 ## Troubleshooting
 
 - **Game not found:** run the launcher again and select the installation folder
-  containing the original game's `Resource` data.
+  containing `JK.EXE`, `Episode\JK1.GOB`, `Resource\Res1hi.gob`, and
+  `Resource\Res2.gob`.
+- **Inverted vertical look or legacy mouse buttons:** apply the **Modern** control
+  style from **Setup → Controls → Options → Control Style**. Imported or
+  customized player profiles are not overwritten automatically.
+- **Application Control policy blocked the game:** the 1.0 binaries are unsigned,
+  and Windows 11 Smart App Control does not support a per-app exception. Verify
+  the release SHA-256 first, then read the
+  [Smart App Control guidance](packaging/windows/TROUBLESHOOTING.md#smart-app-control-blocks-the-game)
+  before changing any system-wide security setting.
 - **Display changed unexpectedly:** restart normally; the watchdog and recovery
   snapshot restore the last known-good desktop configuration.
 - **Settings or saves:** normal mode uses `%LOCALAPPDATA%\OpenJKDF2 AMD Enhanced`;
@@ -130,7 +160,7 @@ are also included inside the ZIP.
 - **Renderer problem:** open **Setup → Display → Advanced → Diagnostics**, then
   include the diagnostics files when filing an issue.
 
-See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) and
+See [TROUBLESHOOTING.md](packaging/windows/TROUBLESHOOTING.md) and
 [COMPATIBILITY.md](COMPATIBILITY.md) for detailed limitations and evidence.
 
 ## Build from source
