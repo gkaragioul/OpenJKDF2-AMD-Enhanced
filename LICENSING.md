@@ -1,18 +1,18 @@
 # Licensing guide
 
-OpenJKDF2 AMD Enhanced is a modified distribution of
+OpenJKDF2 Modern is a modified distribution of
 [OpenJKDF2](https://github.com/shinyquagsire23/OpenJKDF2). This guide explains
 the licensing structure of the source tree and Windows package. It does not
 replace any license text and is not legal advice.
 
-## OpenJKDF2 and AMD Enhanced changes
+## OpenJKDF2 and OpenJKDF2 Modern changes
 
 The original OpenJKDF2 code remains copyright the OpenJKDF2 contributors under
 the custom permissive permission and warranty terms in [`LICENSE.md`](LICENSE.md).
 GitHub currently classifies that file as `Other`/`NOASSERTION`; this project does
 not relabel it as MIT, ISC, GPL, or another standard SPDX license.
 
-OpenJKDF2 AMD Enhanced modifications are copyright 2026 George Karagioules and
+OpenJKDF2 Modern modifications are copyright 2026 George Karagioules and
 are offered under the same permission and warranty terms in `LICENSE.md`. This
 statement covers only George Karagioules's contributions. It does not relicense
 OpenJKDF2 or any third-party component.
@@ -48,7 +48,7 @@ rebuild the application and relink it with a modified compatible library.
 Clone the tagged source and all pinned submodules with:
 
 ```powershell
-git clone --branch 1.0 --recurse-submodules https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced.git
+git clone --branch 1.0 --recurse-submodules https://github.com/gkaragioul/OpenJKDF2-Modern.git
 ```
 
 OpenAL Soft and the DrMinGW crash-handler components are shipped as replaceable
@@ -70,5 +70,6 @@ of *Star Wars: Jedi Knight - Dark Forces II*.
 
 STAR WARS, Jedi Knight, LucasArts, Lucasfilm, and related marks are properties
 of Lucasfilm Ltd. AMD and AMD Radeon are trademarks of Advanced Micro Devices,
-Inc. This independent project is not affiliated with or endorsed by Lucasfilm,
-Disney, AMD, Valve, GOG, or the upstream OpenJKDF2 maintainers.
+Inc. NVIDIA and GeForce are trademarks of NVIDIA Corporation. This independent
+project is not affiliated with or endorsed by Lucasfilm, Disney, AMD, NVIDIA,
+Intel, Valve, GOG, or the upstream OpenJKDF2 maintainers.
