@@ -1,11 +1,11 @@
-# OpenJKDF2 AMD Enhanced
+# OpenJKDF2 Modern
 
-A Windows 11-focused OpenJKDF2 fork that makes *Star Wars: Jedi Knight - Dark
-Forces II* comfortable on a modern PC: modern FPS controls by default,
-native-resolution Borderless Fullscreen, safer display switching, improved frame
-pacing, and observable OpenGL 3.3 rendering on modern AMD Radeon hardware.
+A Windows 11-focused modern-experience fork of OpenJKDF2 that makes *Star Wars:
+Jedi Knight - Dark Forces II* comfortable on a current PC: modern FPS controls
+by default, native-resolution Borderless Fullscreen, safer display switching,
+improved frame pacing, and observable OpenGL 3.3 rendering.
 
-**[Download release 1.0](https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced/releases/tag/1.0)** ·
+**[Download release 1.0](https://github.com/gkaragioul/OpenJKDF2-Modern/releases/tag/1.0)** ·
 **[Release notes](docs/RELEASE-1.0.md)** · **[Licensing guide](LICENSING.md)**
 
 > [!IMPORTANT]
@@ -41,14 +41,17 @@ original game content is not included in this repository or its downloads.
 - Working monitor, mode, resolution, and refresh-behavior controls under Display
   Options, with confirmation and restoration safeguards.
 - Standards-compliant OpenGL 3.3 fixes, shader/framebuffer diagnostics, renderer
-  fallbacks, and hardware evidence for the tested Radeon RX 7900 XTX system.
+  fallbacks, and hardware evidence from the tested Radeon RX 7900 XTX system.
 - Configurable frame caps, VSync, frame-pacing telemetry, FOV, HUD scale, SSAA,
   bloom, SSAO, filtering, and optional user-owned enhancement packs.
 - Read-only discovery of Steam/GOG game data, isolated per-user saves/settings,
   portable mode, crash diagnostics, and a Windows display watchdog.
 
-AMD hardware is not required. AMD/RDNA is the tested optimization and diagnostic
-focus; untested GPUs use standards-based capability checks and fallbacks.
+AMD hardware is not required. The release is not vendor-locked: its rendering
+paths use standards-based capability checks and fallbacks, so it is intended for
+AMD, NVIDIA, and Intel GPUs that meet the OpenGL requirement. AMD/RDNA is the
+hardware family used for the recorded test evidence; other vendors remain
+unverified rather than unsupported.
 
 ## Requirements
 
@@ -60,8 +63,8 @@ focus; untested GPUs use standards-based capability checks and fallbacks.
 
 ## Install in three steps
 
-1. Download `OpenJKDF2-AMD-Enhanced-windows-x64-1.0.zip` from the
-   [1.0 release](https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced/releases/tag/1.0).
+1. Download the 1.0 ZIP from the
+   [1.0 release](https://github.com/gkaragioul/OpenJKDF2-Modern/releases/tag/1.0).
    Create a new writable folder for the port, then extract the **entire** ZIP
    there. Keep the package layout intact. **Do not** merge these files into the
    original Jedi Knight folder.
@@ -72,7 +75,7 @@ focus; untested GPUs use standards-based capability checks and fallbacks.
    powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install.ps1
    ```
 
-3. Start **OpenJKDF2 AMD Enhanced** from the new desktop shortcut. The launcher
+3. Start **OpenJKDF2 Modern** from the new desktop shortcut. The launcher
    searches common Steam and GOG locations. If it cannot find the game, select
    the original installation folder containing `JK.EXE`, `Episode\JK1.GOB`,
    `Resource\Res1hi.gob`, and `Resource\Res2.gob` when prompted.
@@ -90,7 +93,7 @@ your game files.
 
 ### Portable mode and uninstall
 
-- Run `OpenJKDF2 AMD Enhanced Portable.cmd` from the extracted package to keep
+- Run the portable launcher from the extracted package to keep
   saves and settings in its local `UserData` folder.
 - Run the installed `Uninstall.ps1` to remove the app and shortcut. Original game
   files and normal saves under `%LOCALAPPDATA%\OpenJKDF2 AMD Enhanced` are never
@@ -168,8 +171,8 @@ See [TROUBLESHOOTING.md](packaging/windows/TROUBLESHOOTING.md) and
 Clone the exact release, including pinned submodules:
 
 ```powershell
-git clone --branch 1.0 --recurse-submodules https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced.git
-cd OpenJKDF2-AMD-Enhanced
+git clone --branch 1.0 --recurse-submodules https://github.com/gkaragioul/OpenJKDF2-Modern.git
+cd OpenJKDF2-Modern
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts\build-windows.ps1 -Configuration Release -Test
 ```
 
@@ -179,9 +182,12 @@ and Debug build command are documented in
 
 ## Source, licenses, and attribution
 
-This project preserves the history and attribution of
-[OpenJKDF2](https://github.com/shinyquagsire23/OpenJKDF2). The original project
-and George Karagioules's modifications are distributed under the custom
+This project is a downstream modernization fork of
+[OpenJKDF2](https://github.com/shinyquagsire23/OpenJKDF2), the original project
+by the OpenJKDF2 contributors. Upstream OpenJKDF2 provides the cross-platform
+engine foundation; this repository adds its Windows-focused experience,
+packaging, diagnostics, and verification work. The original project and George
+Karagioules's modifications are distributed under the custom
 permission and warranty terms in [LICENSE.md](LICENSE.md); third-party components
 retain their own licenses. Read [LICENSING.md](LICENSING.md),
 [THIRD-PARTY-NOTICES.md](packaging/windows/THIRD-PARTY-NOTICES.md), and the
