@@ -1,8 +1,9 @@
-# OpenJKDF2 AMD Enhanced 1.0
+# OpenJKDF2 Modern 1.0
 
-Release 1.0 is the first public Windows x64 build of this independent OpenJKDF2
-fork. It modernizes how *Jedi Knight: Dark Forces II* feels and behaves on a
-current desktop while keeping original game content outside the distribution.
+Release 1.0 is the first public Windows x64 build of this independent,
+vendor-neutral OpenJKDF2 modernization fork. It modernizes how *Jedi Knight:
+Dark Forces II* feels and behaves on a current desktop while keeping original
+game content outside the distribution.
 
 ## Highlights
 
@@ -33,6 +34,8 @@ optional third-party enhancement packs are included.**
 ## Install
 
 1. Download `OpenJKDF2-AMD-Enhanced-windows-x64-1.0.zip` and extract it fully.
+   The archive retains its original 1.0 filename, but the release is not
+   AMD-only; it is intended for AMD, NVIDIA, and Intel GPUs with OpenGL 3.3.
 2. Right-click `Install.ps1` and choose **Run with PowerShell**, or run:
 
    ```powershell
@@ -42,7 +45,7 @@ optional third-party enhancement packs are included.**
 3. Launch the desktop shortcut. The launcher discovers common Steam/GOG
    locations or asks you to select the original game folder.
 
-Portable users can run `OpenJKDF2 AMD Enhanced Portable.cmd` without installing.
+Portable users can run the included portable launcher without installing.
 
 ## Integrity
 
@@ -54,16 +57,17 @@ __ZIP_SHA256__
 
 Compare this value with `SHA256SUMS.txt`. The ZIP also contains a generated file
 manifest and build provenance. Source corresponding to this binary is the exact
-[`1.0` tag](https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced/tree/1.0),
+[`1.0` tag](https://github.com/gkaragioul/OpenJKDF2-Modern/tree/1.0),
 including pinned submodule revisions and build scripts.
 
 ## Licensing and independence
 
-See [LICENSE.md](https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced/blob/1.0/LICENSE.md),
-[LICENSING.md](https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced/blob/1.0/LICENSING.md),
-and [THIRD-PARTY-NOTICES.md](https://github.com/gkaragioul/OpenJKDF2-AMD-Enhanced/blob/1.0/packaging/windows/THIRD-PARTY-NOTICES.md).
+See [LICENSE.md](https://github.com/gkaragioul/OpenJKDF2-Modern/blob/1.0/LICENSE.md),
+[LICENSING.md](https://github.com/gkaragioul/OpenJKDF2-Modern/blob/1.0/LICENSING.md),
+and [THIRD-PARTY-NOTICES.md](https://github.com/gkaragioul/OpenJKDF2-Modern/blob/1.0/packaging/windows/THIRD-PARTY-NOTICES.md).
 The engine changes are distributed under those documented terms; third-party
 components retain their respective licenses.
 
 This is an independent community project and is not affiliated with or endorsed
-by Lucasfilm, Disney, AMD, Valve, GOG, or the upstream OpenJKDF2 maintainers.
+by Lucasfilm, Disney, AMD, NVIDIA, Intel, Valve, GOG, or the upstream OpenJKDF2
+maintainers.
